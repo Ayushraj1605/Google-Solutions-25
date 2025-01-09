@@ -1,7 +1,9 @@
 # E-Waste Management App Documentation
+( Link for the LaTeX doc: https://www.overleaf.com/project/677e77ffb2b96d212ad9da0e)
 
 **Author**: The Boys  
 **Date**: January 8, 2025
+
 
 ## 1. Introduction
 
