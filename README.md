@@ -1,9 +1,29 @@
 # E-Waste Management App Documentation
-( Link for the LaTeX doc: https://www.overleaf.com/project/677e77ffb2b96d212ad9da0e)
+*Author*: The Boys  
+*Date*: January 8, 2025
 
-**Author**: The Boys  
-**Date**: January 8, 2025
-
+## Table of Contents
+1. [Introduction](#introduction)
+    - [Overview of the Project](#overview-of-the-project)
+    - [Technology Stack](#technology-stack)
+2. [Features Overview](#features-overview)
+    - [E-Waste Collection Locator](#e-waste-collection-locator)
+    - [Scheduling Pickup Services](#scheduling-pickup-services)
+    - [Product Lifecycle Tracker](#product-lifecycle-tracker)
+    - [In-App Rewards System](#in-app-rewards-system)
+    - [Refurbish & Reuse Marketplace](#refurbish-reuse-marketplace)
+    - [Educational Section](#educational-section)
+    - [Advanced Features](#advanced-features)
+    - [Blogging Section](#blogging-section)
+    - [Leaderboard for Carbon Emission Reduction](#leaderboard-for-carbon-emission-reduction)
+3. [System Architecture](#system-architecture)
+    - [Frontend (React Native)](#frontend-react-native)
+    - [Backend (Express.js + Google Cloud/Firebase)](#backend-expressjs-google-cloudfirebase)
+    - [APIs](#apis)
+4. [App Flow and User Interface](#app-flow-and-user-interface)
+    - [Main Flow](#main-flow)
+    - [UI/UX Design](#uiux-design)
+5. [Google API Documentation Links](#google-api-documentation-links)
 
 ## 1. Introduction
 
@@ -97,3 +117,29 @@ The app aims to help users manage their e-waste by finding collection centers, s
 - Responsive design to ensure usability across different device sizes.
 - Clear call-to-action buttons and intuitive navigation.
 - Colors should align with the environment-friendly theme (green for recycling, clean design).
+
+## 5. Google API Documentation Links
+
+Here are the links to the official documentation for the Google APIs used in the project:
+
+- [Google Maps SDK for Android](https://developers.google.com/maps/documentation/android-sdk/overview)  
+  Learn how to integrate Google Maps into your Android app and use features like geolocation, maps, and more.
+
+- [Google Firebase Documentation](https://firebase.google.com/docs)  
+  Access Firebase's real-time database, authentication, cloud storage, and other services for your app.
+
+- [Google Calendar API](https://developers.google.com/calendar)  
+  Provides functionality for scheduling and managing events in the user's Google Calendar.
+
+- [Firebase Cloud Messaging (FCM)](https://firebase.google.com/docs/cloud-messaging)  
+  Learn how to send push notifications to users via Firebase Cloud Messaging.
+
+- [Google Analytics for Firebase](https://firebase.google.com/docs/analytics)  
+  Track and analyze user behavior in your app using Firebase Analytics.
+
+- [Google Identity Platform](https://developers.google.com/identity)  
+  Learn about user authentication using Google Sign-In and OAuth.
+
+- [TensorFlow.js](https://www.tensorflow.org/js)  
+  A library for training and deploying machine learning models in the browser or Node.js.
+
