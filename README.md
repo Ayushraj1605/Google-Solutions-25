@@ -1,3 +1,5 @@
+![Picture1](https://github.com/user-attachments/assets/0d8fd938-b24a-4c55-9afe-884e2c5703d2)
+
 # E-Waste Management App Documentation
 *Author*: The Boys  
 *Date*: January 8, 2025
