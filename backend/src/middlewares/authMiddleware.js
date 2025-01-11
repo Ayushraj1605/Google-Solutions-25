@@ -1,8 +1,8 @@
 
 
-export const authMiddleware = async (req, res) => 
+export const authMiddleware = async (req, res, next) => 
 {
-
+    
 
 
 

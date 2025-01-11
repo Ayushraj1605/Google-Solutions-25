@@ -21,7 +21,6 @@ router.get('/profile', authMiddleware, getProfile);
 
 router.get('/users', async (req, res) => {
     try {
-       
         const userCollection = collection(db, "users");  
         const userSnapshot = await getDocs(userCollection);  
         const userList = userSnapshot.docs.map(doc => doc.data());  
