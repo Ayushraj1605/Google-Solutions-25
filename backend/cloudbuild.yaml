@@ -1,0 +1,23 @@
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-east1-docker.pkg.dev/${PROJECT_ID}/ewaste/app:latest', '.']
+
+  # Step 2: Push the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-east1-docker.pkg.dev/${PROJECT_ID}/ewaste/app:latest']
+
+  # Step 3: Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run deploy cloudrunservice \
+          --image 'us-east1-docker.pkg.dev/${PROJECT_ID}/ewaste/app:latest' \
+          --region us-central1 \
+          --platform managed \
+          --allow-unauthenticated
+
+images:
+  - 'us-east1-docker.pkg.dev/${PROJECT_ID}/ewaste/app:latest'

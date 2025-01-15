@@ -1,0 +1,19 @@
+# Use a compatible Node.js version
+FROM node:20.17.0
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Update npm to the required version
+RUN npm install -g npm@11.0.0
+
+# Install dependencies
+RUN npm install
+
+EXPOSE 8080
+
+# Start the application
+CMD ["node","app.js"]

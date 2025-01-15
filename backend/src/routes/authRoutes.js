@@ -6,18 +6,18 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
+router.get('/user', (req, res) => {
 
     res.status(200).json({
         message: "This is the user endpoint!"
     });
-});
+}); 
 
-router.post('/signup', signup);
+router.post('/user/signup', signup);
 
-router.post('/login', signin);
+router.post('/user/login', signin);
 
-router.get('/profile', authMiddleware, getProfile);
+router.get('/user/profile', authMiddleware, getProfile);
 
 router.get('/users', async (req, res) => {
     try {
