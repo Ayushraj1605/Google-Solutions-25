@@ -3,6 +3,7 @@ import { signup, signin, getProfile } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { signupOrg, signinOrg } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -13,7 +14,9 @@ router.get('/user', (req, res) => {
     });
 }); 
 
-router.post('/user/signup', signup);
+router.post('/org/signup', signupOrg);
+
+router.post('/org/login', signinOrg);
 
 router.post('/user/login', signin);
 

@@ -6,6 +6,79 @@ import jwt from "jsonwebtoken";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 
 // Sign-In Function
+
+export const signupOrg = async (req, res) => {
+    const { name, email, password, GST } = req.body;
+
+    if (!name || !email || !password || !GST) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
+    try {
+        const orgCollection = collection(db, "Organization");
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const docRef = await addDoc(orgCollection, {
+            name,
+            email,
+            password: hashedPassword,
+            GST,
+        });
+
+        return res.status(200).json({
+            message: "Organization registered successfully!",
+            userId: docRef.id,
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Internal server error",
+            error: err.message,
+        });
+    }
+};
+
+export const signinOrg = async (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    try {
+        const orgCollection = collection(db, "Organization");
+        const orgQuery = query(orgCollection, where("email", "==", email));
+        const querySnapshot = await getDocs(orgQuery);
+
+        if (querySnapshot.empty) {
+            return res.status(404).json({ message: "Organization not found" });
+        }
+
+        const orgDoc = querySnapshot.docs[0];
+        const orgData = orgDoc.data();
+
+        const isPasswordValid = await bcrypt.compare(password, orgData.password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+
+        const token = jwt.sign(
+            { id: orgDoc.id, email: orgData.email, name: orgData.name },
+            process.env.JWT_SECRET,
+        );
+
+        return res.status(200).json({
+            message: "Organization successfully signed in!",
+            name: orgData.name,
+            token,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+};
+
 export const signin = async (req, res) => {
     const { email, password } = req.body;
 
