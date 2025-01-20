@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useState, useCallback, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
@@ -26,23 +27,45 @@ const SignIn = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-    
+
     // console.log()
     try {
-      const response = await axios.post(
-        'https://cloudrunservice-254131401451.us-central1.run.app/user/login', // Replace with your actual API endpoint
-        {
-            "email": form.email,
-            "password": form.password
-        }
-      );
+      // const response = await axios.post(
+      //   'https://cloudrunservice-254131401451.us-central1.run.app/user/login', // Replace with your actual API endpoint
+      //   {
+      //       "email": form.email,
+      //       "password": form.password
+      //   }
+      const response = {
+        data: {
+          email: "ayushrajaayatha@gmail.com",
+          password: "passwordhaiye",
+          token:"maiaayahutokendene",
+        },
+        
+        status: 200
+      };
+      
+      // Now you can access the status like this:
+      console.log(response.status); // Outputs: 200
+      
       // Handle successful response
       if (response.status === 200) {
         alert('Success', 'Signed in successfully!');
-        console.log('User data:', response.data);
+        // Save token to AsyncStorage
+        const _storeData = async () => {
+          try {
+            await AsyncStorage.setItem('TASK', response.data.token); // Save token with key 'TASK'
+            console.log('Token saved successfully!');
+          } catch (error) {
+            console.error('Error saving data to AsyncStorage:', error);
+          }
+        };
+      
+        await _storeData(); // Invoke the function to save the token
         router.replace('/home'); // Navigate to the home screen
       } else {
-       alert('Error', response.data.message || 'Invalid credentials.');
+        alert('Error', response.data.message || 'Invalid credentials.');
       }
     } catch (error) {
       // Handle errors
@@ -55,6 +78,64 @@ const SignIn = () => {
       setIsSubmitting(false);
     }
   }, [form, validateForm]);
+
+  // Function to handle form submission
+  const SubmitOrg = useCallback(async () => {
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
+    // console.log()
+    try {
+      // const response = await axios.post(
+      //   'https://cloudrunservice-254131401451.us-central1.run.app/org/login', // Replace with your actual API endpoint
+      //   {
+      //       "email": form.email,
+      //       "password": form.password
+      //   });
+      const response = {
+        data: {
+          email: "ayushrajaayatha@gmail.com",
+          password: "passwordhaiye",
+          token:"maiaayahutokendene",
+        },
+        status: 200
+      };
+      
+      // Now you can access the status like this:
+      console.log(response.status); // Outputs: 200
+      
+      // Handle successful response
+      if (response.status === 200) {
+        alert('Success', 'Signed in successfully!');
+        // Save token to AsyncStorage
+        const _storeData = async () => {
+          try {
+            await AsyncStorage.setItem('TASK', response.data.token); // Save token with key 'TASK'
+            console.log('Token saved successfully!');
+          } catch (error) {
+            console.error('Error saving data to AsyncStorage:', error);
+          }
+        };
+      
+        await _storeData(); // Invoke the function to save the token
+        router.replace('/home'); // Navigate to the home screen
+      } else {
+        alert('Error', response.data.message || 'Invalid credentials.');
+      }
+    } catch (error) {
+      // Handle errors
+      console.error('Error signing in:', error);
+      alert(
+        'Error',
+        error.response?.data?.message || 'Something went wrong. Please try again later.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [form, validateForm]);
+
+
 
   return (
     <SafeAreaView>
@@ -114,7 +195,7 @@ const SignIn = () => {
           {/* Organization Sign In Button */}
           <CustomButton
             title="Sign In as Organization"
-            handlePress={Submit}
+            handlePress={SubmitOrg}
             containerStyles="mt-10 bg-smallText"
             isLoading={isSubmitting}
           />

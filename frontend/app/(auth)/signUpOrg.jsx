@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router'; // Expo Router for navigation
 import FormField from '../../components/formField'; // Import custom FormField component
 import CustomButton from '../../components/customButton'; // Import custom CustomButton component
 import '../../global.css'; // Tailwind CSS with NativeWind
+import axios from 'axios';
 
 const SignUpOrg = () => {
   const [form, setForm] = useState({
@@ -16,24 +17,58 @@ const SignUpOrg = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const Submit = () => {
-    // Basic validation
-    if (!form.name || !form.email || !form.password || !form.confirmPassword || !form.gstNumber) {
-      alert('All fields are required, including GST Number!');
-      return;
+  const validateForm = useCallback(() => {
+    const { name, email, password, confirmPassword, gstNumber } = form;
+
+    if (!name || !email || !password || !confirmPassword || !gstNumber) {
+      alert('All fields are required!');
+      return false;
     }
 
-    if (form.password !== form.confirmPassword) {
+    if (password !== confirmPassword) {
       alert('Passwords do not match!');
-      return;
+      return false;
     }
 
-    setIsSubmitting(true);
+    return true;
+  }, [form]);
 
-    // Form submission logic here
-    console.log('Form submitted:', form);
-    setIsSubmitting(false);
-  };
+  const handleSubmit = useCallback(async () => {
+    if (!validateForm()) return; // Ensure form validation is passed
+
+    setIsSubmitting(true); // Start the loading state
+    try {
+      // API call with axios
+      const response = await axios.post(
+        "https://cloudrunservice-254131401451.us-central1.run.app/org/signup",
+        {
+          "email": form.email,
+          "password": form.password,
+          "name": form.name,
+          "GST":form.gstNumber
+        }
+      );
+
+      console.log("Response from API:", response.data);
+
+      if (response.status === 200) {
+        alert("Sign up successful!");
+        setForm({ name: "", email: "", password: "", confirmPassword: "", gstNumber:""});
+        // Redirect to the next page
+        router.replace("/home");
+      }
+      else {
+        alert("Failed to sign up. Please try again.");
+      }
+    }
+    catch (error) {
+      console.error("Error during signup:", error);
+      alert("An error occurred. Please check your network connection and try again.");
+    }
+    finally {
+      setIsSubmitting(false);
+    }
+  }, [form, validateForm]);
 
   return (
     <SafeAreaView>
@@ -93,7 +128,7 @@ const SignUpOrg = () => {
           {/* Sign Up Button */}
           <CustomButton
             title="Sign Up"
-            handlePress={Submit}
+            handlePress={handleSubmit}
             containerStyles="mt-7 bg-options"
             isLoading={isSubmitting}
           />

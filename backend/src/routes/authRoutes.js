@@ -15,9 +15,9 @@ router.get('/user', (req, res) => {
 }); 
 
 router.post('/org/signup', signupOrg);
-
 router.post('/org/login', signinOrg);
 
+router.post('/user/signup', signup);
 router.post('/user/login', signin);
 
 router.get('/user/profile', authMiddleware, getProfile);
