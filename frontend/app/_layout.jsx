@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { SplashScreen, Stack } from 'expo-router';
-import { StatusBar } from 'react-native'; // Import StatusBar
+import { StatusBar } from 'react-native';
 import "../global.css";
 import { useFonts } from 'expo-font';
 
+// Prevent the splash screen from hiding automatically
 SplashScreen.preventAutoHideAsync();
 
 const RootLayout = () => {
+  // Load custom fonts
   const [fontsLoaded, error] = useFonts({
     "Poppins-Black": require("../assets/fonts/Poppins-Black.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
@@ -19,11 +21,13 @@ const RootLayout = () => {
     "Poppins-Thin": require("../assets/fonts/Poppins-Thin.ttf"),
   });
 
+  // Handle splash screen visibility
   useEffect(() => {
-    if (error) throw error;
-    if (fontsLoaded) SplashScreen.hideAsync();
+    if (error) throw error; // Throw error if fonts fail to load
+    if (fontsLoaded) SplashScreen.hideAsync(); // Hide splash screen when fonts are loaded
   }, [fontsLoaded, error]);
 
+  // Show nothing while fonts are loading
   if (!fontsLoaded && !error) return null;
 
   return (
@@ -33,12 +37,32 @@ const RootLayout = () => {
         barStyle="dark-content" // Black icons on light background
         backgroundColor="white" // Set the background color of the status bar
       />
-      
-      {/* Main Stack Navigator */}
+
+      {/* Main Navigation Stack */}
       <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown:false}} />
+        {/* Index Screen */}
+        <Stack.Screen
+          name="index"
+          options={{ headerShown: false }} // Hide the header for the main screen
+        />
+
+        {/* Authentication Stack */}
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            headerShown: false, // Hide the header for authentication screens
+            gestureEnabled: false, // Disables swiping back to this stack
+          }}
+        />
+
+        {/* Tabs Stack */}
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false, // Hide the header for tab-based screens
+            gestureEnabled: false, // Disables swiping back to this stack
+          }}
+        />
       </Stack>
     </>
   );
