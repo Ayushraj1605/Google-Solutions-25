@@ -1,19 +1,44 @@
 import { View, Text, TouchableOpacity, Image, StatusBar } from 'react-native';
 import React from 'react';
+import ButtonProfile from '../../components/buttonProfile';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, CommonActions } from '@react-navigation/native';
+
 
 const Profile = () => {
+  const navigation = useNavigation();
+  const OnClickHandler = async () => {
+    try {
+      // Clear all AsyncStorage data
+      await AsyncStorage.clear();
+      console.log('All AsyncStorage data has been cleared!');
+
+      // Reset navigation state and navigate to the SignIn screen in the Auth stack
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0, // Start at the first screen in the stack
+          routes: [
+            { name: '(auth)', params: { screen: 'signIn' } }, // Navigate to (auth)/signIn
+          ],
+        })
+      );
+    } catch (error) {
+      console.error('Error clearing AsyncStorage or navigating:', error);
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
-      
+
       {/* Green Header */}
-      <View style={{ 
+      <View style={{
         backgroundColor: '#609966',
         height: 120,
         paddingHorizontal: 24,
         paddingTop: 32
       }}>
-        <Text style={{ 
+        <Text style={{
           color: 'white',
           fontSize: 24,
           fontWeight: '600'
@@ -55,39 +80,17 @@ const Profile = () => {
       {/* Menu Options */}
       <View style={{ marginHorizontal: 16, marginTop: 24 }}>
         {/* Order History */}
-        <TouchableOpacity style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: 16,
-          backgroundColor: 'white',
-          borderRadius: 8,
-          marginBottom: 12,
-          elevation: 2,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.2,
-          shadowRadius: 2,
-        }}>
-          <Text style={{ flex: 1, fontSize: 16 }}>Order History</Text>
-          <Text style={{ fontSize: 24, color: '#666666' }}>›</Text>
-        </TouchableOpacity>
+        <ButtonProfile
+          title="Order History"
+          onPress={OnClickHandler}
+        />
 
         {/* Sign Out */}
-        <TouchableOpacity style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          padding: 16,
-          backgroundColor: 'white',
-          borderRadius: 8,
-          elevation: 2,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.2,
-          shadowRadius: 2,
-        }}>
-          <Text style={{ flex: 1, fontSize: 16 }}>Sign Out</Text>
-          <Text style={{ fontSize: 24, color: '#666666' }}>›</Text>
-        </TouchableOpacity>
+        <ButtonProfile
+          title="Sign Out"
+          handlePress={OnClickHandler}
+        />
+
       </View>
     </View>
   );
