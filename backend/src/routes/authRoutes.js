@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, signin, getProfile } from '../controllers/authController.js';
+import { signup, signin, getProfile, locations } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -21,6 +21,8 @@ router.post('/user/signup', signup);
 router.post('/user/login', signin);
 
 router.get('/user/profile', authMiddleware, getProfile);
+
+router.get('/user/orgLocations', locations)
 
 router.get('/users', async (req, res) => {
     try {

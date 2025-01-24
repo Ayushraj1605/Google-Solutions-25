@@ -1,12 +1,12 @@
-import { View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, TouchableOpacity, Image, StatusBar } from 'react-native';
 import React from 'react';
-import CustomButton from '../../components/customButton';
+import ButtonProfile from '../../components/buttonProfile';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 
-const Profile = () => {
-  const navigation = useNavigation(); // Ensure the navigation prop is available
 
+const Profile = () => {
+  const navigation = useNavigation();
   const OnClickHandler = async () => {
     try {
       // Clear all AsyncStorage data
@@ -29,13 +29,9 @@ const Profile = () => {
 
   return (
     <View>
-      <CustomButton
-        title="Log Out"
-        handlePress={OnClickHandler}
-        containerStyles="mt-10 bg-smallText" // Apply custom styles if needed
-      />
+      <Text>profiless</Text>
     </View>
   );
 };
 
-export default Profile;
+export default profile
