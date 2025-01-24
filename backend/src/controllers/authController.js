@@ -65,7 +65,7 @@ export const signupOrg = async (req, res) => {
             process.env.JWT_SECRET
         );
 
-        return res.status(201).json({
+        return res.status(200).json({
             message: "Organization registered successfully!",
             userId: docRef.id,
             token
@@ -221,6 +221,7 @@ export const locations = async (req, res) => {
             const data = doc.data();
             return {
                 name: data.name,
+                Address: data.Address,
                 latitude: data.latitude,
                 longitude: data.longitude
             };
