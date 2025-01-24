@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 
 
-const Profile = () => {
+const profile = () => {
   const navigation = useNavigation();
   const OnClickHandler = async () => {
     try {
@@ -96,4 +96,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default profile;

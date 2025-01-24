@@ -1,19 +1,20 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Text, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router'; // Expo Router for navigation
-import FormField from '../../components/formField'; // Import custom FormField component
-import CustomButton from '../../components/customButton'; // Import custom CustomButton component
-import '../../global.css'; // Tailwind CSS with NativeWind
-import axios from 'axios';
+import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import FormField from '../../components/formField';
+import CustomButton from '../../components/customButton';
+import '../../global.css';
 
 const SignUpOrg = () => {
+  const router = useRouter();
   const [form, setForm] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
-    gstNumber: '', // Add GST Number to the form state
+    gstNumber: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,6 +23,11 @@ const SignUpOrg = () => {
 
     if (!name || !email || !password || !confirmPassword || !gstNumber) {
       alert('All fields are required!');
+      return false;
+    }
+
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters');
       return false;
     }
 
@@ -34,50 +40,29 @@ const SignUpOrg = () => {
   }, [form]);
 
   const handleSubmit = useCallback(async () => {
-    if (!validateForm()) return; // Ensure form validation is passed
+    if (!validateForm()) return;
 
-    setIsSubmitting(true); // Start the loading state
+    setIsSubmitting(true);
     try {
-      // API call with axios
-      const response = await axios.post(
-        "https://cloudrunservice-254131401451.us-central1.run.app/org/signup",
-        {
-          "email": form.email,
-          "password": form.password,
-          "name": form.name,
-          "GST":form.gstNumber
-        }
-      );
-
-      console.log("Response from API:", response.data);
-
-      if (response.status === 200) {
-        alert("Sign up successful!");
-        setForm({ name: "", email: "", password: "", confirmPassword: "", gstNumber:""});
-        // Redirect to the next page
-        router.replace("/home");
-      }
-      else {
-        alert("Failed to sign up. Please try again.");
-      }
-    }
-    catch (error) {
-      console.error("Error during signup:", error);
-      alert("An error occurred. Please check your network connection and try again.");
-    }
-    finally {
+      // Store partial signup data
+      await AsyncStorage.setItem('orgSignupData', JSON.stringify(form));
+      
+      // Navigate to address entry page
+      router.push("/orgadd");
+    } catch (error) {
+      console.error("Error saving signup data:", error);
+      alert("Failed to proceed. Please try again.");
+    } finally {
       setIsSubmitting(false);
     }
-  }, [form, validateForm]);
+  }, [form, validateForm, router]);
 
   return (
     <SafeAreaView>
       <ScrollView>
         <View className="w-full flex-1 justify-center items-center min-h-full px-4 my-3">
-          {/* Heading */}
           <Text className="text-5xl font-semibold self-start">Sign Up</Text>
 
-          {/* Name Field */}
           <FormField
             title="Name"
             value={form.name}
@@ -86,7 +71,6 @@ const SignUpOrg = () => {
             placeholder="Enter name here"
           />
 
-          {/* Email Field */}
           <FormField
             title="Email"
             value={form.email}
@@ -96,7 +80,6 @@ const SignUpOrg = () => {
             keyboardType="email-address"
           />
 
-          {/* Password Field */}
           <FormField
             title="Password"
             value={form.password}
@@ -106,7 +89,6 @@ const SignUpOrg = () => {
             secureTextEntry={true}
           />
 
-          {/* Confirm Password Field */}
           <FormField
             title="Confirm Password"
             value={form.confirmPassword}
@@ -116,18 +98,16 @@ const SignUpOrg = () => {
             secureTextEntry={true}
           />
 
-          {/* GST Number Field */}
           <FormField
             title="GST Number"
-            value={form.gstNumber} // Bind to form.gstNumber
-            handleChangeText={(e) => setForm({ ...form, gstNumber: e })} // Update form state
+            value={form.gstNumber}
+            handleChangeText={(e) => setForm({ ...form, gstNumber: e })}
             placeholder="Enter your GST number here"
             otherStyles="mt-2"
           />
 
-          {/* Sign Up Button */}
           <CustomButton
-            title="Sign Up"
+            title="NEXT"
             handlePress={handleSubmit}
             containerStyles="mt-7 bg-options"
             isLoading={isSubmitting}
