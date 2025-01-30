@@ -27,7 +27,7 @@ const Loader = () => {
     <View className="w-full h-full justify-center items-center bg-black">
       <Animated.Image
         key="loader-image" // Provide a unique key
-        source={images.Logo}
+        source={images.logo}
         resizeMode="contain"
         className="w-60 h-60 rounded-xl shadow-lg"
         style={{
