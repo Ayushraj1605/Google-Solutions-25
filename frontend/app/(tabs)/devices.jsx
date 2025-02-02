@@ -1,8 +1,8 @@
 import { View, Text, ScrollView } from 'react-native'
-import React from 'react'
-import '../../global.css'
-import Cards from '../../components/devicecards'
-import SearchBar from '../../components/searchbar'
+import React from 'react';
+import '../../global.css';
+import Cards from '../../components/devicecards';
+import SearchBar from '../../components/searchbar';
 
 const devices = () => {
   return (

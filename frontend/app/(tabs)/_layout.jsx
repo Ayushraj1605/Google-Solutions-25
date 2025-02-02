@@ -4,6 +4,9 @@ import { Tabs, Redirect, Stack } from 'expo-router'
 import Home from '../../assets/svg/home';
 import Blogs from '../../assets/svg/blogs';
 import icons from '../../constants';
+import Organisations from '../../assets/svg/organisations';
+import Devices from '../../assets/svg/devices';
+import Profile from '../../assets/svg/profile';
 import '../../global.css'
 
 const TabIcon = (icon, color, name, focused) => {
@@ -57,7 +60,9 @@ const _layout = () => {
                     options={{
                         title: 'Devices',
                         headerShown: false,
-                        
+                        tabBarIcon: ({ color, focused, name }) => (
+                            <Devices></Devices>
+                        ),
                     }}
                     
                 />
@@ -67,7 +72,9 @@ const _layout = () => {
                     options={{
                         title: 'Institutions',
                         headerShown: false,
-                       
+                        tabBarIcon: ({ color, focused, name }) => (
+                            <Organisations></Organisations>
+                        ),
                     }}
 
                 />
@@ -77,7 +84,9 @@ const _layout = () => {
                     options={{
                         title: 'Profile',
                         headerShown: false,
-                        
+                        tabBarIcon: ({ color, focused, name }) => (
+                        <Profile></Profile> 
+                        ),
                     }}
 
                 />
