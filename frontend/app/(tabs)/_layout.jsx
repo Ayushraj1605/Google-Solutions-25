@@ -1,7 +1,9 @@
 import { Text, View, Image } from 'react-native'
 import React from 'react'
 import { Tabs, Redirect, Stack } from 'expo-router'
-import { icons } from '../../constants';
+import Home from '../../assets/svg/home';
+import Blogs from '../../assets/svg/blogs';
+import icons from '../../constants';
 import '../../global.css'
 
 const TabIcon = (icon, color, name, focused) => {
@@ -30,12 +32,7 @@ const _layout = () => {
                         headerBackTitleVisible: false, // Hide the back button title
                         headerTitleAlign: '',
                         tabBarIcon: ({ color, focused, name }) => (
-                            <TabIcon
-                                icon={icons.home}
-                                color={color}
-                                name="Home"
-                                focused={focused}
-                            />
+                            <Home></Home>
                         ),
                     }}
                 />
@@ -48,8 +45,11 @@ const _layout = () => {
                         headerTitle: 'AppName', // Remove the title
                         headerBackTitleVisible: false, // Hide the back button title
                         headerTitleAlign: '',
+                        tabBarIcon: ({ color, focused, name }) => (
+                            <Blogs></Blogs>
+                        ),
                     }}
-
+                    
                 />
 
                 <Tabs.Screen
@@ -57,8 +57,9 @@ const _layout = () => {
                     options={{
                         title: 'Devices',
                         headerShown: false,
+                        
                     }}
-
+                    
                 />
 
                 <Tabs.Screen
@@ -66,6 +67,7 @@ const _layout = () => {
                     options={{
                         title: 'Institutions',
                         headerShown: false,
+                       
                     }}
 
                 />
@@ -75,6 +77,7 @@ const _layout = () => {
                     options={{
                         title: 'Profile',
                         headerShown: false,
+                        
                     }}
 
                 />
