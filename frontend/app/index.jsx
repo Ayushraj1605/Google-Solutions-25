@@ -40,7 +40,7 @@ const Index = () => {
       className={`h-full ${isLoading ? 'bg-black' : 'bg-white'}`} // Dynamic background color
     >
       {/* Change status bar color based on isLoading */}
-      <StatusBar barStyle={isLoading ? 'light-content' : 'dark-content'} backgroundColor={isLoading ? 'black' : 'white'} />
+      <StatusBar barStyle={isLoading ? 'light-content' : 'dark-content'} backgroundColor={isLoading ? 'black' : '#609966'} />
 
       <ScrollView contentContainerStyle={{ height: '100%', justifyContent: 'center' }}>
         <View className="w-full justify-center items-center h-full px-4">

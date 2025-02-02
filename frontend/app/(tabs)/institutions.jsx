@@ -125,18 +125,6 @@ const Institutions = () => {
       }, 1000);
     }
   };
-  // In the top bar section
-  <TouchableOpacity
-    onPress={() => {
-      setShowRoute(false);
-      setSelectedInstitution(null);
-      setDistance(null);
-      setDuration(null);
-    }}
-    className="p-2"
-  >
-    <Icon name="arrow-back" size={24} color="#007bff" />
-  </TouchableOpacity>
 
   return (
     <View className="flex-1">
@@ -198,15 +186,15 @@ const Institutions = () => {
           )}
         </MapView>
       ) : (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color="#0000ff" />
-          <Text>Loading map...</Text>
+          <Text className="text-lg mt-2">Loading map...</Text>
         </View>
       )}
 
       {/* Directions Info Bar */}
       {showRoute && (
-        <View className="absolute top-0 left-0 right-0 bg-white flex-row items-center justify-between p-3 shadow-md">
+        <View className="absolute top-0 left-0 right-0 bg-white flex-row items-center justify-between p-4 shadow-md">
           <TouchableOpacity
             onPress={() => setShowRoute(false)}
             className="p-2"
@@ -215,7 +203,7 @@ const Institutions = () => {
           </TouchableOpacity>
 
           <View className="flex-row items-center">
-            <Text className="text-base font-bold mr-2">
+            <Text className="text-base font-bold text-gray-700">
               {distance} | {duration}
             </Text>
           </View>
@@ -229,14 +217,12 @@ const Institutions = () => {
       {!showRoute && (
         <TouchableOpacity
           onPress={fetchNearbyInstitutions}
-          className="absolute bottom-5 self-center bg-blue-500 p-3 rounded-lg"
+          className="absolute bottom-5 self-center bg-blue-500 p-4 rounded-lg shadow-lg"
         >
           {loading ? (
             <ActivityIndicator size="small" color="#ffffff" />
           ) : (
-            <Text className="text-white font-bold">
-              Find Nearby Institutions
-            </Text>
+            <Text className="text-white font-bold text-lg">Find Nearby Institutions</Text>
           )}
         </TouchableOpacity>
       )}
@@ -251,24 +237,22 @@ const Institutions = () => {
           <View className="bg-white p-5 rounded-t-2xl">
             {selectedInstitution && (
               <>
-                <Text className="text-lg font-bold">
-                  {selectedInstitution.name}
-                </Text>
+                <Text className="text-xl font-semibold">{selectedInstitution.name}</Text>
                 {distance && (
-                  <Text className="mt-2">Distance: {distance}</Text>
+                  <Text className="mt-2 text-gray-700">Distance: {distance}</Text>
                 )}
                 <View className="flex-row mt-4 justify-between">
                   <TouchableOpacity
                     onPress={() => setSelectedInstitution(null)}
-                    className="flex-1 mr-2 bg-red-500 p-3 rounded-lg"
+                    className="flex-1 mr-2 bg-red-500 p-3 rounded-lg shadow-md"
                   >
-                    <Text className="text-white text-center">Close</Text>
+                    <Text className="text-white text-center font-semibold">Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={handleGetDirections}
-                    className="flex-1 ml-2 bg-blue-500 p-3 rounded-lg"
+                    className="flex-1 ml-2 bg-blue-500 p-3 rounded-lg shadow-md"
                   >
-                    <Text className="text-white text-center">
+                    <Text className="text-white text-center font-semibold">
                       Get Directions
                     </Text>
                   </TouchableOpacity>
