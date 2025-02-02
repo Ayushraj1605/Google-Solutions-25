@@ -15,10 +15,10 @@ const Cards = () => (
         {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
         <Card.Actions>
             <Button style={styles.button1}>View Details</Button>
-            <Button style={styles.button2}>Recycle</Button>
+            <Button style={styles.button2}>Recycle </Button>
         </Card.Actions>
     </Card>
-);
+)
 
 export default Cards
 
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
         color: 'black',
     },
     button2:{
-        backgroundColor: '#609966',
         color: 'black',
+        backgroundColor:'green'
     },
 })

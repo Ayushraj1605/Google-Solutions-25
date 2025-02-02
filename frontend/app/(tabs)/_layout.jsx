@@ -1,4 +1,4 @@
-import { Text, View, Image } from 'react-native'
+import { View, Image } from 'react-native'
 import React from 'react'
 import { Tabs, Redirect, Stack } from 'expo-router'
 import Home from '../../assets/svg/home';
@@ -16,7 +16,7 @@ const TabIcon = (icon, color, name, focused) => {
                 source={icon}
                 resizeMode='contain'
                 tintColor={color}
-                className="w-6 h-6"
+                className="w-12 h-12"
             />
         </View>
     )
