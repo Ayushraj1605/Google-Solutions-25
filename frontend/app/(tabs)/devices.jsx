@@ -65,9 +65,8 @@ const devices = ({
         visible={visible}
         animateFrom={'left'}
         iconMode={'static'}
-        color="white"
-        uppercaseLabel={false}
-        labelStyle={{ color: '#FFFFFF' }}
+        iconColor="#FFFFFF"
+        labelStyle={styles.fabLabel}
         style={[styles.fabStyle, style, fabStyle]}
       />
     </View>
@@ -83,5 +82,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     backgroundColor: "#609966",
     shadowColor: "#000",
+    color: "#FFFFFF",
+  },
+  fabLabel: {
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
 });
