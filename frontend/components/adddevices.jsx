@@ -1,10 +1,5 @@
-import React from 'react'
-import '../../global.css'
-import Cards from '../../components/devicecards'
-import SearchBar from '../../components/searchbar'
-// import AddDeviceButton from '../../components/adddevices'
+import React from 'react';
 import {
-  View,
   StyleProp,
   ViewStyle,
   Animated,
@@ -17,7 +12,7 @@ import {
 } from 'react-native';
 import { AnimatedFAB } from 'react-native-paper';
 
-const devices = ({
+const AddDeviceButton = ({
   animatedValue,
   visible,
   extended,
@@ -26,7 +21,6 @@ const devices = ({
   style,
   iconMode,
 }) => {
-
   const [isExtended, setIsExtended] = React.useState(true);
 
   const isIOS = Platform.OS === 'ios';
@@ -41,51 +35,35 @@ const devices = ({
   const fabStyle = { [animateFrom]: 16 };
 
   return (
-    <View className="w-full h-full items-center bg-white">
-      <SearchBar />
-      <ScrollView onScroll={onScroll} contentContainerStyle={{ alignItems: 'center' }} className="flex w-full h-full">
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
+    <SafeAreaView style={styles.container}>
+      <ScrollView onScroll={onScroll}>
+        {[...new Array(100).keys()].map((_, i) => (
+          <Text>{i}</Text>
+        ))}
       </ScrollView>
       <AnimatedFAB
         icon={'plus'}
-        label={'  Add Device'}
+        label={'Label'}
         extended={isExtended}
         onPress={() => console.log('Pressed')}
         visible={visible}
-        animateFrom={'left'}
+        animateFrom={'right'}
         iconMode={'static'}
-        iconColor="#FFFFFF"
-        labelStyle={styles.fabLabel}
         style={[styles.fabStyle, style, fabStyle]}
       />
-    </View>
-  )
-}
+    </SafeAreaView>
+  );
+};
 
-export default devices
+export default AddDeviceButton;
 
 const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+  },
   fabStyle: {
     bottom: 16,
-    left: 16,
+    right: 16,
     position: 'absolute',
-    backgroundColor: "#609966",
-    shadowColor: "#000",
-    color: "#FFFFFF",
-  },
-  fabLabel: {
-    color: '#FFFFFF',
-    fontWeight: '500',
   },
 });
