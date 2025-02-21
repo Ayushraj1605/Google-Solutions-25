@@ -3,7 +3,6 @@ import React from 'react'
 import { Tabs, Redirect, Stack } from 'expo-router'
 import Home from '../../assets/svg/home';
 import Blogs from '../../assets/svg/blogs';
-import icons from '../../constants';
 import Organisations from '../../assets/svg/organisations';
 import Devices from '../../assets/svg/devices';
 import Profile from '../../assets/svg/profile';
@@ -41,10 +40,10 @@ const _layout = () => {
                 />
 
                 <Tabs.Screen
-                    name='blogs'
+                    name='leaderboard'
                     options={{
-                        title: 'Blogs',
-                        headerShown: true, // Show the header
+                        title: 'Leaderboard',
+                        headerShown: false, // Show the header
                         headerTitle: 'AppName', // Remove the title
                         headerBackTitleVisible: false, // Hide the back button title
                         headerTitleAlign: '',

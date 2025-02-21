@@ -2,22 +2,12 @@ import React from 'react'
 import '../../global.css'
 import Cards from '../../components/devicecards'
 import SearchBar from '../../components/searchbar'
-// import AddDeviceButton from '../../components/adddevices'
-import {
-  View,
-  StyleProp,
-  ViewStyle,
-  Animated,
-  StyleSheet,
-  Platform,
-  ScrollView,
-  Text,
-  SafeAreaView,
-  I18nManager,
-} from 'react-native';
+import {View, StyleSheet, Platform, ScrollView } from 'react-native';
 import { AnimatedFAB } from 'react-native-paper';
+import { router } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 
-const devices = ({
+const Devices = ({
   animatedValue,
   visible,
   extended,
@@ -26,7 +16,7 @@ const devices = ({
   style,
   iconMode,
 }) => {
-
+  const navigation = useNavigation();
   const [isExtended, setIsExtended] = React.useState(true);
 
   const isIOS = Platform.OS === 'ios';
@@ -40,40 +30,35 @@ const devices = ({
 
   const fabStyle = { [animateFrom]: 16 };
 
+  const handlePress = () => {
+    router.push('/deviceinfo');
+  };
+  
   return (
     <View className="w-full h-full items-center bg-white">
       <SearchBar />
       <ScrollView onScroll={onScroll} contentContainerStyle={{ alignItems: 'center' }} className="flex w-full h-full">
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
-        <Cards />
+        {[...new Array(10).keys()].map((_, i) => (
+          <Cards />
+        ))}
       </ScrollView>
       <AnimatedFAB
         icon={'plus'}
         label={'  Add Device'}
         extended={isExtended}
-        onPress={() => console.log('Pressed')}
+        onPress={() => handlePress()}
         visible={visible}
         animateFrom={'left'}
         iconMode={'static'}
-        iconColor="#FFFFFF"
-        labelStyle={styles.fabLabel}
+        color="white"
+        uppercaseLabel={false}
+        labelStyle={{ color: '#FFFFFF' }}
         style={[styles.fabStyle, style, fabStyle]}
       />
     </View>
   )
 }
-
-export default devices
+export default Devices
 
 const styles = StyleSheet.create({
   fabStyle: {
@@ -81,11 +66,5 @@ const styles = StyleSheet.create({
     left: 16,
     position: 'absolute',
     backgroundColor: "#609966",
-    shadowColor: "#000",
-    color: "#FFFFFF",
-  },
-  fabLabel: {
-    color: '#FFFFFF',
-    fontWeight: '500',
   },
 });

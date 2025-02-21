@@ -3,7 +3,7 @@ import React from 'react'
 import '../../global.css'
 import Segments from '../../components/segments'
 
-const home = () => {
+const Home = () => {
   return (
     <View className="flex-1 items-center">
       <Segments />
@@ -11,4 +11,4 @@ const home = () => {
   )
 }
 
-export default home
+export default Home
