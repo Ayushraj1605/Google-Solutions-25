@@ -63,6 +63,13 @@ const RootLayout = () => {
             gestureEnabled: false, // Disables swiping back to this stack
           }}
         />
+        <Stack.Screen
+          name="(pages)"
+          options={{
+            headerShown: false, // Hide the header for tab-based screens
+            gestureEnabled: false, // Disables swiping back to this stack
+          }}
+        />
       </Stack>
     </>
   );
