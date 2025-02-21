@@ -2,7 +2,7 @@ import { View, Image } from 'react-native'
 import React from 'react'
 import { Tabs, Redirect, Stack } from 'expo-router'
 import Home from '../../assets/svg/home';
-import icons from '../../constants';
+import Blogs from '../../assets/svg/blogs';
 import Organisations from '../../assets/svg/organisations';
 import Devices from '../../assets/svg/devices';
 import Profile from '../../assets/svg/profile';
@@ -30,13 +30,28 @@ const _layout = () => {
                     options={{
                         title: 'Home',
                         headerShown: true, // Show the header
-                        headerTitle: 'Home', // Remove the title
+                        headerTitle: 'AppName', // Remove the title
                         headerBackTitleVisible: false, // Hide the back button title
                         headerTitleAlign: '',
                         tabBarIcon: ({ color, focused, name }) => (
                             <Home></Home>
                         ),
                     }}
+                />
+
+                <Tabs.Screen
+                    name='leaderboard'
+                    options={{
+                        title: 'Leaderboard',
+                        headerShown: false, // Show the header
+                        headerTitle: 'AppName', // Remove the title
+                        headerBackTitleVisible: false, // Hide the back button title
+                        headerTitleAlign: '',
+                        tabBarIcon: ({ color, focused, name }) => (
+                            <Blogs></Blogs>
+                        ),
+                    }}
+                    
                 />
 
                 <Tabs.Screen

@@ -11,6 +11,7 @@ import {
   I18nManager,
 } from 'react-native';
 import { AnimatedFAB } from 'react-native-paper';
+import Cards from './devicecards';
 
 const AddDeviceButton = ({
   animatedValue,
@@ -35,20 +36,23 @@ const AddDeviceButton = ({
   const fabStyle = { [animateFrom]: 16 };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView onScroll={onScroll}>
-        {[...new Array(100).keys()].map((_, i) => (
-          <Text>{i}</Text>
+    <SafeAreaView className="w-full h-full items-center bg-white">
+      <ScrollView onScroll={onScroll} contentContainerStyle={{ alignItems: 'center' }} className="flex w-full h-full">
+        {[...new Array(10).keys()].map((_, i) => (
+          <Cards />
         ))}
       </ScrollView>
       <AnimatedFAB
         icon={'plus'}
-        label={'Label'}
+        label={'  Add Device'}
         extended={isExtended}
         onPress={() => console.log('Pressed')}
         visible={visible}
-        animateFrom={'right'}
+        animateFrom={'left'}
         iconMode={'static'}
+        color="white"
+        uppercaseLabel={false}
+        labelStyle={{ color: '#FFFFFF' }}
         style={[styles.fabStyle, style, fabStyle]}
       />
     </SafeAreaView>
@@ -58,12 +62,10 @@ const AddDeviceButton = ({
 export default AddDeviceButton;
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-  },
   fabStyle: {
     bottom: 16,
-    right: 16,
+    left: 16,
     position: 'absolute',
+    backgroundColor: "#609966",
   },
 });

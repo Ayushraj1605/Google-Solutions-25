@@ -3,13 +3,12 @@ import React from 'react'
 import '../../global.css'
 import Segments from '../../components/segments'
 
-const home = () => {
+const Home = () => {
   return (
     <View className="items-center">
       <Segments />
-      
     </View>
   )
 }
 
-export default home
+export default Home
