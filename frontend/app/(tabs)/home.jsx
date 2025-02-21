@@ -5,8 +5,9 @@ import Segments from '../../components/segments'
 
 const home = () => {
   return (
-    <View className="flex-1 items-center">
+    <View className="items-center">
       <Segments />
+      
     </View>
   )
 }

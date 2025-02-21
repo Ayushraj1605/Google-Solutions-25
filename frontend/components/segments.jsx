@@ -1,8 +1,11 @@
 import * as React from 'react';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
+import Cards from './blogcards';
+import NewsCards from './Newscards';
 
-const Segments = () => {
+const Segments = ({name}) => {
   const [value, setValue] = React.useState('');
 
   return (
@@ -12,20 +15,43 @@ const Segments = () => {
         onValueChange={setValue}
         buttons={[
           {
-            value: 'walk',
-            label: 'Walking',
+            value: 'Blogs',
+            label: 'Blogs',
           },
           {
-            value: 'train',
-            label: 'Transit',
+            value: 'News',
+            label: 'News',
           },
-          { 
-            value: 'drive', 
-            label: 'Driving' 
-        },
+          {
+            value: 'Facts',
+            label: 'Facts',
+          },
         ]}
         style={styles.buttons}
       />
+      
+        <View className="items-center pt-4 w-full h-full">
+          {value === 'Blogs' ? (
+            <Text>
+              <ScrollView className='p-2 w-full overflow-hidden'> 
+                <Cards></Cards>
+                <Cards></Cards>
+                <Cards></Cards>
+              </ScrollView>
+            </Text>
+          ) : value === 'News' ? (
+            <Text>
+              <ScrollView>
+                <NewsCards></NewsCards>
+                <NewsCards></NewsCards>
+                <NewsCards></NewsCards>
+              </ScrollView>
+            </Text>
+          ) : value === 'Facts' ? (
+            <Text>Displaying Facts</Text>
+          ) : null}
+        </View>
+
     </SafeAreaView>
   );
 };
