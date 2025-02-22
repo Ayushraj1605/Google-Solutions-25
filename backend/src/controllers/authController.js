@@ -64,11 +64,10 @@ export const signupOrg = async (req, res) => {
             { id: docRef.id, email, name },
             process.env.JWT_SECRET
         );
-
         return res.status(200).json({
             message: "Organization registered successfully!",
             userId: docRef.id,
-            token
+            Token
         });
     } catch (err) {
         console.error("Signup error:", err.message);
@@ -107,11 +106,10 @@ export const signinOrg = async (req, res) => {
             { id: orgDoc.id, email: orgData.email, name: orgData.name },
             process.env.JWT_SECRET,
         );
-
         return res.status(200).json({
             message: "Organization successfully signed in!",
             name: orgData.name,
-            token,
+            Token,
         });
     } catch (error) {
         return res.status(500).json({
