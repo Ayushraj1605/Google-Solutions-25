@@ -48,6 +48,7 @@ const SignIn = () => {
       
       // Now you can access the status like this:
       console.log(response.status); // Outputs: 200
+      console.log(response.data.userId);
       
       // Handle successful response
       if (response.status === 200) {
@@ -55,7 +56,8 @@ const SignIn = () => {
         // Save token to AsyncStorage
         const _storeData = async () => {
           try {
-            await AsyncStorage.setItem('TASK', "user "+response.data.token); // Save token with key 'TASK'
+            await AsyncStorage.setItem('TOKEN', "user "+response.data.token); // Save token with key 'TASK'
+            await AsyncStorage.setItem('ID',response.data.userId);
             console.log('Token saved successfully!');
           } catch (error) {
             console.error('Error saving data to AsyncStorage:', error);
@@ -112,7 +114,8 @@ const SignIn = () => {
         // Save token to AsyncStorage
         const _storeData = async () => {
           try {
-            await AsyncStorage.setItem('TASK', "org "+response.data.token); // Save token with key 'TASK'
+            await AsyncStorage.setItem('TOKEN', "org "+response.data.token); // Save token with key 'TASK'
+            await AsyncStorage.setItem('ID',response.data.userId);
             console.log('Token saved successfully!');
           } catch (error) {
             console.error('Error saving data to AsyncStorage:', error);

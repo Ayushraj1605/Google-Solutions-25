@@ -3,6 +3,7 @@ import React from 'react';
 import ButtonProfile from '../../components/buttonProfile';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
+import ProfileImage from '../../components/profileAvatar';
 
 
 const profile = () => {
@@ -61,12 +62,13 @@ const profile = () => {
         shadowRadius: 3.84,
       }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{
+          {/* <View style={{
             width: 60,
             height: 60,
             borderRadius: 30,
             backgroundColor: '#E0E0E0'
-          }} />
+          }} /> */}
+          <ProfileImage name="Surbhi Dighe" />
           <View style={{ marginLeft: 16, flex: 1 }}>
             <Text style={{ fontSize: 18, fontWeight: '600' }}>Ayush Raj</Text>
             <Text style={{ color: '#666666' }}>theboys.ewaste@gmail.com</Text>

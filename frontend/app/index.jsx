@@ -24,7 +24,7 @@ const Index = () => {
 
   const _retrieveData = async () => {
     try {
-      const value = await AsyncStorage.getItem('TASK'); // Retrieve token saved during SignIn
+      const value = await AsyncStorage.getItem('TOKEN'); // Retrieve token saved during SignIn
       if (value !== null) {
         console.log('Retrieved token:', value); // Log the retrieved value
 
