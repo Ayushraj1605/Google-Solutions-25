@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Stream</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #video {
+            width: 640px;
+            height: auto;
+            border: 2px solid black;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Webcam Stream</h1>
+    <img id="video" src="/video_feed" alt="Webcam Feed">
+    <div>
+        <button onclick="playVideo()">Play</button>
+        <button onclick="pauseVideo()">Pause</button>
+    </div>
+
+    <script>
+        let videoElement = document.getElementById('video');
+        let videoStream = '/video_feed';
+
+        function playVideo() {
+            videoElement.src = videoStream;
+        }
+
+        function pauseVideo() {
+            videoElement.src = '';  // Stop the video feed
+        }
+    </script>
+</body>
+</html>

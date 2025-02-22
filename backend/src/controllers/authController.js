@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { collection, query, where, getDocs, addDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, Timestamp, doc } from "firebase/firestore";
 
 // Sign-In Function
 
@@ -167,6 +167,7 @@ export const signup = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const docRef = await addDoc(usersCollection, {
+            userId: docRef.id,
             username: username,
             email: email,
             password: hashedPassword,
@@ -236,3 +237,153 @@ export const locations = async (req, res) => {
         });
     }
 };
+
+export const addDevice = async (req, res) => 
+{
+    const {deviceType, deviceName, userId} = req.body;
+    if (!deviceType || !deviceName) {
+        return res.status(400).json({
+            message: "deviceType and deviceName are required"
+        });
+    }
+    
+    try
+    {
+        const deviceCollection = collection(db, "Devices");
+        const deviceDoc = await addDoc(deviceCollection, {
+            deviceType: deviceType,
+            deviceName: deviceName,
+            userId : userId,
+            createdAt: Timestamp.fromDate(new Date())
+        });
+
+        return res.status(200).json({
+            message: "Device added successfully!",
+            deviceId: deviceDoc.id
+        });
+    }
+    catch(err)
+    {
+        console.error("Error adding device:", err);
+        return res.status(500).json({
+            message: "Error adding device",
+            error: err.message
+        });
+    }
+}
+
+export const getDevices = async (req, res) => 
+{
+    const { userId } = req.query;
+
+    if (!userId) {
+        return res.status(400).json({
+            message: "userId is required"
+        });
+    }
+
+    try {
+        const devicesCollection = collection(db, "devices");
+        const devicesQuery = query(devicesCollection, where("userId", "==", userId));
+        const querySnapshot = await getDocs(devicesQuery);
+
+        const userDevices = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                deviceId: doc.id,
+                deviceType: data.deviceType,
+                deviceName: data.deviceName,
+                createdAt: data.createdAt
+            };
+        });
+
+        return res.status(200).json({
+            message: "User devices retrieved successfully!",
+            devices: userDevices
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Error retrieving user devices",
+            error: err.message
+        });
+    }
+}
+
+export const orders = async (req, res) => {
+    const { userId, deviceId, organizationId } = req.body;
+
+    if (!userId) {
+        return res.status(400).json({
+            message: "userId is required"
+        });
+    }
+
+    try {
+        // Reference the user document
+        const userDoc = doc(db, "users", userId);
+        
+        // Create orders subcollection inside the user document
+        const ordersCollection = collection(userDoc, "orders");
+        
+        // Add a new order to the subcollection
+        const orderDoc = await addDoc(ordersCollection, {
+            userId: userId,
+            deviceId: deviceId,
+            organizationId: organizationId,
+            createdAt: Timestamp.fromDate(new Date()),
+            status: "pending"
+            // Add other order details as needed
+        });
+
+        return res.status(200).json({
+            message: "Order created successfully!",
+            orderId: orderDoc.id
+        });
+
+    } catch (err) {
+        console.error("Error creating order:", err);
+        return res.status(500).json({
+            message: "Error creating order",
+            error: err.message
+        });
+    }
+}
+
+export const getOrders = async (req, res) => 
+{
+    const { userId } = req.query;
+
+    if (!userId) {
+        return res.status(400).json({
+            message: "userId is required"
+        });
+    }
+
+    try {
+        const userDoc = doc(db, "users", userId);
+        const ordersCollection = collection(userDoc, "orders");
+        const ordersSnapshot = await getDocs(ordersCollection);
+
+        const userOrders = ordersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                orderId: doc.id,
+                userId: data.userId,
+                deviceId: data.deviceId,
+                organizationId: data.organizationId,
+                createdAt: data.createdAt,
+                status: data.status
+            };
+        });
+
+        return res.status(200).json({
+            message: "User orders retrieved successfully!",
+            orders: userOrders
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Error retrieving user orders",
+            error: err.message
+        });
+    }
+}
