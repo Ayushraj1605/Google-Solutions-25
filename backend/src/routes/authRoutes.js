@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, signin, getProfile, locations } from '../controllers/authController.js';
+import { signup, signin, getProfile, locations, orders, getOrders, getDevices, addDevice } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -14,16 +14,23 @@ router.get('/user', (req, res) => {
     });
 }); 
 
+/* Org Endpoints */
 router.post('/org/signup', signupOrg);
 router.post('/org/login', signinOrg);
 
+/* user Endpoints */
 router.post('/user/signup', signup);
-router.post('/user/login', signin);
-
+router.post('/user/login', signin);     
+router.post('/user/order', orders);
 router.get('/user/profile', authMiddleware, getProfile);
+router.get('/user/orgLocations', locations);
 
-router.get('/user/orgLocations', locations)
+/* Adding Devices endpoints */
+router.post('/user/addDevice', addDevice);
+router.get('/user/getDevices', getDevices);
 
+/* order Endpoints */
+router.get('/user/getOrders', getOrders);
 router.get('/users', async (req, res) => {
     try {
         const userCollection = collection(db, "users");  
