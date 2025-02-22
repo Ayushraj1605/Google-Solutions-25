@@ -30,21 +30,21 @@ const SignIn = () => {
 
     // console.log()
     try {
-      // const response = await axios.post(
-      //   'https://cloudrunservice-254131401451.us-central1.run.app/user/login', // Replace with your actual API endpoint
-      //   {
-      //       "email": form.email,
-      //       "password": form.password
-      //   }
-      const response = {
-        data: {
-          email: "ayushrajaayatha@gmail.com",
-          password: "passwordhaiye",
-          token:"maiaayahutokendene",
-        },
+      const response = await axios.post(
+        'https://cloudrunservice-254131401451.us-central1.run.app/user/login', // Replace with your actual API endpoint
+        {
+            "email": form.email,
+            "password": form.password
+        });
+      // const response = {
+      //   data: {
+      //     email: "ayushrajaayatha@gmail.com",
+      //     password: "passwordhaiye",
+      //     token:"maiaayahutokendene",
+      //   },
         
-        status: 200
-      };
+      //   status: 200
+      // };
       
       // Now you can access the status like this:
       console.log(response.status); // Outputs: 200
@@ -55,7 +55,7 @@ const SignIn = () => {
         // Save token to AsyncStorage
         const _storeData = async () => {
           try {
-            await AsyncStorage.setItem('TASK', response.data.token); // Save token with key 'TASK'
+            await AsyncStorage.setItem('TASK', "user "+response.data.token); // Save token with key 'TASK'
             console.log('Token saved successfully!');
           } catch (error) {
             console.error('Error saving data to AsyncStorage:', error);
@@ -87,20 +87,21 @@ const SignIn = () => {
 
     // console.log()
     try {
-      // const response = await axios.post(
-      //   'https://cloudrunservice-254131401451.us-central1.run.app/org/login', // Replace with your actual API endpoint
-      //   {
-      //       "email": form.email,
-      //       "password": form.password
-      //   });
-      const response = {
-        data: {
-          email: "ayushrajaayatha@gmail.com",
-          password: "passwordhaiye",
-          token:"maiaayahutokendene",
-        },
-        status: 200
-      };
+      console.log(form.email, form.password);
+      const response = await axios.post(
+        'https://cloudrunservice-254131401451.us-central1.run.app/org/login', // Replace with your actual API endpoint
+        {
+            "email": form.email,
+            "password": form.password
+        });
+      // const response = {
+      //   data: {
+      //     email: "ayushrajaayatha@gmail.com",
+      //     password: "passwordhaiye",
+      //     token:"maiaayahutokendene",
+      //   },
+      //   status: 200
+      // };
       
       // Now you can access the status like this:
       console.log(response.status); // Outputs: 200
@@ -111,7 +112,7 @@ const SignIn = () => {
         // Save token to AsyncStorage
         const _storeData = async () => {
           try {
-            await AsyncStorage.setItem('TASK', response.data.token); // Save token with key 'TASK'
+            await AsyncStorage.setItem('TASK', "org "+response.data.token); // Save token with key 'TASK'
             console.log('Token saved successfully!');
           } catch (error) {
             console.error('Error saving data to AsyncStorage:', error);
@@ -119,7 +120,7 @@ const SignIn = () => {
         };
       
         await _storeData(); // Invoke the function to save the token
-        router.replace('/home'); // Navigate to the home screen
+        router.replace('/homeOrg'); // Navigate to the home screen
       } else {
         alert('Error', response.data.message || 'Invalid credentials.');
       }

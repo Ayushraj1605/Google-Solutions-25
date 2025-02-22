@@ -81,7 +81,7 @@ const OrgAdd = () => {
       if (response.status === 200) {
         await AsyncStorage.removeItem('orgSignupData');
         alert("Signup completed successfully!");
-        router.replace("/home");
+        router.replace("/homeOrg");
       } else {
         alert("Failed to complete signup. Please try again.");
       }

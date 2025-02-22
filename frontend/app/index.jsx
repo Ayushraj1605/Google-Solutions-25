@@ -10,6 +10,7 @@ import Loader from './(auth)/loader';
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true); // State to manage loader
   const [userToken, setUserToken] = useState(null); // State to store retrieved token
+  const [role, setRole] = useState(null); // State to store user role
 
   useEffect(() => {
     // Show loader and retrieve data from AsyncStorage
@@ -26,7 +27,10 @@ const Index = () => {
       const value = await AsyncStorage.getItem('TASK'); // Retrieve token saved during SignIn
       if (value !== null) {
         console.log('Retrieved token:', value); // Log the retrieved value
-        setUserToken(value); // Set token to state
+
+        const [retrievedRole, token] = value.split(' '); // Split to extract role and token
+        setRole(retrievedRole); // Set role in state
+        setUserToken(token); // Set token in state
       }
     } catch (error) {
       console.error('Error retrieving data from AsyncStorage:', error);
@@ -48,14 +52,14 @@ const Index = () => {
             <Loader /> // Show loader initially
           ) : userToken ? (
             <>
-              {/* Redirect to Home if token exists */}
+              {/* Redirect based on role */}
               <Text className="text-2xl font-bold text-center text-green-600">Welcome Back!</Text>
               <Link
-                href="home"
+                href={role === 'org' ? 'homeOrg' : 'home'} // Conditional redirection
                 className="text-3xl text-white bg-green-500 font-bold py-2 px-6 rounded-xl mt-4"
                 style={{ textAlign: 'center' }}
               >
-                Go to Home
+                Go to {role === 'org' ? 'Organization' : 'User'} Home
               </Link>
             </>
           ) : (

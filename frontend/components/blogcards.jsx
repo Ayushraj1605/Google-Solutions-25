@@ -11,7 +11,7 @@ const Cards = () => (
         <Card.Content>
             <Text className="text-4xl mb-1" >Lorem ipsum dolor sit.</Text>
             <Text variant="bodyMedium">Lorem ipsum dolor sit amet consectetur adipisicing elit. Nemo reiciendis debitis consequuntur perspiciatis eius nihil voluptas iusto explicabo nam! Maxime quasi laudantium rem iste reiciendis quia aliquid esse culpa incidunt.</Text>
-        </Card.Content>++
+        </Card.Content>
     </Card>
 )
 
@@ -19,7 +19,7 @@ export default Cards
 
 const styles = StyleSheet.create({
     container:{
-        width: '98%', // Responsive width
+        width: '100%', // Responsive width
         maxWidth: 420,
         padding: 2,
         marginBottom: 10,
