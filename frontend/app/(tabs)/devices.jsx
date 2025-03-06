@@ -22,7 +22,7 @@ const Devices = ({
   const [isExtended, setIsExtended] = useState(true);
   const isIOS = Platform.OS === 'ios';
   const [data, setData] = useState([]);
-  const [userId, setUserId]=useState(null);
+  const [userId, setUserId] = useState(null);
 
 
   const _retrieveData = async () => {
@@ -45,9 +45,12 @@ const Devices = ({
     const fetchData = async () => {
       try {
         const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}`);
-        const jsonData = response.data.devices;
-        console.log(jsonData);
-        setData(jsonData);
+        if (response.data && response.data.devices) {
+          const jsonData = response.data.devices;
+          // console.log(response.data.devices);
+          setData(jsonData);
+        }
+
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -55,7 +58,7 @@ const Devices = ({
 
     // Call the fetchData function
     fetchData();
-  },[]);
+  },[userId]);
 
   const onScroll = ({ nativeEvent }) => {
     const currentScrollPosition =
@@ -67,7 +70,7 @@ const Devices = ({
   const fabStyle = { [animateFrom]: 16 };
 
   const handlePress = () => {
-    router.push('/deviceinfo');
+    // router.push('/deviceinfo');
   };
 
   return (
@@ -81,6 +84,7 @@ const Devices = ({
         {data.length > 0 ? (
           data.map((item, i) => (
             // Pass the item data to the Cards component.
+            console.log(item),
             <Cards key={item.id ? item.id : i} data={item} />
           ))
         ) : (

@@ -36,15 +36,13 @@
     "expo-status-bar": "~2.0.1",
     "expo-symbols": "~0.2.2",
     "expo-system-ui": "~4.0.8",
-    "expo-updates": "~0.26.18",
+    "expo-updates": "^0.27.2",
     "expo-web-browser": "~14.0.2",
     "geolib": "^3.3.4",
     "jest-expo": "~52.0.4",
     "nativewind": "^4.1.23",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-native": "0.76.7",
-    "react-native-camera": "^4.2.1",
     "react-native-elements": "^3.4.3",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-keyboard-controller": "^1.15.2",
@@ -73,6 +71,13 @@
     "react-test-renderer": "18.3.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
+  },
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
   },
   "private": true
 }

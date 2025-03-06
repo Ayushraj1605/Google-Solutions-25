@@ -2,9 +2,9 @@ import 'dotenv/config';
 
 export default {
     expo: {
-        name: "E-waste",
+        name: "e-waste",
         scheme: "e-waste",
-        slug: "e-waste",
+        slug: "E-waste",
         version: "1.0.0",
         orientation: "portrait",
         icon: "./assets/images/logo.png",
@@ -39,7 +39,7 @@ export default {
             [
                 "expo-splash-screen",
                 {
-                    image: "",
+                    image: "./assets/images/logo.png",
                     imageWidth: 200,
                     resizeMode: "contain",
                     backgroundColor: "#ffffff"
