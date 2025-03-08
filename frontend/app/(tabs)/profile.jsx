@@ -1,99 +1,92 @@
-import { View, Text, TouchableOpacity, Image, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
 import React from 'react';
 import ButtonProfile from '../../components/buttonProfile';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
+import ProfileImage from '../../components/profileAvatar';
 
-
-const profile = () => {
+const ProfileScreen = () => {
   const navigation = useNavigation();
-  const OnClickHandler = async () => {
-    try {
-      // Clear all AsyncStorage data
-      await AsyncStorage.clear();
-      console.log('All AsyncStorage data has been cleared!');
 
-      // Reset navigation state and navigate to the SignIn screen in the Auth stack
+  const handleSignOut = async () => {
+    try {
+      await AsyncStorage.clear();
+      console.log('AsyncStorage cleared!');
       navigation.dispatch(
         CommonActions.reset({
-          index: 0, // Start at the first screen in the stack
-          routes: [
-            { name: '(auth)', params: { screen: 'signIn' } }, // Navigate to (auth)/signIn
-          ],
+          index: 0,
+          routes: [{ name: '(auth)', params: { screen: 'signIn' } }],
         })
       );
     } catch (error) {
-      console.error('Error clearing AsyncStorage or navigating:', error);
+      console.error('Sign out error:', error);
     }
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
+    <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
 
-      {/* Green Header */}
-      <View style={{
-        backgroundColor: '#609966',
-        height: 120,
-        paddingHorizontal: 24,
-        paddingTop: 32
-      }}>
-        <Text style={{
-          color: 'white',
-          fontSize: 24,
-          fontWeight: '600'
-        }}>
+      {/* Header */}
+      <View
+        style={{
+          backgroundColor: '#609966',
+          paddingHorizontal: 24,
+          paddingVertical: 50,
+          borderBottomLeftRadius: 30,
+          borderBottomRightRadius: 30,
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          elevation: 5,
+          height: 150,
+        }}
+      >
+        {/* <Text style={{ color: '#fff', fontSize: 32, fontWeight: '800' }}>
           My Profile
-        </Text>
+        </Text> */}
       </View>
 
       {/* Profile Card */}
-      <View style={{
-        backgroundColor: 'white',
-        marginHorizontal: 16,
-        marginTop: -16,
-        borderRadius: 12,
-        padding: 16,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: '#E0E0E0'
-          }} />
-          <View style={{ marginLeft: 16, flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: '600' }}>Ayush Raj</Text>
-            <Text style={{ color: '#666666' }}>theboys.ewaste@gmail.com</Text>
-          </View>
-          <TouchableOpacity>
-            <Text style={{ fontSize: 24, color: '#666666' }}>›</Text>
-          </TouchableOpacity>
+      <View
+        style={{
+          backgroundColor: '#FFFFFF',
+          marginHorizontal: 20,
+          marginTop: -50,
+          padding: 24,
+          borderRadius: 24,
+          flexDirection: 'row',
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          elevation: 6,
+        }}
+      >
+        <ProfileImage name="Ayush" />
+        <View style={{ marginLeft: 16, flex: 1 }}>
+          <Text style={{ fontSize: 22, fontWeight: '700', color: '#1F2937' }}>
+            Ayush Raj
+          </Text>
+          <Text style={{ color: '#6B7280', fontSize: 16 }}>
+            theboys.ewaste@gmail.com
+          </Text>
         </View>
+        <TouchableOpacity activeOpacity={0.7}>
+          <Text style={{ fontSize: 32, color: '#9CA3AF' }}>›</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Menu Options */}
-      <View style={{ marginHorizontal: 16, marginTop: 24 }}>
-        {/* Order History */}
-        <ButtonProfile
-          title="Order History"
-          onPress={OnClickHandler}
-        />
-
-        {/* Sign Out */}
-        <ButtonProfile
-          title="Sign Out"
-          handlePress={OnClickHandler}
-        />
-
+      <View style={{ marginTop: 40, paddingHorizontal: 20 }}>
+        <ButtonProfile title="Order History" onPress={() => {}} />
+        <View style={{ height: 20 }} />
+        <ButtonProfile title="Sign Out" handlePress={handleSignOut} />
       </View>
     </View>
   );
 };
 
-export default profile;
+export default ProfileScreen;
