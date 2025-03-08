@@ -8,7 +8,6 @@ import { Link, router } from 'expo-router';
 import axios from 'axios';
 
 const SignUp = () => {
-  // State
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -17,22 +16,21 @@ const SignUp = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handlers
   const handleInputChange = useCallback(
     (key, value) => {
       setForm((prev) => ({ ...prev, [key]: value }));
     },
-    [setForm]
+    []
   );
 
-  const OnClickHandler = useCallback(() => {
+  const navigateToOrgSignUp = useCallback(() => {
     router.replace('/signUpOrg');
   }, []);
 
   const validateForm = useCallback(() => {
     const { name, email, password, confirmPassword } = form;
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
       alert('All fields are required!');
       return false;
     }
@@ -46,99 +44,95 @@ const SignUp = () => {
   }, [form]);
 
   const handleSubmit = useCallback(async () => {
-    if (!validateForm()) return; // Ensure form validation is passed
+    if (!validateForm()) return;
 
-    setIsSubmitting(true); // Start the loading state
+    setIsSubmitting(true);
+
     try {
-      // API call with axios
       const response = await axios.post(
         "https://cloudrunservice-254131401451.us-central1.run.app/user/signup",
         {
-          "email": form.email,
-          "password": form.password,
-          "username": form.name
+          email: form.email,
+          password: form.password,
+          username: form.name,
         }
       );
-
-      console.log("Response from API:", response.data);
 
       if (response.status === 200) {
         alert("Sign up successful!");
         setForm({ name: "", email: "", password: "", confirmPassword: "" });
-        // Redirect to the next page
         router.replace("/home");
-      }
-      else {
+      } else {
         alert("Failed to sign up. Please try again.");
       }
-    } 
-    catch (error) {
-      console.error("Error during signup:", error);
-      alert("An error occurred. Please check your network connection and try again.");
-    } 
-    finally {
+    } catch (error) {
+      console.error("Signup error:", error);
+      alert(
+        error.response?.data?.message ||
+          "Something went wrong. Please check your network connection."
+      );
+    } finally {
       setIsSubmitting(false);
     }
   }, [form, validateForm]);
 
-  // Memoized fields for better performance
   const formFields = useMemo(
     () => [
       {
-        title: 'Name',
-        value: form.name,
-        placeholder: 'Enter name here',
-        secureTextEntry: false,
         key: 'name',
+        title: 'Name',
+        placeholder: 'Enter your name',
+        value: form.name,
+        secureTextEntry: false,
       },
       {
+        key: 'email',
         title: 'Email',
+        placeholder: 'Enter your email',
         value: form.email,
-        placeholder: 'Enter email here',
         keyboardType: 'email-address',
         secureTextEntry: false,
-        key: 'email',
       },
       {
-        title: 'Password',
-        value: form.password,
-        placeholder: 'Enter password here',
-        secureTextEntry: true,
         key: 'password',
+        title: 'Password',
+        placeholder: 'Enter your password',
+        value: form.password,
+        secureTextEntry: true,
       },
       {
-        title: 'Confirm Password',
-        value: form.confirmPassword,
-        placeholder: 'Confirm your password',
-        secureTextEntry: true,
         key: 'confirmPassword',
+        title: 'Confirm Password',
+        placeholder: 'Confirm your password',
+        value: form.confirmPassword,
+        secureTextEntry: true,
       },
     ],
     [form]
   );
 
   return (
-    <SafeAreaView>
-      <ScrollView>
-        <View className="w-full flex-1 justify-center items-center min-h-full px-4 my-6">
-          {/* Heading */}
+    <SafeAreaView className="bg-white flex-1">
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="w-full flex-1 justify-center items-center px-4 py-6">
           <Text className="text-5xl font-semibold mt-10 self-start">Sign Up</Text>
 
-          {/* Form Fields */}
-          {formFields.map((field) => (
+          {formFields.map(({ key, title, placeholder, value, secureTextEntry, keyboardType }) => (
             <FormField
-              key={field.key}
-              title={field.title}
-              value={field.value}
-              handleChangeText={(value) => handleInputChange(field.key, value)}
-              placeholder={field.placeholder}
-              otherStyles="mt-2"
-              secureTextEntry={field.secureTextEntry}
-              keyboardType={field.keyboardType}
+              key={key}
+              title={title}
+              placeholder={placeholder}
+              value={value}
+              secureTextEntry={secureTextEntry}
+              keyboardType={keyboardType}
+              handleChangeText={(val) => handleInputChange(key, val)}
+              otherStyles="mt-3"
             />
           ))}
 
-          {/* Sign Up Button */}
           <CustomButton
             title="Sign Up"
             handlePress={handleSubmit}
@@ -146,7 +140,6 @@ const SignUp = () => {
             isLoading={isSubmitting}
           />
 
-          {/* Already Have an Account */}
           <View className="flex-row justify-center items-center mt-9">
             <Text className="text-secondary">ALREADY HAVE AN ACCOUNT? </Text>
             <Text className="text-success font-semibold">
@@ -154,17 +147,15 @@ const SignUp = () => {
             </Text>
           </View>
 
-          {/* Divider */}
           <View className="flex-row justify-center items-center mt-6">
             <View className="h-[1px] bg-gray-300 flex-1"></View>
             <Text className="mx-3 text-gray-500">OR</Text>
             <View className="h-[1px] bg-gray-300 flex-1"></View>
           </View>
 
-          {/* Sign Up as Organization */}
           <CustomButton
             title="Sign Up as Organization"
-            handlePress={OnClickHandler}
+            handlePress={navigateToOrgSignUp}
             containerStyles="mt-10 bg-smallText"
           />
         </View>

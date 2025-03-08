@@ -2,14 +2,15 @@ import * as React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
-import Cards from './blogcards';
 import NewsCards from './Newscards';
+import BlogCards from './blogcards';
+import FactsCards from './factscard';
 
-const Segments = ({name}) => {
+const Segments = ({ name }) => {
   const [value, setValue] = React.useState('');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} showsVerticalScrollIndicator={false}>
       <SegmentedButtons
         value={value}
         onValueChange={setValue}
@@ -29,28 +30,32 @@ const Segments = ({name}) => {
         ]}
         style={styles.buttons}
       />
-      
-        <View className="items-center pt-4 w-full h-full">
-          {value === 'Blogs' ? (
-            <Text>
-              <ScrollView className='p-2 w-full overflow-hidden'> 
-                <Cards></Cards>
-                <Cards></Cards>
-                <Cards></Cards>
-              </ScrollView>
-            </Text>
-          ) : value === 'News' ? (
-            <Text>
-              <ScrollView>
-                <NewsCards></NewsCards>
-                <NewsCards></NewsCards>
-                <NewsCards></NewsCards>
-              </ScrollView>
-            </Text>
-          ) : value === 'Facts' ? (
-            <Text>Displaying Facts</Text>
-          ) : null}
-        </View>
+
+      <View className="items-center pt-4 w-full h-full">
+        {value === 'Blogs' ? (
+          <Text>
+            <ScrollView className='p-2 w-full overflow-hidden' showsVerticalScrollIndicator={false}>
+              <BlogCards></BlogCards>
+              <BlogCards></BlogCards>
+            </ScrollView>
+          </Text>
+        ) : value === 'News' ? (
+          <Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <NewsCards></NewsCards>
+              <NewsCards></NewsCards>
+              <NewsCards></NewsCards>
+            </ScrollView>
+          </Text>
+        ) : value === 'Facts' ? (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <FactsCards></FactsCards>
+            <FactsCards></FactsCards>
+            <FactsCards></FactsCards>
+            <FactsCards></FactsCards>
+          </ScrollView>
+        ) : null}
+      </View>
 
     </SafeAreaView>
   );

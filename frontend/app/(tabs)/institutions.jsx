@@ -1,23 +1,65 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert } from "react-native";
-import MapView, { Marker, Circle } from "react-native-maps";
-import MapViewDirections from "react-native-maps-directions";
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert, FlatList, Animated, Dimensions, Image, StyleSheet, StatusBar } from "react-native";
+import MapView, { Marker, Circle, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as Location from "expo-location";
 import axios from "axios";
-import Icon from 'react-native-vector-icons/Ionicons';
+import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const { width, height } = Dimensions.get('window');
 const GOOGLE_MAPS_API_KEY = "AIzaSyB_KkJwx0da8l-clsHMXvYP4m4cV1ij3_E";
+
+// Custom map style - more modern looking map
+const mapStyle = [
+  {
+    "elementType": "geometry",
+    "stylers": [{ "color": "#f5f5f5" }]
+  },
+  {
+    "elementType": "labels.icon",
+    "stylers": [{ "visibility": "off" }]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#616161" }]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{ "color": "#f5f5f5" }]
+  },
+  {
+    "featureType": "administrative.land_parcel",
+    "stylers": [{ "visibility": "off" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#ffffff" }]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#c9c9c9" }]
+  }
+];
 
 const Institutions = () => {
   const [institutions, setInstitutions] = useState([]);
+  const [sortedInstitutions, setSortedInstitutions] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [selectedInstitution, setSelectedInstitution] = useState(null);
   const [distance, setDistance] = useState(null);
   const [duration, setDuration] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   const mapRef = useRef(null);
+  const drawerAnimation = useRef(new Animated.Value(0)).current;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const fetchCurrentLocation = async () => {
@@ -28,11 +70,23 @@ const Institutions = () => {
           return;
         }
 
-        let location = await Location.getCurrentPositionAsync({});
+        let location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        
         setCurrentLocation({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
         });
+        
+        // Auto-fetch institutions on first load
+        if (isFirstLoad) {
+          setIsFirstLoad(false);
+          fetchNearbyInstitutions({
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
+        }
       } catch (error) {
         console.error("Error fetching current location:", error);
         Alert.alert("Error", "Unable to fetch location.");
@@ -40,10 +94,26 @@ const Institutions = () => {
     };
 
     fetchCurrentLocation();
-  }, []);
+  }, [isFirstLoad]);
 
-  const fetchNearbyInstitutions = async () => {
-    if (!currentLocation) {
+  // Sort institutions by distance whenever they change
+  useEffect(() => {
+    if (institutions.length > 0 && currentLocation) {
+      sortInstitutionsByDistance();
+    }
+  }, [institutions, currentLocation]);
+
+  // Handle drawer animation
+  useEffect(() => {
+    Animated.timing(drawerAnimation, {
+      toValue: drawerOpen ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [drawerOpen]);
+
+  const fetchNearbyInstitutions = async (location = currentLocation) => {
+    if (!location) {
       Alert.alert("Location Not Available", "Please enable location services");
       return;
     }
@@ -55,8 +125,8 @@ const Institutions = () => {
         "https://cloudrunservice-254131401451.us-central1.run.app/user/orgLocations",
         {
           params: {
-            latitude: currentLocation.latitude,
-            longitude: currentLocation.longitude,
+            latitude: location.latitude,
+            longitude: location.longitude,
             radius: 50, // 50 km radius
           },
         }
@@ -68,6 +138,59 @@ const Institutions = () => {
       Alert.alert("Error", "Could not fetch nearby institutions");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sortInstitutionsByDistance = async () => {
+    if (!currentLocation || institutions.length === 0) return;
+
+    try {
+      // Calculate distances for all institutions
+      const promises = institutions.map(async (institution) => {
+        try {
+          const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/distancematrix/json`,
+            {
+              params: {
+                origins: `${currentLocation.latitude},${currentLocation.longitude}`,
+                destinations: `${institution.latitude},${institution.longitude}`,
+                key: GOOGLE_MAPS_API_KEY,
+              },
+            }
+          );
+
+          if (
+            response.data &&
+            response.data.rows &&
+            response.data.rows[0] &&
+            response.data.rows[0].elements &&
+            response.data.rows[0].elements[0]
+          ) {
+            const distanceText = response.data.rows[0].elements[0].distance.text;
+            const distanceValue = response.data.rows[0].elements[0].distance.value;
+            return {
+              ...institution,
+              distanceText,
+              distanceValue,
+            };
+          }
+          return institution;
+        } catch (error) {
+          console.error("Error calculating distance for institution", error);
+          return institution;
+        }
+      });
+
+      const institutionsWithDistance = await Promise.all(promises);
+      
+      // Sort by distance
+      const sorted = institutionsWithDistance
+        .filter(inst => inst.distanceValue !== undefined)
+        .sort((a, b) => a.distanceValue - b.distanceValue);
+      
+      setSortedInstitutions(sorted);
+    } catch (error) {
+      console.error("Error sorting institutions:", error);
     }
   };
 
@@ -104,6 +227,93 @@ const Institutions = () => {
     }
   };
 
+  const fetchDirections = async (origin, destination) => {
+    try {
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/directions/json`,
+        {
+          params: {
+            origin: `${origin.latitude},${origin.longitude}`,
+            destination: `${destination.latitude},${destination.longitude}`,
+            key: GOOGLE_MAPS_API_KEY,
+          },
+        }
+      );
+
+      if (response.data.status === "OK") {
+        const route = response.data.routes[0];
+        const leg = route.legs[0];
+        
+        // Update distance and duration
+        setDistance(leg.distance.text);
+        setDuration(leg.duration.text);
+        
+        // Decode the polyline
+        const points = route.overview_polyline.points;
+        const decodedPoints = decodePolyline(points);
+        
+        setRouteCoordinates(decodedPoints);
+        
+        // Fit the map to show the route
+        if (mapRef.current && decodedPoints.length > 0) {
+          const padding = { top: 100, right: 50, bottom: 50, left: 50 };
+          mapRef.current.fitToCoordinates(decodedPoints, { edgePadding: padding, animated: true });
+        }
+      } else {
+        throw new Error(`Directions API error: ${response.data.status}`);
+      }
+    } catch (error) {
+      console.error("Error fetching directions:", error);
+      Alert.alert("Error", "Could not fetch directions");
+    }
+  };
+
+  // Google Polyline decoder function
+  const decodePolyline = (encoded) => {
+    let index = 0;
+    const len = encoded.length;
+    let lat = 0;
+    let lng = 0;
+    const coordinates = [];
+
+    while (index < len) {
+      let b;
+      let shift = 0;
+      let result = 0;
+
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlat = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+      lng += dlng;
+
+      const latitude = lat / 1e5;
+      const longitude = lng / 1e5;
+
+      coordinates.push({
+        latitude,
+        longitude,
+      });
+    }
+
+    return coordinates;
+  };
+
   const handleGetDirections = () => {
     if (!currentLocation || !selectedInstitution) {
       Alert.alert("Error", "Current location or destination is missing");
@@ -111,11 +321,13 @@ const Institutions = () => {
     }
   
     setShowRoute(true);
+    setSelectedInstitution(null);
+    setDrawerOpen(false);
     
-    // Keep the selected institution for drawing directions
-    // setSelectedInstitution(null); // Remove this line
-  
-    // Zoom in and center on current location
+    // Fetch directions
+    fetchDirections(currentLocation, selectedInstitution);
+    
+    // Initial zoom to current location before the route is fetched
     if (mapRef.current) {
       mapRef.current.animateToRegion({
         latitude: currentLocation.latitude,
@@ -126,28 +338,64 @@ const Institutions = () => {
     }
   };
 
+  const selectInstitutionFromDrawer = (institution) => {
+    setSelectedInstitution(institution);
+    calculateDistance(institution);
+    
+    // Close drawer
+    setDrawerOpen(false);
+    
+    // Animate to the selected institution
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: institution.latitude,
+        longitude: institution.longitude,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }, 1000);
+    }
+  };
+
+  // Drawer transform for sliding effect
+  const drawerTranslateX = drawerAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [width, 0],
+  });
+
   return (
-    <View className="flex-1">
+    <View style={styles.container}>
+      <StatusBar 
+        translucent={false}
+        backgroundColor="#609966"
+        barStyle="light-content" 
+      />
+      
       {currentLocation ? (
         <MapView
           ref={mapRef}
-          style={{ flex: 1 }}
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          customMapStyle={mapStyle}
           initialRegion={{
             latitude: currentLocation.latitude,
             longitude: currentLocation.longitude,
-            latitudeDelta: 0.1,
-            longitudeDelta: 0.1,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
           }}
           showsUserLocation={true}
+          showsMyLocationButton={false}
+          showsCompass={false}
+          showsScale={true}
         >
           <Circle
             center={currentLocation}
             radius={100}
-            fillColor="rgba(0, 0, 255, 0.2)"
-            strokeColor="rgba(0, 0, 255, 0.5)"
+            fillColor="rgba(33, 150, 243, 0.15)"
+            strokeColor="rgba(33, 150, 243, 0.5)"
+            strokeWidth={1}
           />
 
-          {institutions.slice(0, 10).map((institution, index) => (
+          {institutions.map((institution, index) => (
             <Marker
               key={index}
               coordinate={{
@@ -159,71 +407,99 @@ const Institutions = () => {
                 setSelectedInstitution(institution);
                 calculateDistance(institution);
               }}
-            />
+            >
+              <View style={styles.markerContainer}>
+                <FontAwesome5 name="building" size={18} color="#609966" />
+              </View>
+            </Marker>
           ))}
 
-          {showRoute && selectedInstitution && (
-            <MapViewDirections
-              origin={{
-                latitude: currentLocation.latitude,
-                longitude: currentLocation.longitude,
-              }}
-              destination={{
-                latitude: selectedInstitution.latitude,
-                longitude: selectedInstitution.longitude,
-              }}
-              apikey={GOOGLE_MAPS_API_KEY}
-              strokeWidth={4}
-              strokeColor="blue"
-              onStart={() => console.log("Fetching directions...")}
-              onReady={(result) => {
-                console.log("Directions fetched successfully:", result);
-                setDistance(`${result.distance.toFixed(2)} km`);
-                setDuration(`${Math.ceil(result.duration)} mins`);
-              }}
-              onError={(error) => console.error("Directions API Error:", error)}
+          {showRoute && routeCoordinates.length > 0 && (
+            <Polyline
+              coordinates={routeCoordinates}
+              strokeWidth={5}
+              strokeColor="#2196F3"
+              lineDashPattern={[0]}
+              lineCap="round"
+              lineJoin="round"
             />
           )}
         </MapView>
       ) : (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text className="text-lg mt-2">Loading map...</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2196F3" />
+          <Text style={styles.loadingText}>Loading map... </Text>
         </View>
       )}
 
-      {/* Directions Info Bar */}
-      {showRoute && (
-        <View className="absolute top-0 left-0 right-0 bg-white flex-row items-center justify-between p-4 shadow-md">
-          <TouchableOpacity
-            onPress={() => setShowRoute(false)}
-            className="p-2"
-          >
-            <Icon name="arrow-back" size={24} color="#007bff" />
-          </TouchableOpacity>
-
-          <View className="flex-row items-center">
-            <Text className="text-base font-bold text-gray-700">
-              {distance} | {duration}
-            </Text>
+      {/* Header Bar - Only show when not in routing mode */}
+      {!showRoute && (
+        <View style={styles.header}>
+          <View style={[styles.headerContent, { paddingTop: insets.top }]}>
+            <Text style={styles.headerTitle}>E-cycle Institutions</Text>
+            
+            <TouchableOpacity 
+              style={styles.drawerButton}
+              onPress={() => setDrawerOpen(true)}
+            >
+              <MaterialIcons name="menu" size={28} color="#609966" />
+            </TouchableOpacity>
           </View>
-
-          {/* Placeholder for additional actions */}
-          <View className="w-8" />
         </View>
       )}
 
-      {/* Nearby Institutions Button */}
+      {/* My Location Button */}
+      <TouchableOpacity 
+        style={styles.myLocationButton}
+        onPress={() => {
+          if (mapRef.current && currentLocation) {
+            mapRef.current.animateToRegion({
+              latitude: currentLocation.latitude,
+              longitude: currentLocation.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }, 1000);
+          }
+        }}
+      >
+        <Ionicons name="locate" size={22} color="#2196F3" />
+      </TouchableOpacity>
+
+      {/* Directions Info Bar - Only show when in routing mode */}
+      {showRoute && (
+        <View style={styles.directionsBar}>
+          <View style={[styles.directionsBarContent, { paddingTop: insets.top }]}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowRoute(false);
+                setRouteCoordinates([]);
+              }}
+              style={styles.backButton}
+            >
+              <Ionicons name="arrow-back" size={24} color="#2196F3" />
+            </TouchableOpacity>
+
+            <View style={styles.directionsInfo}>
+              <Text style={styles.directionsTitle}>Directions</Text>
+              <Text style={styles.directionsText}>
+                {distance} • {duration}
+              </Text>
+            </View>
+
+            <TouchableOpacity style={styles.directionsShare}>
+              <Ionicons name="share-outline" size={24} color="#2196F3" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Refresh Button (only when not showing route) */}
       {!showRoute && (
         <TouchableOpacity
-          onPress={fetchNearbyInstitutions}
-          className="absolute bottom-5 self-center bg-blue-500 p-4 rounded-lg shadow-lg"
+          onPress={() => fetchNearbyInstitutions()}
+          style={styles.refreshButton}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
-            <Text className="text-white font-bold text-lg">Find Nearby Institutions</Text>
-          )}
+          <Ionicons name="refresh" size={24} color="white" />
         </TouchableOpacity>
       )}
 
@@ -232,29 +508,47 @@ const Institutions = () => {
         visible={!!selectedInstitution && !showRoute}
         transparent={true}
         animationType="slide"
+        onRequestClose={() => setSelectedInstitution(null)}
       >
-        <View className="flex-1 justify-end bg-black/50">
-          <View className="bg-white p-5 rounded-t-2xl">
+        <View style={styles.modalOverlay}>
+          <BlurView intensity={50} style={styles.blurBackground} tint="dark" />
+          <View style={styles.modalContent}>
             {selectedInstitution && (
               <>
-                <Text className="text-xl font-semibold">{selectedInstitution.name}</Text>
-                {distance && (
-                  <Text className="mt-2 text-gray-700">Distance: {distance}</Text>
-                )}
-                <View className="flex-row mt-4 justify-between">
+                <View style={styles.modalHandle} />
+                <Text style={styles.modalTitle}>{selectedInstitution.name}</Text>
+                
+                <View style={styles.modalInfo}>
+                  <View style={styles.infoItem}>
+                    <Ionicons name="location" size={20} color="#2196F3" />
+                    <Text style={styles.infoText}>
+                      {distance || "Calculating..."}
+                    </Text>
+                  </View>
+                  
+                  {duration && (
+                    <View style={styles.infoItem}>
+                      <Ionicons name="time-outline" size={20} color="#2196F3" />
+                      <Text style={styles.infoText}>{duration}</Text>
+                    </View>
+                  )}
+                </View>
+                
+                <View style={styles.modalButtons}>
                   <TouchableOpacity
                     onPress={() => setSelectedInstitution(null)}
-                    className="flex-1 mr-2 bg-red-500 p-3 rounded-lg shadow-md"
+                    style={styles.cancelButton}
                   >
-                    <Text className="text-white text-center font-semibold">Close</Text>
+                    <Text style={styles.cancelButtonText}>Close</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={handleGetDirections}
-                    className="flex-1 ml-2 bg-blue-500 p-3 rounded-lg shadow-md"
+                    style={styles.directionsButton}
                   >
-                    <Text className="text-white text-center font-semibold">
+                    <Text style={styles.directionsButtonText}>
                       Get Directions
                     </Text>
+                    <Ionicons name="navigate" size={18} color="white" style={{marginLeft: 5}} />
                   </TouchableOpacity>
                 </View>
               </>
@@ -262,8 +556,382 @@ const Institutions = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Institutions Drawer */}
+      <Animated.View 
+        style={[
+          styles.drawer,
+          { transform: [{ translateX: drawerTranslateX }] }
+        ]}
+      >
+        <View style={styles.drawerHeader}>
+          <View style={[styles.drawerHeaderContent, { paddingTop: insets.top }]}>
+            <Text style={styles.drawerTitle}>Nearby Institutions</Text>
+            <TouchableOpacity 
+              onPress={() => setDrawerOpen(false)}
+              style={styles.drawerCloseButton}
+            >
+              <Ionicons name="close" size={24} color="#609966" />
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {sortedInstitutions.length > 0 ? (
+          <FlatList
+            data={sortedInstitutions}
+            keyExtractor={(item, index) => `institution-${index}`}
+            contentContainerStyle={styles.drawerList}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <TouchableOpacity 
+                style={styles.drawerItem}
+                onPress={() => selectInstitutionFromDrawer(item)}
+              >
+                <View style={styles.drawerItemIcon}>
+                  <FontAwesome5 name="building" size={20} color="#609966" />
+                </View>
+                <View style={styles.drawerItemContent}>
+                  <Text style={styles.drawerItemTitle} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Text style={styles.drawerItemDistance}>
+                    {item.distanceText || "Distance unavailable"}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#A0A0A0" />
+              </TouchableOpacity>
+            )}
+          />
+        ) : (
+          <View style={styles.emptyDrawer}>
+            {loading ? (
+              <ActivityIndicator size="large" color="#2196F3" />
+            ) : (
+              <>
+                <Ionicons name="location-outline" size={60} color="#CCCCCC" />
+                <Text style={styles.emptyDrawerText}>No institutions found nearby</Text>
+                <TouchableOpacity 
+                  style={styles.emptyDrawerButton}
+                  onPress={() => fetchNearbyInstitutions()}
+                >
+                  <Text style={styles.emptyDrawerButtonText}>Refresh</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
+      </Animated.View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f7f7f7',
+  },
+  map: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f7f7f7',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#555555',
+  },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1,
+    backgroundColor: 'white',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  drawerButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+  },
+  myLocationButton: {
+    position: 'absolute',
+    right: 16,
+    bottom: 130,
+    backgroundColor: 'white',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  refreshButton: {
+    position: 'absolute',
+    right: 16,
+    bottom: 70,
+    backgroundColor: '#2196F3',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  directionsBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+    zIndex: 10, // Ensure this is above other elements
+  },
+  directionsBarContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  backButton: {
+    padding: 8,
+  },
+  directionsInfo: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  directionsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  directionsText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  directionsShare: {
+    padding: 8,
+  },
+  markerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 6,
+    borderWidth: 2,
+    borderColor: '#2196F3',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  blurBackground: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    paddingTop: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 10,
+  },
+  modalHandle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    backgroundColor: '#DDDDDD',
+    borderRadius: 2,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 16,
+  },
+  modalInfo: {
+    marginBottom: 20,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#555555',
+    marginLeft: 8,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  cancelButton: {
+    flex: 1,
+    marginRight: 10,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#555555',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  directionsButton: {
+    flex: 1.5,
+    flexDirection: 'row',
+    backgroundColor: '#2196F3',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: "#2196F3",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  directionsButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  drawer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '80%',
+    height: '100%',
+    backgroundColor: 'white',
+    shadowColor: "#000",
+    shadowOffset: { width: -2, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 20,
+    zIndex: 100,
+  },
+  drawerHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  drawerHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  drawerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  drawerCloseButton: {
+    padding: 8,
+  },
+  drawerList: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingBottom: 100,
+  },
+  drawerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  drawerItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  drawerItemContent: {
+    flex: 1,
+  },
+  drawerItemTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  drawerItemDistance: {
+    fontSize: 14,
+    color: '#777777',
+  },
+  emptyDrawer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+  },
+  emptyDrawerText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+    marginTop: 16,
+    marginBottom: 24,
+  },
+  emptyDrawerButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#2196F3',
+    borderRadius: 8,
+  },
+  emptyDrawerButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+});
 
 export default Institutions;

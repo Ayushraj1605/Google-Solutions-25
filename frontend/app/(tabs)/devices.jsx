@@ -1,109 +1,97 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, StatusBar, ActivityIndicator, Text } from 'react-native';
 import { AnimatedFAB } from 'react-native-paper';
 import { router } from 'expo-router';
-import { useNavigation } from '@react-navigation/native';
 import Cards from '../../components/devicecards';
 import SearchBar from '../../components/searchbar';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-const Devices = ({
-  animatedValue,
-  visible,
-  extended,
-  label,
-  animateFrom,
-  style,
-  iconMode,
-}) => {
-  const navigation = useNavigation();
+const Devices = ({ visible = true, style }) => {
   const [isExtended, setIsExtended] = useState(true);
-  const isIOS = Platform.OS === 'ios';
   const [data, setData] = useState([]);
   const [userId, setUserId] = useState(null);
-
+  const [isLoading, setIsLoading] = useState(true);
 
   const _retrieveData = async () => {
     try {
-      const value = await AsyncStorage.getItem('ID'); // Retrieve token saved during SignIn
+      const value = await AsyncStorage.getItem('ID');
       if (value !== null) {
-        console.log('Retrieved ID:', value); // Log the retrieved value
-        setUserId(value); // Set token in state
+        setUserId(value);
       }
     } catch (error) {
-      console.error('Error retrieving data from AsyncStorage:', error);
+      console.error('Error retrieving data:', error);
     } finally {
-      setIsLoading(false); // Hide loader after retrieval
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // Define an async function to fetch data
     _retrieveData();
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}`);
-        if (response.data && response.data.devices) {
-          const jsonData = response.data.devices;
-          // console.log(response.data.devices);
-          setData(jsonData);
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      const fetchData = async () => {
+        try {
+          const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}`);
+          if (response.data?.devices) {
+            setData(response.data.devices);
+          }
+        } catch (error) {
+          console.error('Error fetching devices:', error);
         }
-
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
-
-    // Call the fetchData function
-    fetchData();
-  },[userId]);
+      };
+      fetchData();
+    }
+  }, [userId]);
 
   const onScroll = ({ nativeEvent }) => {
-    const currentScrollPosition =
-      Math.floor(nativeEvent?.contentOffset?.y) ?? 0;
-
-    setIsExtended(currentScrollPosition <= 0);
+    setIsExtended(nativeEvent?.contentOffset?.y <= 0);
   };
 
-  const fabStyle = { [animateFrom]: 16 };
-
   const handlePress = () => {
-    // router.push('/deviceinfo');
+    router.push('/deviceinfo');
   };
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#609966" />
       <SearchBar />
-      <ScrollView
-        onScroll={onScroll}
-        contentContainerStyle={styles.contentContainer}
-        style={styles.scrollView}
-      >
-        {data.length > 0 ? (
-          data.map((item, i) => (
-            // Pass the item data to the Cards component.
-            console.log(item),
-            <Cards key={item.id ? item.id : i} data={item} />
-          ))
-        ) : (
-          // Optionally, render something else when there's no data.
-          <View></View>
-        )}
-      </ScrollView>
+      {isLoading ? (
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#609966" />
+        </View>
+      ) : (
+        <ScrollView
+          onScroll={onScroll}
+          contentContainerStyle={styles.contentContainer}
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {data.length > 0 ? (
+            data.map((item, index) => (
+              <Cards key={item.id || index} data={item} />
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No devices found</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
       <AnimatedFAB
-        icon={'plus'}
-        label={'  Add Device'}
+        icon="plus"
+        label=" Add Device"
         extended={isExtended}
         onPress={handlePress}
         visible={visible}
-        animateFrom={'left'}
-        iconMode={'static'}
+        animateFrom="left"
+        iconMode="static"
         color="white"
         uppercaseLabel={false}
-        labelStyle={{ color: '#FFFFFF' }}
-        style={[styles.fabStyle, style, fabStyle]}
+        labelStyle={{ color: '#FFFFFF', fontWeight: '600' }}
+        style={[styles.fabStyle, style]}
       />
     </View>
   );
@@ -114,21 +102,42 @@ export default Devices;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
-    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingTop: 12,
   },
   scrollView: {
-    width: '100%',
     flex: 1,
+    width: '100%',
+    paddingHorizontal: 16,
   },
   contentContainer: {
-    alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 20,
+    gap: 16,
   },
   fabStyle: {
-    bottom: 16,
-    left: 16,
     position: 'absolute',
-    backgroundColor: "#609966",
+    bottom: 24,
+    left: 24,
+    backgroundColor: '#609966',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 100,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
   },
 });

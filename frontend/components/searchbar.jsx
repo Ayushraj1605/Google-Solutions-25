@@ -1,21 +1,20 @@
 import * as React from 'react';
-import { StyleSheet, Platform, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 
 const SearchBar = () => {
     const [searchQuery, setSearchQuery] = React.useState('');
-    console.log(searchQuery);
 
     return (
-        <View style={styles.container}>
-
+        <View style={styles.wrapper}>
             <Searchbar
                 placeholder="Search for devices"
                 onChangeText={setSearchQuery}
                 value={searchQuery}
-                // Make the Searchbar take full width of the container
-                style={{ backgroundColor: 'white', width: '100%' }}
-                inputStyle={styles.input} // Styling the inner text input
+                style={styles.searchBar}
+                inputStyle={styles.input}
+                iconColor="#888"
+                placeholderTextColor="#aaa"
             />
         </View>
     );
@@ -24,27 +23,23 @@ const SearchBar = () => {
 export default SearchBar;
 
 const styles = StyleSheet.create({
-    container: {
-        width: '90%',
-        margin: 10,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        backgroundColor: 'white',
-        borderRadius: 30,   
-
-        // iOS Shadow
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.5,
-        shadowRadius: 0,
-
-        // Android Shadow
-        elevation: 10,
+    wrapper: {
+        width: '100%',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        backgroundColor: '#f2f4f7', // Light background to contrast the search bar
     },
-
+    searchBar: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        elevation: 5, // Android shadow
+        shadowColor: '#000', // iOS shadow
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+    },
     input: {
-        fontSize: 16, // Adjust text size
-        color: '#333', // Text color
-        paddingLeft: 10, // Better padding
-    }
+        fontSize: 16,
+        color: '#333',
+    },
 });

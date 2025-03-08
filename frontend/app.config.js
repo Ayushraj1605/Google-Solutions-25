@@ -2,9 +2,9 @@ import 'dotenv/config';
 
 export default {
     expo: {
-        name: "e-waste",
-        scheme: "e-waste",
-        slug: "E-waste",
+        name: "E-cycle",
+        scheme: "E-cycle",
+        slug: "E-cycle",
         version: "1.0.0",
         orientation: "portrait",
         icon: "./assets/images/logo.png",
@@ -20,7 +20,7 @@ export default {
         android: {
             package: "com.yourcompany.ewaste", // Update this if needed
             adaptiveIcon: {
-                foregroundImage: "",
+                foregroundImage: "./assets/images/logo.png",
                 backgroundColor: "#ffffff"
             },
             config: {
@@ -32,7 +32,7 @@ export default {
         web: {
             bundler: "metro",
             output: "static",
-            favicon: ""
+            favicon: "./assets/images/logo.png"
         },
         plugins: [
             "expo-router",
@@ -43,6 +43,12 @@ export default {
                     imageWidth: 200,
                     resizeMode: "contain",
                     backgroundColor: "#ffffff"
+                }
+            ],
+            [
+                "expo-image-picker",
+                {
+                    "photosPermission": "The app accesses your photos to let you share them with your friends."
                 }
             ],
             [
