@@ -4,7 +4,7 @@ export default {
     expo: {
         name: "E-cycle",
         scheme: "E-cycle",
-        slug: "E-cycle",
+        slug: "e-cycle",
         version: "1.0.0",
         orientation: "portrait",
         icon: "./assets/images/logo.png",
