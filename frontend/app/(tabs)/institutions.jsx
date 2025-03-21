@@ -427,7 +427,7 @@ const Institutions = () => {
         </MapView>
       ) : (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
+          <ActivityIndicator size="large" color="#609966" />
           <Text style={styles.loadingText}>Loading map... </Text>
         </View>
       )}
@@ -462,7 +462,7 @@ const Institutions = () => {
           }
         }}
       >
-        <Ionicons name="locate" size={22} color="#2196F3" />
+        <Ionicons name="locate" size={22} color="#609966" />
       </TouchableOpacity>
 
       {/* Directions Info Bar - Only show when in routing mode */}
@@ -476,18 +476,16 @@ const Institutions = () => {
               }}
               style={styles.backButton}
             >
-              <Ionicons name="arrow-back" size={24} color="#2196F3" />
+              <Ionicons name="arrow-back" size={24} color="#609966" />
             </TouchableOpacity>
 
             <View style={styles.directionsInfo}>
               <Text style={styles.directionsTitle}>Directions</Text>
-              <Text style={styles.directionsText}>
-                {distance} • {duration}
-              </Text>
+              <Text style={styles.directionsText}>`{distance} • {duration}`</Text>
             </View>
 
             <TouchableOpacity style={styles.directionsShare}>
-              <Ionicons name="share-outline" size={24} color="#2196F3" />
+              <Ionicons name="share-outline" size={24} color="#609966" />
             </TouchableOpacity>
           </View>
         </View>
@@ -520,7 +518,7 @@ const Institutions = () => {
                 
                 <View style={styles.modalInfo}>
                   <View style={styles.infoItem}>
-                    <Ionicons name="location" size={20} color="#2196F3" />
+                    <Ionicons name="location" size={20} color="#609966" />
                     <Text style={styles.infoText}>
                       {distance || "Calculating..."}
                     </Text>
@@ -528,7 +526,7 @@ const Institutions = () => {
                   
                   {duration && (
                     <View style={styles.infoItem}>
-                      <Ionicons name="time-outline" size={20} color="#2196F3" />
+                      <Ionicons name="time-outline" size={20} color="#609966" />
                       <Text style={styles.infoText}>{duration}</Text>
                     </View>
                   )}
@@ -605,7 +603,7 @@ const Institutions = () => {
         ) : (
           <View style={styles.emptyDrawer}>
             {loading ? (
-              <ActivityIndicator size="large" color="#2196F3" />
+              <ActivityIndicator size="large" color="#609966" />
             ) : (
               <>
                 <Ionicons name="location-outline" size={60} color="#CCCCCC" />
@@ -694,7 +692,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     bottom: 70,
-    backgroundColor: '#2196F3',
+    backgroundColor: '#609966',
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -751,7 +749,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 6,
     borderWidth: 2,
-    borderColor: '#2196F3',
+    borderColor: '#609966',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -826,7 +824,7 @@ const styles = StyleSheet.create({
   directionsButton: {
     flex: 1.5,
     flexDirection: 'row',
-    backgroundColor: '#2196F3',
+    backgroundColor: '#609966',
     padding: 12,
     borderRadius: 8,
     alignItems: 'center',
@@ -917,7 +915,7 @@ const styles = StyleSheet.create({
   },
   emptyDrawerText: {
     fontSize: 16,
-    color: '#666666',
+    color: '#609966',
     textAlign: 'center',
     marginTop: 16,
     marginBottom: 24,
@@ -925,7 +923,7 @@ const styles = StyleSheet.create({
   emptyDrawerButton: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#2196F3',
+    backgroundColor: '#609966',
     borderRadius: 8,
   },
   emptyDrawerButtonText: {

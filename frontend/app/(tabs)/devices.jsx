@@ -10,8 +10,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const Devices = ({ visible = true, style }) => {
   const [isExtended, setIsExtended] = useState(true);
   const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]); // New state for filtered data
   const [userId, setUserId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(''); // New state for search query
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const _retrieveData = async () => {
     try {
@@ -34,9 +37,16 @@ const Devices = ({ visible = true, style }) => {
     if (userId) {
       const fetchData = async () => {
         try {
-          const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}`);
+          const response = await axios.get(
+            `https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}&cache=${refreshKey}`
+          );
           if (response.data?.devices) {
-            setData(response.data.devices);
+            const devicesWithStatus = response.data.devices.map(device => ({
+              ...device,
+              recycleStatus: device.recycleStatus || false
+            }));
+            setData(devicesWithStatus);
+            setFilteredData(devicesWithStatus);
           }
         } catch (error) {
           console.error('Error fetching devices:', error);
@@ -44,7 +54,22 @@ const Devices = ({ visible = true, style }) => {
       };
       fetchData();
     }
-  }, [userId]);
+  }, [userId, refreshKey]);
+
+  useEffect(() => {
+    const filterData = () => {
+      if (searchQuery) {
+        const filtered = data.filter(item => {
+          const text = `${item.deviceName || ''} ${item.deviceID || ''} ${item.deviceType|| ''}`.toLowerCase();
+          return text.includes(searchQuery.toLowerCase());
+        });
+        setFilteredData(filtered);
+      } else if (data.length > 0) {
+        setFilteredData(data);
+      }
+    };
+    filterData();
+  }, [searchQuery, data]);
 
   const onScroll = ({ nativeEvent }) => {
     setIsExtended(nativeEvent?.contentOffset?.y <= 0);
@@ -54,10 +79,25 @@ const Devices = ({ visible = true, style }) => {
     router.push('/deviceinfo');
   };
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  const debouncedSearch = React.useCallback(
+    (query) => {
+      const timeoutId = setTimeout(() => {
+        handleSearch(query);
+      }, 500); // Wait for 500ms before updating the search query
+
+      return () => clearTimeout(timeoutId);
+    },
+    []
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
-      <SearchBar />
+      <SearchBar onSearch={debouncedSearch} />
       {isLoading ? (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#609966" />
@@ -69,8 +109,8 @@ const Devices = ({ visible = true, style }) => {
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
         >
-          {data.length > 0 ? (
-            data.map((item, index) => (
+          {filteredData.length > 0 ? (
+            filteredData.map((item, index) => (
               <Cards key={item.id || index} data={item} />
             ))
           ) : (

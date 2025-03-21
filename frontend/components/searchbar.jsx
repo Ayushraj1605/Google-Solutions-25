@@ -2,15 +2,12 @@ import * as React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Searchbar } from 'react-native-paper';
 
-const SearchBar = () => {
-    const [searchQuery, setSearchQuery] = React.useState('');
-
+const SearchBar = ({ onSearch }) => {
     return (
         <View style={styles.wrapper}>
             <Searchbar
                 placeholder="Search for devices"
-                onChangeText={setSearchQuery}
-                value={searchQuery}
+                onChangeText={onSearch}
                 style={styles.searchBar}
                 inputStyle={styles.input}
                 iconColor="#888"

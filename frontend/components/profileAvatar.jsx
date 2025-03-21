@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 
 const ProfileImage = ({ name }) => {
   const nameParts = name.split(' ');
+  console.log(nameParts);
   const firstNameInitial = nameParts[0] ? nameParts[0][0] : '';
 //   const lastNameInitial = nameParts[1] ? nameParts[1][0] : '';
 
