@@ -1,6 +1,7 @@
 // firebase.js
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
@@ -23,6 +24,7 @@ const firebaseApp = initializeApp(firebaseConfig); // Renamed to avoid conflict 
 
 // Initialize Firestore
 export const db = getFirestore(firebaseApp);
+export const storage = getStorage(firebaseApp);
 
 // Initialize Express
 const app = express();

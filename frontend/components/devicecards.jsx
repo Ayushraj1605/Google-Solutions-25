@@ -12,7 +12,7 @@ const LeftContent = props => (
   />
 );
 
-const Cards = () => (
+const Cards = ({data}) => (
   <Card style={styles.container} mode="elevated">
     <Card.Title
       title="Eco-Friendly Recycling"

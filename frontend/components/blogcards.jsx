@@ -5,26 +5,21 @@ import { images } from '../constants';
 
 const LeftContent = (props) => <Avatar.Icon {...props} icon={images.logo} size={40} />;
 
-const BlogCards = () => (
+const BlogCards = ({
+  title,
+  imageUrl,
+  body
+}) => (
   <Card style={styles.container} mode="elevated">
     <Card.Title
-      title="Breaking News"
-      subtitle="Today’s Update"
-      left={LeftContent}
+      title={title}
+      left={(props) => <Avatar.Image {...props} source={{ uri: imageUrl }} size={40} style={styles.avatar} />}
       titleStyle={styles.title}
       subtitleStyle={styles.subtitle}
     />
-    <Card.Cover
-      source={{ uri: 'https://picsum.photos/700' }}
-      style={styles.cover}
-    />
     <Card.Content>
-      <Text style={styles.headline}>Headline of the Day</Text>
       <Text style={styles.body}>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nemo reiciendis
-        debitis consequuntur perspiciatis eius nihil voluptas iusto explicabo
-        nam! Maxime quasi laudantium rem iste reiciendis quia aliquid esse culpa
-        incidunt.
+        {body}
       </Text>
     </Card.Content>
     <Card.Actions>
@@ -42,7 +37,7 @@ export default BlogCards;
 
 const styles = StyleSheet.create({
   container: {
-    width: '95%',
+    width: '98%',
     maxWidth: 420,
     marginVertical: 10,
     borderRadius: 16,

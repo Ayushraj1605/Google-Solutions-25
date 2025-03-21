@@ -6,13 +6,14 @@ import '../global.css';
 
 const LeftContent = (props) => <Avatar.Icon {...props} icon={images.logo} />;
 
-const FactsCards = () => (
+const FactsCards = ({
+    body
+}) => (
     <Card style={styles.container}>
         <Card.Content>
             <Text className="text-4xl mb-1">Did You Know?</Text>
-            <Text variant="bodyMedium">Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible.</Text>
+            <Text variant="bodyMedium">{body}</Text>
         </Card.Content>
-        <Card.Cover source={{ uri: 'https://picsum.photos/700' }} />
     </Card>
 );
 

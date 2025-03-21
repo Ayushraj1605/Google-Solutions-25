@@ -5,33 +5,36 @@ import { images } from '../constants';
 
 const LeftContent = (props) => <Avatar.Icon {...props} icon={images.logo} size={40} />;
 
-const NewsCards = () => (
+const NewsCards = ({ 
+  title,
+  subtitle,
+  imageUrl,
+  headline,
+  body,
+  onShare,
+  onReadMore 
+}) => (
   <Card style={styles.container} mode="elevated">
     <Card.Title
-      title="Breaking News"
-      subtitle="Today’s Update"
+      title={title}
+      subtitle={subtitle}
       left={LeftContent}
       titleStyle={styles.title}
       subtitleStyle={styles.subtitle}
     />
     <Card.Cover
-      source={{ uri: 'https://picsum.photos/700' }}
+      source={{ uri: imageUrl }}
       style={styles.cover}
     />
     <Card.Content>
-      <Text style={styles.headline}>Headline of the Day</Text>
-      <Text style={styles.body}>
-        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nemo reiciendis
-        debitis consequuntur perspiciatis eius nihil voluptas iusto explicabo
-        nam! Maxime quasi laudantium rem iste reiciendis quia aliquid esse culpa
-        incidunt.
-      </Text>
+      <Text style={styles.headline}>{headline}</Text>
+      <Text style={styles.body}>{body}</Text>
     </Card.Content>
     <Card.Actions>
-      <Button mode="outlined" style={styles.buttonOutline} onPress={() => {}}>
+      <Button mode="outlined" style={styles.buttonOutline} onPress={onShare}>
         Share
       </Button>
-      <Button mode="contained" style={styles.buttonContained} onPress={() => {}}>
+      <Button mode="contained" style={styles.buttonContained} onPress={onReadMore}>
         Read More
       </Button>
     </Card.Actions>
@@ -42,7 +45,7 @@ export default NewsCards;
 
 const styles = StyleSheet.create({
   container: {
-    width: '95%',
+    width: '98%',
     maxWidth: 420,
     marginVertical: 10,
     borderRadius: 16,
@@ -56,6 +59,8 @@ const styles = StyleSheet.create({
   cover: {
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    width: '100%',
+    padding: 10,
   },
   title: {
     fontSize: 22,

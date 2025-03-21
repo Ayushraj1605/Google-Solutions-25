@@ -283,7 +283,7 @@ export const getDevices = async (req, res) =>
     }
 
     try {
-        const devicesCollection = collection(db, "devices");
+        const devicesCollection = collection(db, "Devices");
         const devicesQuery = query(devicesCollection, where("userId", "==", userId));
         const querySnapshot = await getDocs(devicesQuery);
 

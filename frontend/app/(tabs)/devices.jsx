@@ -38,6 +38,7 @@ const Devices = ({ visible = true, style }) => {
           if (response.data?.devices) {
             setData(response.data.devices);
           }
+          console.log(data);
         } catch (error) {
           console.error('Error fetching devices:', error);
         }
@@ -45,6 +46,7 @@ const Devices = ({ visible = true, style }) => {
       fetchData();
     }
   }, [userId]);
+  
 
   const onScroll = ({ nativeEvent }) => {
     setIsExtended(nativeEvent?.contentOffset?.y <= 0);
