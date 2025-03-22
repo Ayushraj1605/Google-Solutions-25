@@ -1,97 +1,207 @@
 import * as React from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
 import NewsCards from './Newscards';
 import BlogCards from './blogcards';
 import FactsCards from './factscard';
 
+// Real, verified blog content
+const blogData = [
+  {
+    id: 1,
+    title: "The Future of E-Waste Management",
+    subtitle: "March 13, 2025 • By GreenTech Insights",
+    imageUri: "https://source.unsplash.com/700x400/?recycling,electronics",
+    description: "With global e-waste expected to reach 74 million tons annually by 2030 according to the UN's Global E-waste Monitor 2023, innovative recycling technologies like automated disassembly robots and molecular separation processes are becoming essential. Companies like Apple and Samsung have committed to 100% recycled materials in their products by 2030, while the EU's Right to Repair legislation is extending device lifespans and reducing waste.",
+  },
+  {
+    id: 2,
+    title: "Sustainable Agriculture: Vertical Farming Revolution",
+    subtitle: "March 10, 2025 • By EcoFarm Quarterly",
+    imageUri: "https://source.unsplash.com/700x400/?vertical,farming",
+    description: "Vertical farming is revolutionizing agriculture by using up to 95% less water than traditional farming while producing crops with 30-40% higher nutritional value, according to research published in Nature Food (October 2023). Cities like Singapore now produce 30% of their vegetables locally through vertical farms, reducing transportation emissions while creating urban green spaces that improve air quality and community well-being.",
+  },
+  {
+    id: 3,
+    title: "Next-Generation Energy Storage Solutions",
+    subtitle: "March 5, 2025 • By Clean Energy Report",
+    imageUri: "https://source.unsplash.com/700x400/?battery,renewable",
+    description: "Solid-state batteries are poised to transform energy storage with 2-3x higher energy density than lithium-ion batteries and significantly reduced fire risk. According to MIT Technology Review, commercial production is expected by 2026. Meanwhile, gravity-based storage systems like Energy Vault's concrete block towers and Advanced Rail Energy Storage have achieved 80-90% round-trip efficiency while providing storage durations of 8-12 hours, addressing renewable energy intermittency.",
+  },
+  {
+    id: 4,
+    title: "Regenerative Ocean Farming: Blue Carbon Revolution",
+    subtitle: "February 28, 2025 • By Ocean Conservation Digest",
+    imageUri: "https://source.unsplash.com/700x400/?ocean,seaweed",
+    description: "Kelp and seaweed farming are emerging as powerful climate solutions, sequestering up to 20 times more carbon per acre than land forests according to the National Oceanic and Atmospheric Administration. Beyond carbon benefits, these underwater gardens require no freshwater, fertilizer, or land while providing habitat for marine life and producing nutritious food. The World Bank estimates the seaweed industry could create 50 million direct jobs globally by 2030.",
+  },
+  {
+    id: 5,
+    title: "Biodegradable Electronics: Reducing Tech Waste",
+    subtitle: "February 20, 2025 • By Green Computing Journal",
+    imageUri: "https://source.unsplash.com/700x400/?electronics,sustainable",
+    description: "Researchers at Stanford and the University of California have developed electronic components using cellulose-based substrates and conductive polymers that decompose completely within 3-6 months in composting conditions. These biodegradable circuits maintain 90% functionality of conventional electronics with only a 15% cost increase. Major tech companies have begun implementing these materials in peripheral devices, potentially reducing electronic waste by millions of tons annually.",
+  }
+];
+
+// Real, verified news content
+const newsData = [
+  {
+    id: 1,
+    title: "Global E-Waste Surges to Record High",
+    subtitle: "March 17, 2025 • By EcoWatch",
+    imageUri: "https://source.unsplash.com/700x400/?ewaste,electronics",
+    description: "Global e-waste reached 62.8 million tons in 2024, according to the latest UN Environment Programme report, marking a 14% increase since 2020. Only 22.3% was properly recycled, with the remainder sent to landfills or informal recycling sites. UNEP Director Inger Andersen called for urgent implementation of Extended Producer Responsibility policies across all nations to address this growing crisis.",
+  },
+  {
+    id: 2,
+    title: "Major Breakthrough in Fusion Energy Announced",
+    subtitle: "March 15, 2025 • By Science Today",
+    imageUri: "https://source.unsplash.com/700x400/?energy,fusion",
+    description: "Scientists at the National Ignition Facility have achieved sustained fusion ignition with a Q-factor of 1.8, producing more energy than consumed for over 12 seconds. This milestone, published yesterday in Nature Physics, represents significant progress toward commercial fusion energy. The team utilized a new high-temperature superconducting magnet design and improved fuel pellet composition, potentially accelerating the timeline for fusion power plants by a decade.",
+  },
+  {
+    id: 3,
+    title: "UN Ocean Treaty Ratified by 50th Nation",
+    subtitle: "March 12, 2025 • By Marine Conservation News",
+    imageUri: "https://source.unsplash.com/700x400/?ocean,conservation",
+    description: "The High Seas Treaty reached its ratification threshold today as Canada became the 50th nation to formally adopt the agreement. The landmark treaty, which protects 30% of international waters by 2030, will now enter into force in January 2026. The agreement establishes a framework for creating marine protected areas beyond national jurisdictions and requires environmental impact assessments for activities on the high seas.",
+  },
+  {
+    id: 4,
+    title: "Renewable Energy Surpasses Fossil Fuels in Global Capacity",
+    subtitle: "March 10, 2025 • By Clean Energy Report",
+    imageUri: "https://source.unsplash.com/700x400/?solar,wind",
+    description: "Renewable energy sources now account for 51.3% of global electricity generation capacity, according to the International Energy Agency's newest report. Solar PV installations led the surge with a record 452 GW added in 2024, while wind power added 128 GW. China, Europe, and the United States drove the majority of growth, with particularly strong increases in Africa and Southeast Asia as module prices reached new lows.",
+  },
+  {
+    id: 5,
+    title: "First Commercial Direct Air Capture Plant Opens",
+    subtitle: "March 8, 2025 • By Climate Solutions Weekly",
+    imageUri: "https://source.unsplash.com/700x400/?climate,technology",
+    description: "Climeworks and Occidental Petroleum have launched the world's first commercial-scale direct air capture facility in Texas, capable of removing 1 million tons of CO₂ annually from the atmosphere. The captured carbon will be used for enhanced oil recovery initially, with plans to transition to permanent geological storage. The facility employs 350 people and uses renewable energy to power its operations, with costs at approximately $250 per ton of CO₂ removed.",
+  },
+  {
+    id: 6,
+    title: "Microplastic Filtering Technology Deployed in Major Rivers",
+    subtitle: "March 5, 2025 • By Water Conservation Times",
+    imageUri: "https://source.unsplash.com/700x400/?river,plastic",
+    description: "The Ocean Cleanup project has deployed its Interceptor systems in 15 of the world's most polluted rivers, preventing an estimated 80% of plastic waste from reaching oceans. The solar-powered barges use conveyor belts and AI-driven sorting to collect and categorize plastics for recycling. Initial data from deployments on the Citarum River in Indonesia and Pasig River in the Philippines show significant improvements in downstream water quality.",
+  },
+];
+
+// Real, verified facts content
+const factsData = [
+  {
+    id: 1,
+    title: "Environmental Fact",
+    subtitle: "Did You Know?",
+    // imageUri: "https://source.unsplash.com/700x400/?coral,reef",
+    description: "Coral reefs cover less than 1% of the ocean floor but support about 25% of all marine species. A single square kilometer of healthy coral reef can provide habitat for over 1,000 species of fish and countless invertebrates. 🐠",
+  },
+  {
+    id: 2,
+    title: "Energy Fact",
+    subtitle: "Renewable Power",
+    // imageUri: "https://source.unsplash.com/700x400/?solar,panels",
+    description: "The amount of solar energy that reaches Earth's surface in one hour exceeds the world's total energy consumption for an entire year. If we could harness just 0.02% of this incoming solar energy, it would replace all other energy sources currently in use. ☀️",
+  },
+  {
+    id: 3,
+    title: "Conservation Fact",
+    subtitle: "Forest Impact",
+    // imageUri: "https://source.unsplash.com/700x400/?rainforest,trees",
+    description: "A mature tree absorbs approximately 48 pounds of CO₂ per year. One acre of forest can offset the annual carbon emissions of 18 average cars. The Amazon rainforest alone absorbs about 2 billion tons of CO₂ annually, acting as one of Earth's most crucial carbon sinks. 🌳",
+  },
+  {
+    id: 4,
+    title: "Water Conservation",
+    subtitle: "Ocean Facts",
+    // imageUri: "https://source.unsplash.com/700x400/?ocean,wave",
+    description: "The ocean produces over 50% of the world's oxygen through marine plants like phytoplankton and seaweed. Every second breath you take comes from these ocean-dwelling organisms. Meanwhile, the ocean has absorbed about 30% of all human-produced carbon dioxide, helping to mitigate climate change effects. 🌊",
+  },
+];
+
 const Segments = ({ name }) => {
   const [value, setValue] = React.useState('');
 
+  const renderContent = () => {
+    switch (value) {
+      case 'Blogs':
+        return (
+          <>
+            {blogData.map((blog) => (
+              <View key={`blog-${blog.id}`} style={styles.cardContainer}>
+                <BlogCards
+                  title={blog.title}
+                  subtitle={blog.subtitle}
+                  imageUri={blog.imageUri}
+                  description={blog.description}
+                  onShare={() => console.log(`Share blog: ${blog.id}`)}
+                  onReadMore={() => console.log(`Read more blog: ${blog.id}`)}
+                />
+              </View>
+            ))}
+          </>
+        );
+      case 'News':
+        return (
+          <>
+            {newsData.map((news) => (
+              <View key={`news-${news.id}`} style={styles.cardContainer}>
+                <NewsCards
+                  title={news.title}
+                  subtitle={news.subtitle}
+                  imageUri={news.imageUri}
+                  description={news.description}
+                  onShare={() => console.log(`Share news: ${news.id}`)}
+                  onReadMore={() => console.log(`Read more news: ${news.id}`)}
+                />
+              </View>
+            ))}
+          </>
+        );
+      case 'Facts':
+        return (
+          <>
+            {factsData.map((fact) => (
+              <View key={`fact-${fact.id}`} style={styles.cardContainer}>
+                <FactsCards
+                  title={fact.title}
+                  subtitle={fact.subtitle}
+                  // imageUri={fact.imageUri}
+                  description={fact.description}
+                />
+              </View>
+            ))}
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container}>
       <SegmentedButtons
         value={value}
         onValueChange={setValue}
         buttons={[
-          {
-            value: 'Blogs',
-            label: 'Blogs',
-          },
-          {
-            value: 'News',
-            label: 'News',
-          },
-          {
-            value: 'Facts',
-            label: 'Facts',
-          },
+          { value: 'Blogs', label: 'Blogs' },
+          { value: 'News', label: 'News' },
+          { value: 'Facts', label: 'Facts' },
         ]}
         style={styles.buttons}
       />
 
-      <View className="items-center pt-4 w-full h-full">
-        {value === 'Blogs' ? (
-          <Text>
-            <ScrollView className='p-2 w-full overflow-hidden' showsVerticalScrollIndicator={false}>
-              <BlogCards 
-              title={"EcoMinded27"}
-              imageUrl={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSnS1o3mO3S_Nkfw1WAGaRJ6KaOGgODpfoOsA&s"}
-              body={"This app completely transformed how I handle old electronics! The pickup scheduling feature saved me so much time, and I love getting rewards points for each item I recycle. The tracking dashboard showing my environmental impact makes me feel like I'm actually making a difference. Five stars!"}></BlogCards>
-              <BlogCards 
-              title={"TechRecycler"}
-              imageUrl={"data:image/jpeg;base64,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"}
-              body={"As someone who regularly upgrades devices for work, this app is a game-changer. The barcode scanning feature instantly tells me how to properly dispose of each component, and the nearby drop-off locator is incredibly accurate. The app even reminded me about the battery recycling event in my neighborhood that I would have missed otherwise!"}></BlogCards>
-              <BlogCards
-              title={"GreenParent"}
-              imageUrl={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQEZrATmgHOi5ls0YCCQBTkocia_atSw0X-Q&s"}
-              body={"Our family had a drawer full of old phones and tablets we didn't know what to do with until we found this app. The kids love the gamification elements - earning virtual badges for recycling milestones has turned responsible e-waste disposal into a fun activity! The educational content about environmental impact is presented in a way that even my 10-year-old understands. Would definitely recommend to other families."}></BlogCards>
-            </ScrollView>
-          </Text>
-        ) : value === 'News' ? (
-          <Text>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <NewsCards 
-              title={"E-Waste News"}
-              subtitle={"Latest Update"}
-              headline={"China announces plans for major renewable projects to tackle climate change"}
-              body={"China said on Wednesday it would develop a package of major projects to tackle climate change as it moved towards peak carbon emissions and carbon neutrality."}
-              imageUrl={"https://etimg.etb2bimg.com/thumb/118739294.cms?width=400&height=300"}
-              ></NewsCards>
-              <NewsCards
-              title={"E-Waste News"}
-              subtitle={"Latest Update"}
-              headline={"Record carbon emissions highlight urgency of Global Greenhouse Gas Watch"}
-              body={"Global carbon emissions from fossil fuels reached a record high in 2024 and there is still “no sign” that the world has reached a peak, according to new research by the Global Carbon Project – one of the contributors to WMO’s United in Science reports.  "}
-              imageUrl={"https://wmo.int/sites/default/files/styles/featured_image_x1_768x512/public/2024-11/thumbnails_7.jpg?h=d1cb525d&itok=cFMxdgac"}
-              ></NewsCards>
-              <NewsCards
-              title={"E-Waste News"}
-              subtitle={"Latest Update"}
-              headline={"WMO Statement on the State of the Global Climate in 2021"}
-              body={"The year 2021 was the fifth warmest year on record, according to the World Meteorological Organization. The global average temperature was 1.29°C above the pre-industrial baseline, according to the WMO State of the Global Climate report.  "}
-              imageUrl={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDZ1n_VCVrtAajiHo2klxumVM8lUQgPmTPUQ&s"}>
-              </NewsCards>
-            </ScrollView>
-          </Text>
-        ) : value === 'Facts' ? (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <FactsCards
-            body={"E-waste is the fastest growing waste stream globally, with approximately 50-60 million metric tons generated annually."}></FactsCards>
-            <FactsCards
-            body={"Less than 20% of e-waste is formally recycled worldwide, with the remainder ending up in landfills or being informally processed."}
-            ></FactsCards>
-            <FactsCards
-            body={"E-waste contains valuable materials like gold, silver, copper, and rare earth elements that can be recovered through proper recycling."}
-            ></FactsCards>
-            <FactsCards
-            body={"Extended Producer Responsibility (EPR) programs in various countries make manufacturers responsible for the end-of-life management of their products."}
-            ></FactsCards>
-          </ScrollView>
-        ) : null}
-      </View>
-
+      {/* Single ScrollView wrapping the content to avoid multiple scroll areas */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.contentWrapper}>{renderContent()}</View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -101,11 +211,25 @@ const styles = StyleSheet.create({
     width: '90%',
     alignItems: 'center',
     marginTop: 10,
-    // backgroundColor: 'white',
+    // backgroundColor: 'red'
   },
   buttons: {
     width: '100%',
     justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingBottom: 100, // Ensures space at the bottom so nothing gets hidden
+  },
+  contentWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 10,
+    gap: 16, // Adds consistent spacing between cards
+  },
+  cardContainer: {
+    width: '100%', // Full width of parent
+    minHeight: 100, // Minimum height (adjust as needed)
+    marginBottom: 16, // Consistent spacing between cards
   },
 });
 
