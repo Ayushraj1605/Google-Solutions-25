@@ -4,7 +4,7 @@ import ButtonProfile from '../../components/buttonProfile';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import ProfileImage from '../../components/profileAvatar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 
 const ProfileScreen = () => {
@@ -55,6 +55,16 @@ const ProfileScreen = () => {
     }
   };
 
+  const handleAnalytics = () => {
+    console.log('User Analytics');
+    router.push('/userAnalytics');
+  }
+
+  const handleOrders = () => {
+    console.log('Order History');
+    router.push('/orderHistory');
+  }
+
   return (
     <>
       <StatusBar 
@@ -100,6 +110,7 @@ const ProfileScreen = () => {
             }}
           >
             <ProfileImage name={userData.name} />
+            {console.log(userData.name)}
             <View style={{ marginLeft: 16, flex: 1 }}>
               <Text style={{ fontSize: 22, fontWeight: '700', color: '#1F2937' }}>
                 {userData.name}
@@ -115,7 +126,9 @@ const ProfileScreen = () => {
 
           {/* Menu Options */}
           <View style={{ marginTop: 40, paddingHorizontal: 20 }}>
-            <ButtonProfile title="Order History" onPress={() => {}} />
+            <ButtonProfile title="Order History" handlePress={handleOrders} />
+            <View style={{ height: 20 }} />
+            <ButtonProfile title="Analytics" handlePress={handleAnalytics} />
             <View style={{ height: 20 }} />
             <ButtonProfile title="Sign Out" handlePress={handleSignOut} />
           </View>

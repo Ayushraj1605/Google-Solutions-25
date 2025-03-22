@@ -1,19 +1,18 @@
-import {React, useState} from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Avatar, Button, Card, Text } from 'react-native-paper';
-import { Logo } from '../assets/svg/logo';
+import React, { useState } from 'react';
+import { 
+  StyleSheet, 
+  View, 
+  Text, 
+  Image, 
+  TouchableOpacity, 
+  ActivityIndicator, 
+  Dimensions 
+} from 'react-native';
 import { router } from 'expo-router';
 
-const LeftContent = props => (
-  <Avatar.Image
-    {...props}
-    source={Logo}
-    size={48}
-    style={styles.avatar}
-  />
-);
+const { width } = Dimensions.get('window');
 
-const Cards = ({ data }) => {
+const DeviceCard = ({ data }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleRecyclePress = () => {
@@ -21,101 +20,222 @@ const Cards = ({ data }) => {
     router.push('/recycleform');
     setIsSubmitting(false);
   };
+
+  const handleViewDetails = () => {
+    router.push({
+      pathname: '/device-details',
+      params: { deviceId: data.deviceId }
+    });
+  };
+
+  // Default values if data is incomplete
+  const deviceName = data?.deviceName || "Eco-Friendly Recycling";
+  const deviceType = data?.deviceType || "Make the world greener";
+  const imageUrl = data?.imageUrl || 'https://picsum.photos/700';
+  const deviceId = data?.deviceId || "Unknown";
+  const recycleStatus = data?.recycleStatus || false;
+
+  // Status indicator color
+  const statusColor = recycleStatus ? '#FFB74D' : '#4CAF50';
+  const statusText = recycleStatus ? "In Progress" : "Ready to Recycle";
+
   return (
-    <Card style={styles.container} mode="elevated">
-      <Card.Title
-        title={data?.deviceName || "Eco-Friendly Recycling"}
-        subtitle={data?.deviceType || "Make the world greener"}
-        left={LeftContent}
-        titleStyle={styles.title}
-        subtitleStyle={styles.subtitle}
-      />
-      <Card.Cover
-        source={{ uri: data?.imageUrl || 'https://picsum.photos/700' }}
-        style={styles.cover}
-      />
-      <Card.Content style={styles.content}>
-        <Text variant="bodyMedium" style={styles.description}>
-          Device ID: {data.deviceId}
-        </Text>
-      </Card.Content>
-      <Card.Actions style={styles.actions}>
-        <Button
-          mode="outlined"
-          textColor="#333"
-          style={styles.buttonOutlined}
-          labelStyle={styles.buttonLabel}
-        >
-          View Details
-        </Button>
-        <Button
-          mode="contained"
-          buttonColor={data.recycleStatus ? '#888' : '#34C759'}
-          textColor="#fff"
-          style={styles.buttonContained}
-          labelStyle={styles.buttonLabel}
-          onPress={!data.recycleStatus ? handleRecyclePress : null}
-          disabled={data.recycleStatus || isSubmitting}
-        >
-          {isSubmitting ? "Loading..." : (data.recycleStatus ? "Recycle in Progress" : "Recycle")}
-        </Button>
-      </Card.Actions>
-    </Card>
+    <View style={styles.container}>
+      {/* Status indicator */}
+      <View style={[styles.statusIndicator, { backgroundColor: statusColor }]}>
+        <Text style={styles.statusText}>{statusText}</Text>
+      </View>
+
+      <View style={styles.contentContainer}>
+        {/* Left side: Image */}
+        <View style={styles.imageContainer}>
+          <Image 
+            source={{ uri: imageUrl }} 
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../assets/svg/logo')} 
+              style={styles.logo}
+            />
+          </View>
+        </View>
+
+        {/* Right side: Info and buttons */}
+        <View style={styles.infoContainer}>
+          {/* Device details */}
+          <View style={styles.detailsContainer}>
+            <Text style={styles.title} numberOfLines={1}>{deviceName}</Text>
+            <Text style={styles.subtitle} numberOfLines={1}>{deviceType}</Text>
+            <View style={styles.idContainer}>
+              <Text style={styles.idLabel}>ID:</Text>
+              <Text style={styles.idValue}>{deviceId}</Text>
+            </View>
+          </View>
+
+          {/* Action buttons */}
+          <View style={styles.actionContainer}>
+            <TouchableOpacity 
+              style={styles.detailsButton}
+              onPress={handleViewDetails}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.detailsButtonText}>Details</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[
+                styles.recycleButton, 
+                recycleStatus && styles.recycleButtonDisabled
+              ]}
+              onPress={!recycleStatus ? handleRecyclePress : null}
+              disabled={recycleStatus || isSubmitting}
+              activeOpacity={recycleStatus ? 1 : 0.7}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.recycleButtonText}>
+                  {recycleStatus ? "Processing" : "Recycle"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 };
-
-export default Cards;
 
 const styles = StyleSheet.create({
   container: {
     width: '95%',
+    maxWidth: 500,
     alignSelf: 'center',
-    marginVertical: 12,
-    borderRadius: 16,
-    elevation: 4,
-    backgroundColor: '#fff',
-  },
-  avatar: {
-    backgroundColor: '#E0F7FA',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#777',
-  },
-  cover: {
-    marginHorizontal: 16,
-    marginTop: 8,
+    marginVertical: 8,
     borderRadius: 12,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+    height: 120, // Fixed compact height
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  statusIndicator: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderBottomLeftRadius: 8,
+    zIndex: 1,
   },
-  description: {
-    fontSize: 15,
-    color: '#555',
-    lineHeight: 22,
+  statusText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
-  actions: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+  contentContainer: {
+    flexDirection: 'row',
+    height: '100%',
+  },
+  imageContainer: {
+    width: 120,
+    height: '100%',
+    position: 'relative',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  logoContainer: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 20,
+    padding: 2,
+  },
+  logo: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  infoContainer: {
+    flex: 1,
+    padding: 10,
     justifyContent: 'space-between',
   },
-  buttonOutlined: {
-    borderRadius: 8,
-    borderColor: '#ccc',
+  detailsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 2,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#777',
+    marginBottom: 6,
+  },
+  idContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  idLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginRight: 4,
+  },
+  idValue: {
+    fontSize: 12,
+    color: '#555',
+    fontWeight: '500',
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  detailsButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
     borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: '#f8f8f8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 80,
   },
-  buttonContained: {
-    borderRadius: 8,
+  detailsButtonText: {
+    fontSize: 12,
+    color: '#555',
+    fontWeight: '500',
   },
-  buttonLabel: {
-    fontSize: 14,
-    paddingHorizontal: 8,
+  recycleButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: '#34C759',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 90,
+  },
+  recycleButtonDisabled: {
+    backgroundColor: '#888',
+  },
+  recycleButtonText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
+
+export default DeviceCard;

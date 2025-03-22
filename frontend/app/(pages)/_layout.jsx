@@ -27,6 +27,20 @@ const _layout = () => {
           // headerTitle: 'Upload Device Info',
         }}
       />
+      <Stack.Screen
+        name='userAnalytics'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
+      />
+      <Stack.Screen
+        name='orderHistory'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
+      />
     </Stack>
   )
 }
