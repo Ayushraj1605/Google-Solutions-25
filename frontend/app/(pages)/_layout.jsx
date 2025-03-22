@@ -9,8 +9,22 @@ const _layout = () => {
       <Stack.Screen
         name='deviceinfo'
         options={{
-          // headerShown: false,
-          headerTitle: 'Upload Device Info',
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
+      />
+      <Stack.Screen
+        name='organisationList'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
+      />
+      <Stack.Screen
+        name='recycleform'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
         }}
       />
     </Stack>
