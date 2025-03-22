@@ -3,15 +3,15 @@ import { View, Text, StyleSheet } from 'react-native';
 
 const ProfileImage = ({ name }) => {
   const nameParts = name.split(' ');
-  console.log(nameParts);
   const firstNameInitial = nameParts[0] ? nameParts[0][0] : '';
-//   const lastNameInitial = nameParts[1] ? nameParts[1][0] : '';
+  const lastNameInitial = nameParts[1] ? nameParts[1][0] : '';
+  console.log(nameParts);
 
   return (
     <View style={styles.profileImage}>
       <Text style={styles.initials}>
         {firstNameInitial}
-        {/* {lastNameInitial} */}
+        {lastNameInitial}
       </Text>
     </View>
   );
