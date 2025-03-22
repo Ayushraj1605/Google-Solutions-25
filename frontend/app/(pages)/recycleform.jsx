@@ -1,15 +1,55 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Button, TextInput, Text, HelperText } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  ActivityIndicator,
+  SafeAreaView,
+  StatusBar,
+  KeyboardAvoidingView, 
+  Platform,
+  TextInput as TextInputOriginal
+} from 'react-native';
+import { Text } from 'react-native-paper';
 import { router } from 'expo-router';
 import axios from 'axios';
 import * as DocumentPicker from 'expo-document-picker';
 import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+
+// Custom TextInput component to avoid React Native Paper dependencies
+const TextInput = ({ style, ...props }) => {
+  return (
+    <View style={style}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={{ flex: 1 }}>
+          {Platform.OS === 'web' ? (
+            <input 
+              style={{ 
+                fontSize: 16, 
+                width: '100%', 
+                outline: 'none', 
+                border: 'none', 
+                backgroundColor: 'transparent',
+                padding: 0,
+              }}
+              {...props} 
+            />
+          ) : (
+            <TextInputOriginal style={{ fontSize: 16 }} {...props} />
+          )}
+        </View>
+      </View>
+    </View>
+  );
+};
 
 const RecycleForm = () => {
   const params = useLocalSearchParams();
   const deviceId = params.deviceId;
 
+  // Form state
   const [formData, setFormData] = useState({
     modelNumber: '',
     imei: '',
@@ -17,15 +57,54 @@ const RecycleForm = () => {
     description: '',
     invoice: null
   });
+  
+  // UI state
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [focused, setFocused] = useState(null);
+  const [isFormValid, setIsFormValid] = useState(false);
 
-  const validateYear = (year) => {
-    if (year && (year.length !== 4 || isNaN(year))) {
-      setError('Please enter a valid 4-digit year');
-      return false;
+  // Validate form on every change
+  useEffect(() => {
+    validateForm();
+  }, [formData]);
+
+  const validateForm = () => {
+    const newErrors = {};
+    let valid = true;
+
+    // Model number validation
+    if (!formData.modelNumber.trim()) {
+      newErrors.modelNumber = 'Model number is required';
+      valid = false;
     }
-    return true;
+
+    // Year validation if provided
+    if (formData.purchaseYear) {
+      const currentYear = new Date().getFullYear();
+      const year = parseInt(formData.purchaseYear);
+      
+      if (formData.purchaseYear.length !== 4 || isNaN(year)) {
+        newErrors.purchaseYear = 'Please enter a valid 4-digit year';
+        valid = false;
+      } else if (year > currentYear) {
+        newErrors.purchaseYear = 'Year cannot be in the future';
+        valid = false;
+      } else if (year < 1990) {
+        newErrors.purchaseYear = 'Please enter a year after 1990';
+        valid = false;
+      }
+    }
+
+    // IMEI validation if provided
+    if (formData.imei && !/^\d{15}$/.test(formData.imei)) {
+      newErrors.imei = 'IMEI should be 15 digits';
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    setIsFormValid(valid);
+    return valid;
   };
 
   const handleUploadInvoice = async () => {
@@ -38,16 +117,12 @@ const RecycleForm = () => {
       }
     } catch (err) {
       console.error('Invoice upload failed:', err);
+      setErrors(prev => ({...prev, invoice: 'Failed to upload invoice'}));
     }
   };
 
   const handleSubmit = async () => {
-    if (!formData.modelNumber) {
-      setError('Model number is required');
-      return;
-    }
-
-    if (!validateYear(formData.purchaseYear)) return;
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
@@ -66,113 +141,362 @@ const RecycleForm = () => {
         });
       }
 
-      await axios.post(
-        'https://cloudrunservice-254131401451.us-central1.run.app/recycle',
-        formPayload,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
-      );
+      // Commented API call for demo purposes
+      // await axios.post(
+      //   'https://cloudrunservice-254131401451.us-central1.run.app/recycle',
+      //   formPayload,
+      //   { headers: { 'Content-Type': 'multipart/form-data' } }
+      // );
 
-      router.back();
-      router.replace({ pathname: '/devices', params: { refresh: Date.now() } });
+      // For demo, show loading for a moment
+      setTimeout(() => {
+        setLoading(false);
+        router.back();
+        router.replace({ pathname: '/organisationList', params: { refresh: Date.now() } });
+      }, 1500);
     } catch (err) {
       console.error('Submission error:', err);
-      setError('Submission failed. Please try again.');
-    } finally {
+      setErrors(prev => ({...prev, general: 'Submission failed. Please try again.'}));
       setLoading(false);
     }
   };
 
+  // Custom text input component
+  const CustomInput = ({ 
+    label, 
+    value, 
+    onChangeText, 
+    fieldName, 
+    keyboardType = 'default',
+    multiline = false,
+    optional = false
+  }) => {
+    const isFocused = focused === fieldName;
+    const hasError = !!errors[fieldName];
+    
+    return (
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>
+          {label} {!optional && <Text style={styles.requiredStar}>*</Text>}
+        </Text>
+        <View
+          style={[
+            styles.inputField,
+            isFocused && styles.inputFieldFocused,
+            hasError && styles.inputFieldError,
+            multiline && styles.textArea
+          ]}
+        >
+          <TextInput
+            value={value}
+            onChangeText={(text) => {
+              onChangeText(text);
+              if (errors[fieldName]) {
+                setErrors(prev => {
+                  const newErrors = {...prev};
+                  delete newErrors[fieldName];
+                  return newErrors;
+                });
+              }
+            }}
+            onFocus={() => setFocused(fieldName)}
+            onBlur={() => setFocused(null)}
+            keyboardType={keyboardType}
+            multiline={multiline}
+            style={[
+              styles.input,
+              multiline && styles.textAreaInput
+            ]}
+            placeholder={isFocused ? '' : `Enter ${label.toLowerCase()}`}
+          />
+        </View>
+        {hasError && (
+          <Text style={styles.errorText}>{errors[fieldName]}</Text>
+        )}
+      </View>
+    );
+  };
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Recycle Device</Text>
-
-      <TextInput
-        label="Model Number *"
-        value={formData.modelNumber}
-        onChangeText={text => {
-          setFormData({...formData, modelNumber: text});
-          setError('');
-        }}
-        style={styles.input}
-        error={!!error}
-      />
-
-      <TextInput
-        label="IMEI (Optional)"
-        value={formData.imei}
-        onChangeText={text => setFormData({...formData, imei: text})}
-        style={styles.input}
-        keyboardType="numeric"
-      />
-
-      <TextInput
-        label="Year of Purchase"
-        value={formData.purchaseYear}
-        onChangeText={text => setFormData({...formData, purchaseYear: text})}
-        style={styles.input}
-        keyboardType="numeric"
-      />
-
-      <TextInput
-        label="Description (Optional)"
-        value={formData.description}
-        onChangeText={text => setFormData({...formData, description: text})}
-        style={styles.input}
-        multiline
-      />
-
-      <Button 
-        mode="outlined" 
-        style={styles.uploadButton}
-        onPress={handleUploadInvoice}
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
+      
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
       >
-        {formData.invoice ? 'Invoice Uploaded' : 'Upload Invoice (Optional)'}
-      </Button>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.title}>Recycle Device</Text>
+            <View style={styles.backButtonPlaceholder} />
+          </View>
 
-      {error && <HelperText type="error">{error}</HelperText>}
+          <View style={styles.formContainer}>
+            <CustomInput
+              label="Model Number"
+              value={formData.modelNumber}
+              onChangeText={(text) => setFormData({...formData, modelNumber: text})}
+              fieldName="modelNumber"
+            />
+            
+            <CustomInput
+              label="IMEI"
+              value={formData.imei}
+              onChangeText={(text) => setFormData({...formData, imei: text})}
+              fieldName="imei"
+              keyboardType="numeric"
+              optional={true}
+            />
+            
+            <CustomInput
+              label="Year of Purchase" 
+              value={formData.purchaseYear}
+              onChangeText={(text) => setFormData({...formData, purchaseYear: text})}
+              fieldName="purchaseYear"
+              keyboardType="numeric"
+              optional={true}
+            />
+            
+            <CustomInput
+              label="Description"
+              value={formData.description}
+              onChangeText={(text) => setFormData({...formData, description: text})}
+              fieldName="description"
+              multiline={true}
+              optional={true}
+            />
 
-      <Button 
-        mode="contained" 
-        loading={loading}
-        disabled={loading}
-        onPress={handleSubmit}
-        style={styles.submitButton}
-        labelStyle={styles.buttonLabel}
-      >
-        Submit Recycling Request
-      </Button>
-    </View>
+            <TouchableOpacity 
+              style={styles.uploadContainer}
+              onPress={handleUploadInvoice}
+            >
+              <View style={styles.uploadContent}>
+                <Ionicons 
+                  name={formData.invoice ? "document" : "cloud-upload-outline"} 
+                  size={24} 
+                  color="#609966" 
+                />
+                <Text style={styles.uploadText}>
+                  {formData.invoice ? 
+                    `Invoice uploaded: ${formData.invoice.name}` : 
+                    'Upload Invoice (Optional)'
+                  }
+                </Text>
+              </View>
+              {formData.invoice && (
+                <TouchableOpacity 
+                  style={styles.removeButton}
+                  onPress={() => setFormData({...formData, invoice: null})}
+                >
+                  <Ionicons name="close-circle" size={20} color="#FF6B6B" />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+
+            {errors.invoice && (
+              <Text style={styles.errorText}>{errors.invoice}</Text>
+            )}
+            
+            {errors.general && (
+              <View style={styles.generalErrorContainer}>
+                <Text style={styles.generalErrorText}>{errors.general}</Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              !isFormValid && styles.submitButtonDisabled
+            ]}
+            onPress={handleSubmit}
+            disabled={loading || !isFormValid}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.submitButtonText}>Submit Recycling Request</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    padding: 20,
     backgroundColor: '#F5F5F5',
   },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 100,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonPlaceholder: {
+    width: 40,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 20,
     textAlign: 'center',
   },
-  input: {
-    backgroundColor: '#fff',
-    marginBottom: 15,
+  formContainer: {
+    padding: 24,
   },
-  uploadButton: {
-    marginVertical: 10,
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#555',
+    marginBottom: 8,
+  },
+  requiredStar: {
+    color: '#FF6B6B',
+  },
+  inputField: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  inputFieldFocused: {
     borderColor: '#609966',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  inputFieldError: {
+    borderColor: '#FF6B6B',
+  },
+  input: {
+    fontSize: 16,
+    color: '#333',
+    padding: 0,
+  },
+  textArea: {
+    minHeight: 120,
+  },
+  textAreaInput: {
+    textAlignVertical: 'top',
+    height: 100,
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
+  },
+  uploadContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F0F8F0',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#609966',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  uploadContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  uploadText: {
+    marginLeft: 12,
+    color: '#609966',
+    fontSize: 15,
+    flex: 1,
+  },
+  removeButton: {
+    padding: 5,
+  },
+  generalErrorContainer: {
+    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 20,
+  },
+  generalErrorText: {
+    color: '#FF6B6B',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
   },
   submitButton: {
-    marginTop: 20,
     backgroundColor: '#609966',
-    borderRadius: 8,
+    borderRadius: 12,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#609966',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
-  buttonLabel: {
-    color: '#fff',
+  submitButtonDisabled: {
+    backgroundColor: '#B8D8B8',
+    shadowOpacity: 0.1,
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

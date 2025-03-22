@@ -29,6 +29,7 @@ const ProfileScreen = () => {
           name: userName,
           email: userEmail,
         });
+        console.log('User data retrieved:', userData);
       } catch (error) {
         console.error('Error retrieving user data:', error);
       } finally {
