@@ -10,3 +10,5 @@ function DeviceInfoScreen() {
     </View>
   );
 }       
+
+export default DeviceInfoScreen;
