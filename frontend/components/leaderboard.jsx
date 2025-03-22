@@ -6,34 +6,34 @@ const DEFAULT_AVATAR = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
 const LeaderboardScreen = () => {
   const [globalData] = useState([
-    { name: 'We Tu Lo', score: null, iconUrl: '' },
-    { name: 'Adam Savage', score: 12, iconUrl: 'https://example.com/avatar2.png' },
-    { name: 'Derek Black', score: 244, iconUrl: 'https://example.com/avatar3.png' },
-    { name: 'Erika White', score: 0, iconUrl: 'https://example.com/avatar4.png' },
-    { name: 'Jimmy John', score: 20, iconUrl: 'https://example.com/avatar5.png' },
-    { name: 'Joe Roddy', score: 69, iconUrl: 'https://example.com/avatar6.png' },
-    { name: 'Ericka Johannesburg', score: 101, iconUrl: 'https://example.com/avatar7.png' },
-    { name: 'Tim Thomas', score: 41, iconUrl: 'https://example.com/avatar8.png' },
-    { name: 'John Davis', score: 80, iconUrl: 'https://example.com/avatar9.png' },
-    { name: 'Tina Turner', score: 22, iconUrl: 'https://example.com/avatar10.png' },
-    { name: 'Harry Reynolds', score: null, iconUrl: '' },
-    { name: 'Betty Davis', score: 25, iconUrl: 'https://example.com/avatar12.jpeg' },
-    { name: 'Lauren Leonard', score: 30, iconUrl: 'https://example.com/avatar13.png' },
+    { name: 'Rajesh Sharma', score: null, iconUrl: '' },
+    { name: 'Priya Patel', score: 12, iconUrl: 'https://randomuser.me/api/portraits/women/62.jpg' },
+    { name: 'Vikram Singh', score: 244, iconUrl: 'https://randomuser.me/api/portraits/men/44.jpg' },
+    { name: 'Ananya Gupta', score: 0, iconUrl: 'https://randomuser.me/api/portraits/women/65.jpg' },
+    { name: 'Arjun Malhotra', score: 20, iconUrl: 'https://randomuser.me/api/portraits/men/32.jpg' },
+    { name: 'Rahul Verma', score: 69, iconUrl: 'https://randomuser.me/api/portraits/men/11.jpg' },
+    { name: 'Divya Krishnan', score: 101, iconUrl: 'https://randomuser.me/api/portraits/women/43.jpg' },
+    { name: 'Sanjay Kapoor', score: 41, iconUrl: 'https://randomuser.me/api/portraits/men/57.jpg' },
+    { name: 'Neha Reddy', score: 80, iconUrl: 'https://randomuser.me/api/portraits/women/25.jpg' },
+    { name: 'Kiran Joshi', score: 22, iconUrl: 'https://randomuser.me/api/portraits/women/17.jpg' },
+    { name: 'Ajay Mehta', score: null, iconUrl: '' },
+    { name: 'Meera Iyer', score: 25, iconUrl: 'https://randomuser.me/api/portraits/women/33.jpg' },
+    { name: 'Rohit Desai', score: 30, iconUrl: 'https://randomuser.me/api/portraits/men/72.jpg' },
   ]);
 
   const [friendData] = useState([
-    { name: 'Joe Roddy', score: 69, iconUrl: 'https://example.com/avatar6.png' },
-    { name: 'Ericka Johannesburg', score: 101, iconUrl: 'https://example.com/avatar7.png' },
-    { name: 'Tim Thomas', score: 41, iconUrl: 'https://example.com/avatar8.png' },
+    { name: 'Rahul Verma', score: 69, iconUrl: 'https://randomuser.me/api/portraits/men/11.jpg' },
+    { name: 'Divya Krishnan', score: 101, iconUrl: 'https://randomuser.me/api/portraits/women/43.jpg' },
+    { name: 'Sanjay Kapoor', score: 41, iconUrl: 'https://randomuser.me/api/portraits/men/57.jpg' },
   ]);
 
   const [filter, setFilter] = useState(0);
   const [userRank, setUserRank] = useState(1);
 
   const user = {
-    name: 'Joe Roddy',
+    name: 'Rahul Verma',
     score: 69,
-    iconUrl: 'https://example.com/avatar6.png',
+    iconUrl: 'https://randomuser.me/api/portraits/men/11.jpg',
   };
 
   const processLeaderboardData = (data) =>

@@ -27,6 +27,7 @@
     "expo-blur": "~14.0.3",
     "expo-camera": "~16.0.16",
     "expo-constants": "~17.0.6",
+    "expo-document-picker": "^13.0.3",
     "expo-font": "~13.0.3",
     "expo-haptics": "~14.0.1",
     "expo-image-picker": "~16.0.6",
@@ -39,13 +40,12 @@
     "expo-system-ui": "~4.0.8",
     "expo-updates": "^0.27.2",
     "expo-web-browser": "~14.0.2",
-    "firebase": "^11.4.0",
+    "firebase": "^11.5.0",
     "geolib": "^3.3.4",
     "jest-expo": "~52.0.4",
     "nativewind": "^4.1.23",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-native-dotenv": "^3.4.11",
     "react-native-elements": "^3.4.3",
     "react-native-gesture-handler": "~2.20.2",
     "react-native-keyboard-controller": "^1.15.2",
@@ -61,7 +61,8 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-vision-camera": "^4.6.3",
     "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5"
+    "react-native-webview": "13.12.5",
+    "use-debounce": "^10.0.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.26.4",

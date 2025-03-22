@@ -1,37 +1,79 @@
 import * as React from 'react';
 import { StyleSheet } from 'react-native';
 import { Avatar, Card, Text } from 'react-native-paper';
-import { images } from '../constants';
 import '../global.css';
 
-const LeftContent = (props) => <Avatar.Icon {...props} icon={images.logo} />;
+const LeftContent = (props) => (
+  <Avatar.Image
+    {...props}
+    source={props.avatarSource || require('../assets/svg/logo')}
+    size={48}
+    style={styles.avatar}
+  />
+);
 
 const FactsCards = ({
-    body
+  title = "Fun Fact",
+  subtitle = "Did You Know?",
+  imageUri = 'https://source.unsplash.com/700x400/?knowledge,education',
+  description = "Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible. 🍯",
+  avatarSource = null
 }) => (
-    <Card style={styles.container}>
-        <Card.Content>
-            <Text className="text-4xl mb-1">Did You Know?</Text>
-            <Text variant="bodyMedium">{body}</Text>
-        </Card.Content>
-    </Card>
+  <Card style={styles.container} mode="elevated">
+    <Card.Title
+      title={title}
+      subtitle={subtitle}
+      left={(props) => <LeftContent {...props} avatarSource={avatarSource} />}
+      titleStyle={styles.title}
+      subtitleStyle={styles.subtitle}
+    />
+    <Card.Cover
+      source={{ uri: imageUri }}
+      style={styles.cover}
+    />
+    <Card.Content style={styles.content}>
+      <Text variant="bodyMedium" style={styles.description}>
+        {description}
+      </Text>
+    </Card.Content>
+  </Card>
 );
 
 export default FactsCards;
 
 const styles = StyleSheet.create({
-    container: {
-        width: '98%',
-        maxWidth: 420,
-        padding: 2,
-        marginBottom: 10,
-        backgroundColor: 'white',
-        fontFamily: 'Roboto',
-        borderRadius: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 5,
-    }
+  container: {
+    width: '100%',
+    alignSelf: 'center',
+    marginVertical: 12,
+    borderRadius: 16,
+    elevation: 4,
+    backgroundColor: '#fff',
+  },
+  avatar: {
+    backgroundColor: '#E0F7FA',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#777',
+  },
+  cover: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 12,
+  },
+  content: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  description: {
+    fontSize: 15,
+    color: '#555',
+    lineHeight: 22,
+  },
 });

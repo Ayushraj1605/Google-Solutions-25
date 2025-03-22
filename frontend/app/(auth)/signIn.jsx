@@ -40,8 +40,11 @@ const SignIn = () => {
         await AsyncStorage.multiSet([
           ['TOKEN', `${type} ${data.token}`],
           ['ID', data.userId],
+          ['EMAIL', data.email],
+          ['USERNAME', data.username],
         ]);
         console.log('Token and ID saved successfully!');
+        console.log('Data:', data);
         Alert.alert('Success', 'Signed in successfully!');
         router.replace(type === 'org' ? '/homeOrg' : '/home');
       } else {
