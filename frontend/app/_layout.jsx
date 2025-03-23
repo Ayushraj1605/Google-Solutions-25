@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'react-native';
+import { PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import "../global.css";
 import { useFonts } from 'expo-font';
 
@@ -31,54 +33,56 @@ const RootLayout = () => {
   if (!fontsLoaded && !error) return null;
 
   return (
-    <>
-      {/* StatusBar Configuration */}
-      <StatusBar 
-        barStyle="dark-content" // Black icons on light background
-        backgroundColor="white" // Set the background color of the status bar
-      />
-
-      {/* Main Navigation Stack */}
-      <Stack>
-        {/* Index Screen */}
-        <Stack.Screen
-          name="index"
-          options={{ headerShown: false }} // Hide the header for the main screen
+    <PaperProvider>
+      <SafeAreaProvider>
+        {/* StatusBar Configuration */}
+        <StatusBar 
+          barStyle="dark-content" // Black icons on light background
+          backgroundColor="white" // Set the background color of the status bar
         />
 
-        {/* Authentication Stack */}
-        <Stack.Screen
-          name="(auth)"
-          options={{
-            headerShown: false, // Hide the header for authentication screens
-            gestureEnabled: false, // Disables swiping back to this stack
-          }}
-        />
+        {/* Main Navigation Stack */}
+        <Stack>
+          {/* Index Screen */}
+          <Stack.Screen
+            name="index"
+            options={{ headerShown: false }} // Hide the header for the main screen
+          />
 
-        {/* Tabs Stack */}
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false, // Hide the header for tab-based screens
-            gestureEnabled: false, // Disables swiping back to this stack
-          }}
-        />
-        <Stack.Screen
-          name="(pages)"
-          options={{
-            headerShown: false, // Hide the header for tab-based screens
-            gestureEnabled: false, // Disables swiping back to this stack
-          }}
-        />
-        <Stack.Screen
-          name="(orgtabs)"
-          options={{
-            headerShown: false, // Hide the header for tab-based screens
-            gestureEnabled: false, // Disables swiping back to this stack
-          }}
-        />
-      </Stack>
-    </>
+          {/* Authentication Stack */}
+          <Stack.Screen
+            name="(auth)"
+            options={{
+              headerShown: false, // Hide the header for authentication screens
+              gestureEnabled: false, // Disables swiping back to this stack
+            }}
+          />
+
+          {/* Tabs Stack */}
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: false, // Hide the header for tab-based screens
+              gestureEnabled: false, // Disables swiping back to this stack
+            }}
+          />
+          <Stack.Screen
+            name="(pages)"
+            options={{
+              headerShown: false, // Hide the header for tab-based screens
+              gestureEnabled: false, // Disables swiping back to this stack
+            }}
+          />
+          <Stack.Screen
+            name="(orgtabs)"
+            options={{
+              headerShown: false, // Hide the header for tab-based screens
+              gestureEnabled: false, // Disables swiping back to this stack
+            }}
+          />
+        </Stack>
+      </SafeAreaProvider>
+    </PaperProvider>
   );
 };
 
