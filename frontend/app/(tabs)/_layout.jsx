@@ -6,6 +6,7 @@ import Blogs from '../../assets/svg/blogs';
 import Organisations from '../../assets/svg/organisations';
 import Devices from '../../assets/svg/devices';
 import Profile from '../../assets/svg/profile';
+import Name from "../../assets/svg/name"; // This is importing an SVG component
 import '../../global.css'
 
 // This TabIcon component will handle the enlargement and green background
@@ -41,9 +42,13 @@ const _layout = () => {
           options={{
             title: 'Home',
             headerShown: true,
-            headerTitle: 'E-cycle',
+            headerTitle: () => (
+              <View style={{ width: 200, height: 40 }}>
+                <Name width="100%" height="100%" />
+              </View>
+            ),
             headerBackTitleVisible: false,
-            headerTitleAlign: '',
+            headerTitleAlign: 'left', // You may want to center the logo
             tabBarIcon: ({ focused }) => (
               <TabIcon Component={Home} focused={focused} />
             ),
