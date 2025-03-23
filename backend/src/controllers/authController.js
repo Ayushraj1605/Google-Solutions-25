@@ -4,8 +4,32 @@ dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { collection, query, where, getDocs, addDoc, Timestamp, doc } from "firebase/firestore";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Sign-In Function
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API);
+
+// Example usage in your deviceSuggestions function:
+export const deviceSuggestions = async (req, res) => {
+    try {
+        const deviceType = req.body.deviceType;
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const prompt = "Give me some really nice creative ewaste recycling tips for: " + deviceType;
+        const result = await model.generateContent(prompt);
+        const response = await result.response.text();
+        
+        return res.status(200).json({
+            message: "Suggestions generated successfully",
+            suggestions: response
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: "Error generating suggestions",
+            error: error.message
+        });
+    }
+}
+
 
 export const signupOrg = async (req, res) => {
     const { name, email, password, GST, Address, latitude, longitude } = req.body;
@@ -148,6 +172,8 @@ export const signin = async (req, res) => {
         return res.status(200).json({
             message: "User successfully signed in!",
             username: userData.username,
+            userId: userDoc.id,
+            email: userData.email,
             token,
         });
     } catch (error) {
@@ -283,7 +309,7 @@ export const getDevices = async (req, res) =>
     }
 
     try {
-        const devicesCollection = collection(db, "devices");
+        const devicesCollection = collection(db, "Devices");
         const devicesQuery = query(devicesCollection, where("userId", "==", userId));
         const querySnapshot = await getDocs(devicesQuery);
 

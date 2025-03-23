@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, signin, getProfile, locations, orders, getOrders, getDevices, addDevice } from '../controllers/authController.js';
+import { signup, signin, getProfile, locations, orders, getOrders, getDevices, addDevice, deviceSuggestions } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -43,5 +43,8 @@ router.get('/users', async (req, res) => {
         res.status(500).json({ error: 'Failed to retrieve users' });
     }
 });
+
+// AI endpoint
+router.post('/user/deviceSuggestions', deviceSuggestions)
 
 export default router;

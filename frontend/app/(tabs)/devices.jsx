@@ -48,6 +48,7 @@ const Devices = ({ visible = true, style }) => {
             setData(devicesWithStatus);
             setFilteredData(devicesWithStatus);
           }
+          console.log(data);
         } catch (error) {
           console.error('Error fetching devices:', error);
         }
