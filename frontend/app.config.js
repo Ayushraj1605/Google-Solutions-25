@@ -7,7 +7,7 @@ export default {
         slug: "e-cycle",
         version: "1.0.0",
         orientation: "portrait",
-        icon: "../assets/svg/logo",
+        icon: "./assets/logo.png",
         userInterfaceStyle: "automatic",
         newArchEnabled: true,
         // privacy: "public", // Optional
@@ -20,7 +20,7 @@ export default {
         android: {
             package: "com.yourcompany.ewaste", // Update this if needed
             adaptiveIcon: {
-                foregroundImage: "./assets/svg/logo",
+                foregroundImage: "./assets/logo.png",
                 backgroundColor: "#ffffff"
             },
             config: {
@@ -32,14 +32,14 @@ export default {
         web: {
             bundler: "metro",
             output: "static",
-            favicon: "./assets/svg/logo"
+            favicon: "./assets/logo.png"
         },
         plugins: [
             "expo-router",
             [
                 "expo-splash-screen",
                 {
-                    image: "./assets/svg/logo",
+                    image: "./assets/logo.png",
                     imageWidth: 200,
                     resizeMode: "contain",
                     backgroundColor: "#ffffff"
