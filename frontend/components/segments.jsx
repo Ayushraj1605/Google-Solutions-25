@@ -12,35 +12,35 @@ const blogData = [
     id: 1,
     title: "The Future of E-Waste Management",
     subtitle: "March 13, 2025 • By GreenTech Insights",
-    imageUri: "https://source.unsplash.com/700x400/?recycling,electronics",
+    // imageUri: "https://source.unsplash.com/700x400/?recycling,electronics",
     description: "With global e-waste expected to reach 74 million tons annually by 2030 according to the UN's Global E-waste Monitor 2023, innovative recycling technologies like automated disassembly robots and molecular separation processes are becoming essential. Companies like Apple and Samsung have committed to 100% recycled materials in their products by 2030, while the EU's Right to Repair legislation is extending device lifespans and reducing waste.",
   },
   {
     id: 2,
     title: "Sustainable Agriculture: Vertical Farming Revolution",
     subtitle: "March 10, 2025 • By EcoFarm Quarterly",
-    imageUri: "https://source.unsplash.com/700x400/?vertical,farming",
+    // imageUri: "https://source.unsplash.com/700x400/?vertical,farming",
     description: "Vertical farming is revolutionizing agriculture by using up to 95% less water than traditional farming while producing crops with 30-40% higher nutritional value, according to research published in Nature Food (October 2023). Cities like Singapore now produce 30% of their vegetables locally through vertical farms, reducing transportation emissions while creating urban green spaces that improve air quality and community well-being.",
   },
   {
     id: 3,
     title: "Next-Generation Energy Storage Solutions",
     subtitle: "March 5, 2025 • By Clean Energy Report",
-    imageUri: "https://source.unsplash.com/700x400/?battery,renewable",
+    // imageUri: "https://source.unsplash.com/700x400/?battery,renewable",
     description: "Solid-state batteries are poised to transform energy storage with 2-3x higher energy density than lithium-ion batteries and significantly reduced fire risk. According to MIT Technology Review, commercial production is expected by 2026. Meanwhile, gravity-based storage systems like Energy Vault's concrete block towers and Advanced Rail Energy Storage have achieved 80-90% round-trip efficiency while providing storage durations of 8-12 hours, addressing renewable energy intermittency.",
   },
   {
     id: 4,
     title: "Regenerative Ocean Farming: Blue Carbon Revolution",
     subtitle: "February 28, 2025 • By Ocean Conservation Digest",
-    imageUri: "https://source.unsplash.com/700x400/?ocean,seaweed",
+    // imageUri: "https://source.unsplash.com/700x400/?ocean,seaweed",
     description: "Kelp and seaweed farming are emerging as powerful climate solutions, sequestering up to 20 times more carbon per acre than land forests according to the National Oceanic and Atmospheric Administration. Beyond carbon benefits, these underwater gardens require no freshwater, fertilizer, or land while providing habitat for marine life and producing nutritious food. The World Bank estimates the seaweed industry could create 50 million direct jobs globally by 2030.",
   },
   {
     id: 5,
     title: "Biodegradable Electronics: Reducing Tech Waste",
     subtitle: "February 20, 2025 • By Green Computing Journal",
-    imageUri: "https://source.unsplash.com/700x400/?electronics,sustainable",
+    // imageUri: "https://source.unsplash.com/700x400/?electronics,sustainable",
     description: "Researchers at Stanford and the University of California have developed electronic components using cellulose-based substrates and conductive polymers that decompose completely within 3-6 months in composting conditions. These biodegradable circuits maintain 90% functionality of conventional electronics with only a 15% cost increase. Major tech companies have begun implementing these materials in peripheral devices, potentially reducing electronic waste by millions of tons annually.",
   }
 ];
@@ -124,7 +124,7 @@ const factsData = [
 ];
 
 const Segments = ({ name }) => {
-  const [value, setValue] = React.useState('');
+  const [value, setValue] = React.useState('Blogs');
 
   const renderContent = () => {
     switch (value) {

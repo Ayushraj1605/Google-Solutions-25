@@ -39,15 +39,15 @@ const formatText = (text) => {
   
   // Split text into sections by double newlines
   return text.split('\n\n').map(section => {
-    // Check if section has a bold title format: "**Title:** Content"
-    if (section.includes('**') && section.includes(':**')) {
+    // Check if section has a bold title format: "*Title:* Content"
+    if (section.includes('') && section.includes(':')) {
       // Find the end of the bold title
-      const titleEndIndex = section.indexOf(':**');
+      const titleEndIndex = section.indexOf(':');
       if (titleEndIndex !== -1) {
         // Extract title by removing asterisks
-        const title = section.substring(0, titleEndIndex).replace(/\*\*/g, '').trim();
+        const title = section.substring(0, titleEndIndex).replace(/\\/g, '').trim();
         // Extract content after the colon
-        const content = section.substring(titleEndIndex + 2).replace(/\*\*/g, '').trim();
+        const content = section.substring(titleEndIndex + 2).replace(/\\/g, '').trim();
         
         return {
           isHeader: true,
@@ -59,7 +59,7 @@ const formatText = (text) => {
     
     // Handle paragraphs that might contain bold formatting
     // Replace any remaining ** formatting in regular paragraphs
-    const formattedContent = section.replace(/\*\*(.*?)\*\*/g, '$1').trim();
+    const formattedContent = section.replace(/\\(.?)\\*/g, '$1').trim();
     
     return { 
       isHeader: false, 
@@ -131,7 +131,7 @@ const formatText = (text) => {
           <Card style={styles.modalCard}>
             <Card.Title
               title={data?.deviceName || "Device Details"}
-              subtitle={data?.deviceType ? `Recycling tips for ${data.deviceType}` : "Recycling Tips"}
+              subtitle={data?.deviceType ? Recycling tips for ${data.deviceType} : "Recycling Tips"}
               left={(props) => (
                 <Avatar.Icon
                   {...props}
