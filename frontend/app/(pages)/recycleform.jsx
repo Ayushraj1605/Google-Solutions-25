@@ -9,42 +9,15 @@ import {
   StatusBar,
   KeyboardAvoidingView, 
   Platform,
-  TextInput as TextInputOriginal
+  TextInput,
+  Text
 } from 'react-native';
-import { Text } from 'react-native-paper';
 import { router } from 'expo-router';
-import axios from 'axios';
 import * as DocumentPicker from 'expo-document-picker';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-// Custom TextInput component to avoid React Native Paper dependencies
-const TextInput = ({ style, ...props }) => {
-  return (
-    <View style={style}>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <View style={{ flex: 1 }}>
-          {Platform.OS === 'web' ? (
-            <input 
-              style={{ 
-                fontSize: 16, 
-                width: '100%', 
-                outline: 'none', 
-                border: 'none', 
-                backgroundColor: 'transparent',
-                padding: 0,
-              }}
-              {...props} 
-            />
-          ) : (
-            <TextInputOriginal style={{ fontSize: 16 }} {...props} />
-          )}
-        </View>
-      </View>
-    </View>
-  );
-};
-
+// Completely simplified version with direct use of React Native components
 const RecycleForm = () => {
   const params = useLocalSearchParams();
   const deviceId = params.deviceId;
@@ -107,6 +80,20 @@ const RecycleForm = () => {
     return valid;
   };
 
+  const handleChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Clear error for this field if it exists
+    if (errors[field]) {
+      const updatedErrors = {...errors};
+      delete updatedErrors[field];
+      setErrors(updatedErrors);
+    }
+  };
+
   const handleUploadInvoice = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -141,13 +128,6 @@ const RecycleForm = () => {
         });
       }
 
-      // Commented API call for demo purposes
-      // await axios.post(
-      //   'https://cloudrunservice-254131401451.us-central1.run.app/recycle',
-      //   formPayload,
-      //   { headers: { 'Content-Type': 'multipart/form-data' } }
-      // );
-
       // For demo, show loading for a moment
       setTimeout(() => {
         setLoading(false);
@@ -161,18 +141,10 @@ const RecycleForm = () => {
     }
   };
 
-  // Custom text input component
-  const CustomInput = ({ 
-    label, 
-    value, 
-    onChangeText, 
-    fieldName, 
-    keyboardType = 'default',
-    multiline = false,
-    optional = false
-  }) => {
-    const isFocused = focused === fieldName;
-    const hasError = !!errors[fieldName];
+  // Render a form field with consistent styling
+  const renderField = (label, field, value, keyboardType = 'default', multiline = false, optional = false) => {
+    const isFocused = focused === field;
+    const hasError = !!errors[field];
     
     return (
       <View style={styles.inputContainer}>
@@ -189,17 +161,8 @@ const RecycleForm = () => {
         >
           <TextInput
             value={value}
-            onChangeText={(text) => {
-              onChangeText(text);
-              if (errors[fieldName]) {
-                setErrors(prev => {
-                  const newErrors = {...prev};
-                  delete newErrors[fieldName];
-                  return newErrors;
-                });
-              }
-            }}
-            onFocus={() => setFocused(fieldName)}
+            onChangeText={(text) => handleChange(field, text)}
+            onFocus={() => setFocused(field)}
             onBlur={() => setFocused(null)}
             keyboardType={keyboardType}
             multiline={multiline}
@@ -207,11 +170,11 @@ const RecycleForm = () => {
               styles.input,
               multiline && styles.textAreaInput
             ]}
-            placeholder={isFocused ? '' : `Enter ${label.toLowerCase()}`}
+            placeholder={`Enter ${label.toLowerCase()}`}
           />
         </View>
         {hasError && (
-          <Text style={styles.errorText}>{errors[fieldName]}</Text>
+          <Text style={styles.errorText}>{errors[field]}</Text>
         )}
       </View>
     );
@@ -242,39 +205,10 @@ const RecycleForm = () => {
           </View>
 
           <View style={styles.formContainer}>
-            <CustomInput
-              label="Model Number"
-              value={formData.modelNumber}
-              onChangeText={(text) => setFormData({...formData, modelNumber: text})}
-              fieldName="modelNumber"
-            />
-            
-            <CustomInput
-              label="IMEI"
-              value={formData.imei}
-              onChangeText={(text) => setFormData({...formData, imei: text})}
-              fieldName="imei"
-              keyboardType="numeric"
-              optional={true}
-            />
-            
-            <CustomInput
-              label="Year of Purchase" 
-              value={formData.purchaseYear}
-              onChangeText={(text) => setFormData({...formData, purchaseYear: text})}
-              fieldName="purchaseYear"
-              keyboardType="numeric"
-              optional={true}
-            />
-            
-            <CustomInput
-              label="Description"
-              value={formData.description}
-              onChangeText={(text) => setFormData({...formData, description: text})}
-              fieldName="description"
-              multiline={true}
-              optional={true}
-            />
+            {renderField('Model Number', 'modelNumber', formData.modelNumber)}
+            {renderField('IMEI', 'imei', formData.imei, 'numeric', false, true)}
+            {renderField('Year of Purchase', 'purchaseYear', formData.purchaseYear, 'numeric', false, true)}
+            {renderField('Description', 'description', formData.description, 'default', true, true)}
 
             <TouchableOpacity 
               style={styles.uploadContainer}
