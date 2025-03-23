@@ -15,9 +15,7 @@ import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
-/**
- * Parser to convert complex nested bullet point lists to a simplified format
- */
+// Keeping all your utility functions the same
 const parseFormattedList = (inputText) => {
   if (!inputText || typeof inputText !== 'string') {
     return { title: '', items: [] };
@@ -81,9 +79,6 @@ const parseFormattedList = (inputText) => {
   return { title, items };
 };
 
-/**
- * Format the parsed data into the desired output format
- */
 const formatParsedList = (parsedData) => {
   const { title, items } = parsedData;
   
@@ -96,9 +91,6 @@ const formatParsedList = (parsedData) => {
   return result.trim();
 };
 
-/**
- * Format text for better display
- */
 const formatText = (text) => {
   if (!text) return [];
   
@@ -164,8 +156,11 @@ const formatText = (text) => {
 
 const DeviceCard = ({ data }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [visible, setVisible] = useState(false);
   const [deviceTips, setDeviceTips] = useState('');
+  // Animation state for the pulse effect
+  const [pulseAnimation, setPulseAnimation] = useState(false);
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
@@ -178,20 +173,50 @@ const DeviceCard = ({ data }) => {
 
   const handleViewDetails = async () => {
     try {
+      // Set loading state
+      setIsLoadingTips(true);
+      
+      // Start pulse animation
+      startPulseAnimation();
+      
       // Fetch recycling tips and information
       const response = await axios.post('https://cloudrunservice-254131401451.us-central1.run.app/user/deviceSuggestions', {
         deviceType: data?.deviceType || "generic"
       });
+      
       setDeviceTips(response.data.suggestions);
+      
+      // Stop loading state
+      setIsLoadingTips(false);
+      
+      // Show modal with the tips
       showModal();
     } catch(err) {
       console.error('Error fetching device details:', err);
+      
+      // Stop loading state
+      setIsLoadingTips(false);
+      
       // Navigate to details page as fallback
       router.push({
         pathname: '/device-details',
         params: { deviceId: data?.deviceId || "unknown" }
       });
     }
+  };
+  
+  // Function to start pulse animation
+  const startPulseAnimation = () => {
+    // Start a pulse effect
+    let pulseCount = 0;
+    const interval = setInterval(() => {
+      setPulseAnimation(prev => !prev);
+      pulseCount++;
+      if (pulseCount > 20 || !isLoadingTips) {
+        clearInterval(interval);
+        setPulseAnimation(false);
+      }
+    }, 500); // Pulse every 500ms
   };
 
   // Default values if data is incomplete
@@ -209,7 +234,7 @@ const DeviceCard = ({ data }) => {
   const formattedTips = formatText(deviceTips);
 
   return (
-    <>
+    <View style={styles.outerContainer}>
       <View style={styles.container}>
         {/* Status indicator */}
         <View style={[styles.statusIndicator, { backgroundColor: statusColor }]}>
@@ -232,7 +257,7 @@ const DeviceCard = ({ data }) => {
             </View>
           </View>
 
-          {/* Right side: Info and buttons */}
+          {/* Right side: Info */}
           <View style={styles.infoContainer}>
             {/* Device details */}
             <View style={styles.detailsContainer}>
@@ -243,38 +268,51 @@ const DeviceCard = ({ data }) => {
                 <Text style={styles.idValue}>{deviceId}</Text>
               </View>
             </View>
-
-            {/* Action buttons */}
-            <View style={styles.actionContainer}>
-              <TouchableOpacity 
-                style={styles.detailsButton}
-                onPress={handleViewDetails}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.detailsButtonText}>Details</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[
-                  styles.recycleButton, 
-                  recycleStatus && styles.recycleButtonDisabled
-                ]}
-                onPress={!recycleStatus ? handleRecyclePress : null}
-                disabled={recycleStatus || isSubmitting}
-                activeOpacity={recycleStatus ? 1 : 0.7}
-              >
-                {isSubmitting ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Text style={styles.recycleButtonText}>
-                    {recycleStatus ? "Processing" : "Recycle"}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
           </View>
         </View>
+        
+        {/* Action buttons - Now in a separate row beneath the card content */}
+        <View style={styles.actionContainer}>
+          <TouchableOpacity 
+            style={[
+              styles.detailsButton,
+              pulseAnimation && styles.detailsButtonPulse,
+              isLoadingTips && styles.detailsButtonLoading
+            ]}
+            onPress={handleViewDetails}
+            activeOpacity={0.7}
+            disabled={isLoadingTips}
+          >
+            {isLoadingTips ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#34C759" style={styles.loadingIndicator} />
+                <Text style={styles.loadingText}>Loading Gemini Tips...</Text>
+              </View>
+            ) : (
+              <Text style={styles.detailsButtonText}>Gemini assisted Reuse Tips</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
+      
+      {/* Recycle button - Now outside the main card */}
+      <TouchableOpacity 
+        style={[
+          styles.recycleButton, 
+          recycleStatus && styles.recycleButtonDisabled
+        ]}
+        onPress={!recycleStatus ? handleRecyclePress : null}
+        disabled={recycleStatus || isSubmitting}
+        activeOpacity={recycleStatus ? 1 : 0.7}
+      >
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.recycleButtonText}>
+            {recycleStatus ? "Processing" : "Recycle"}
+          </Text>
+        )}
+      </TouchableOpacity>
 
       {/* Modal for device details and recycling tips */}
       <Modal
@@ -342,16 +380,19 @@ const DeviceCard = ({ data }) => {
           </View>
         </View>
       </Modal>
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  outerContainer: {
     width: '95%',
     maxWidth: 500,
     alignSelf: 'center',
     marginVertical: 8,
+  },
+  container: {
+    width: '100%',
     borderRadius: 12,
     backgroundColor: '#fff',
     shadowColor: '#000',
@@ -360,7 +401,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     overflow: 'hidden',
-    height: 120, // Fixed compact height
   },
   statusIndicator: {
     position: 'absolute',
@@ -378,7 +418,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexDirection: 'row',
-    height: '100%',
+    height: 120, // Keep the main content height the same
   },
   imageContainer: {
     width: 120,
@@ -405,7 +445,7 @@ const styles = StyleSheet.create({
   infoContainer: {
     flex: 1,
     padding: 10,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   detailsContainer: {
     flex: 1,
@@ -437,12 +477,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   actionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
+    padding: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
   detailsButton: {
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
     borderWidth: 1,
@@ -450,32 +490,54 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 80,
+    width: '100%',
+    minHeight: 36, // Ensure consistent height during loading
+  },
+  detailsButtonPulse: {
+    backgroundColor: '#e6f7ed', // Light green background for pulse effect
+  },
+  detailsButtonLoading: {
+    borderColor: '#34C759',
+    borderWidth: 1,
   },
   detailsButtonText: {
     fontSize: 12,
     color: '#555',
     fontWeight: '500',
   },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingIndicator: {
+    marginRight: 8,
+  },
+  loadingText: {
+    fontSize: 12,
+    color: '#34C759',
+    fontWeight: '500',
+  },
   recycleButton: {
-    paddingVertical: 6,
+    marginTop: 8,
+    paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 6,
     backgroundColor: '#34C759',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 90,
+    width: '100%',
   },
   recycleButtonDisabled: {
     backgroundColor: '#888',
   },
   recycleButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#fff',
     fontWeight: 'bold',
   },
 
-  // Modal styles
+  // Modal styles remain unchanged
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -557,16 +619,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     lineHeight: 20,
-  },
-  loadingContainer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
   },
   modalFooter: {
     padding: 16,

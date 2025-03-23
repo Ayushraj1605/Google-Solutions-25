@@ -1,14 +1,14 @@
-import * as React from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Image, 
-  TouchableOpacity, 
-  Text, 
-  Animated, 
+import { React, useState, useEffect, useRef } from 'react';
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  Text,
+  Animated,
   Platform,
   Dimensions,
-  ActivityIndicator 
+  ActivityIndicator
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -17,42 +17,38 @@ const BlogCard = ({
   title = "The Future of E-Waste Management",
   subtitle = "March 13, 2025 • By GreenTech Insights",
   imageUri = null,
-  description = "As the global demand for electronics rises, so does the challenge of e-waste management. Innovative recycling solutions, sustainable production, and community-driven initiatives are shaping a future where technology and environmental responsibility go hand in hand.",
+  description = "As the global demand for electronics rises...",
   avatarSource = null,
   category = "Environment",
   readTime = "5 min read",
+  onCardPress = null,
   onShare = () => console.log('Share pressed'),
   onReadMore = () => console.log('Read More pressed'),
   onBookmark = () => console.log('Bookmark pressed'),
-  isBookmarked = false,
-  onCardPress = null,
 }) => {
-  // Animation values
-  const [isImageLoading, setIsImageLoading] = React.useState(imageUri ? true : false);
-  const scaleAnim = React.useRef(new Animated.Value(1)).current;
-  const opacityAnim = React.useRef(new Animated.Value(0)).current;
+  // Move isBookmarked state inside the component
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Handle press animation
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.98,
-      friction: 8,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
+  // Animation values
+  const [isImageLoading, setIsImageLoading] = useState(imageUri ? true : false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  // Create a bookmark handler within the component
+  const handleBookmarkPress = () => {
+    setIsBookmarked(!isBookmarked); // Toggle local state
+    onBookmark(); // Call the parent's onBookmark function
   };
 
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 5,
-      tension: 40,
-      useNativeDriver: true,
-    }).start();
+
+  const handleReadMorePress = () => {
+    setIsExpanded(!isExpanded); // Toggle expanded state
+    onReadMore(); // Call the parent's onReadMore function
   };
 
   // Handle image loading
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isImageLoading) {
       Animated.timing(opacityAnim, {
         toValue: 1,
@@ -63,7 +59,7 @@ const BlogCard = ({
   }, [isImageLoading, opacityAnim]);
 
   // Update image loading state when imageUri changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (imageUri) {
       setIsImageLoading(true);
     }
@@ -73,18 +69,18 @@ const BlogCard = ({
   const defaultAvatar = require('../assets/svg/logo');
 
   // Card wrapper component decides if card is pressable
-  const CardWrapper = onCardPress 
+  const CardWrapper = onCardPress
     ? ({ children }) => (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={onCardPress}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          style={{ width: '100%' }}
-        >
-          {children}
-        </TouchableOpacity>
-      ) 
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onCardPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={{ width: '100%' }}
+      >
+        {children}
+      </TouchableOpacity>
+    )
     : ({ children }) => <View style={{ width: '100%' }}>{children}</View>;
 
   // Handle button press with feedback
@@ -110,7 +106,7 @@ const BlogCard = ({
 
   return (
     <CardWrapper>
-      <Animated.View 
+      <Animated.View
         style={[
           styles.container,
           { transform: [{ scale: scaleAnim }] }
@@ -119,7 +115,7 @@ const BlogCard = ({
         {/* Card Header with Avatar and Title */}
         <View style={styles.header}>
           <View style={styles.avatarContainer}>
-            <Image 
+            <Image
               source={avatarSource || defaultAvatar}
               style={styles.avatar}
               // Add default image in case of error
@@ -134,9 +130,9 @@ const BlogCard = ({
               {subtitle}
             </Text>
           </View>
-          <TouchableOpacity 
-            style={styles.bookmarkButton} 
-            onPress={handleButtonPress(onBookmark)}
+          <TouchableOpacity
+            style={styles.bookmarkButton}
+            onPress={handleButtonPress(handleBookmarkPress)}
             hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
             accessibilityLabel={isBookmarked ? "Remove bookmark" : "Add bookmark"}
             accessibilityRole="button"
@@ -159,7 +155,7 @@ const BlogCard = ({
         {imageUri && (
           <View style={styles.imageWrapper}>
             <Animated.View style={[styles.imageContainer, { opacity: opacityAnim }]}>
-              <Image 
+              <Image
                 source={{ uri: imageUri }}
                 style={styles.coverImage}
                 resizeMode="cover"
@@ -169,7 +165,7 @@ const BlogCard = ({
                 onError={() => setIsImageLoading(false)}
               />
             </Animated.View>
-            
+
             {isImageLoading && (
               <View style={styles.loaderContainer}>
                 <ActivityIndicator size="small" color="#4CAF50" />
@@ -180,7 +176,10 @@ const BlogCard = ({
 
         {/* Card Content */}
         <View style={styles.content}>
-          <Text style={styles.description} numberOfLines={4}>
+          <Text 
+            style={styles.description} 
+            numberOfLines={isExpanded ? null : 4} // Remove line limit when expanded
+          >
             {description}
           </Text>
         </View>
@@ -199,13 +198,16 @@ const BlogCard = ({
           
           <TouchableOpacity 
             style={styles.readMoreButton} 
-            onPress={handleButtonPress(onReadMore)}
+            onPress={handleButtonPress(handleReadMorePress)}
             activeOpacity={0.7}
-            accessibilityLabel="Read more"
+            accessibilityLabel={isExpanded ? "Show less" : "Read more"}
             accessibilityRole="button"
           >
-            <Text style={styles.readMoreButtonText}>Read More</Text>
+            <Text style={styles.readMoreButtonText}>
+              {isExpanded ? "Show Less" : "Read More"}
+            </Text>
           </TouchableOpacity>
+
         </View>
       </Animated.View>
     </CardWrapper>
