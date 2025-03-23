@@ -33,22 +33,40 @@ const Cards = ({ data }) => {
   };
   
   // Format text for better display in the modal
-  const formatText = (text) => {
-    if (!text) return [];
-    
-    // Simple formatting to separate sections with bold titles
-    return text.split('\n\n').map(section => {
-      if (section.startsWith('**') && section.includes(':**')) {
-        const parts = section.split(':**');
+  // Format text for better display in the modal
+const formatText = (text) => {
+  if (!text) return [];
+  
+  // Split text into sections by double newlines
+  return text.split('\n\n').map(section => {
+    // Check if section has a bold title format: "**Title:** Content"
+    if (section.includes('**') && section.includes(':**')) {
+      // Find the end of the bold title
+      const titleEndIndex = section.indexOf(':**');
+      if (titleEndIndex !== -1) {
+        // Extract title by removing asterisks
+        const title = section.substring(0, titleEndIndex).replace(/\*\*/g, '').trim();
+        // Extract content after the colon
+        const content = section.substring(titleEndIndex + 2).replace(/\*\*/g, '').trim();
+        
         return {
           isHeader: true,
-          title: parts[0].replace(/\*\*/g, '').trim(),
-          content: parts[1] || ''
+          title: title,
+          content: content
         };
       }
-      return { isHeader: false, content: section };
-    });
-  };
+    }
+    
+    // Handle paragraphs that might contain bold formatting
+    // Replace any remaining ** formatting in regular paragraphs
+    const formattedContent = section.replace(/\*\*(.*?)\*\*/g, '$1').trim();
+    
+    return { 
+      isHeader: false, 
+      content: formattedContent 
+    };
+  });
+};
   
   const formattedTips = formatText(deviceTips);
   
