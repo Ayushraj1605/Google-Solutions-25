@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View, Alert, ImageBackground, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import React, { useState, useCallback, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView } from 'react-native';
@@ -6,6 +6,7 @@ import FormField from '../../components/formField';
 import CustomButton from '../../components/customButton';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
+import { StatusBar } from 'expo-status-bar';
 
 const SignUp = () => {
   const [form, setForm] = useState({
@@ -31,12 +32,12 @@ const SignUp = () => {
     const { name, email, password, confirmPassword } = form;
 
     if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      alert('All fields are required!');
+      Alert.alert('Validation Error', 'All fields are required!');
       return false;
     }
 
     if (password !== confirmPassword) {
-      alert('Passwords do not match!');
+      Alert.alert('Validation Error', 'Passwords do not match!');
       return false;
     }
 
@@ -59,17 +60,18 @@ const SignUp = () => {
       );
 
       if (response.status === 200) {
-        alert("Sign up successful!");
+        Alert.alert("Success", "Sign up successful!");
         setForm({ name: "", email: "", password: "", confirmPassword: "" });
-        router.replace("/home");
+        router.replace("/signIn");
       } else {
-        alert("Failed to sign up. Please try again.");
+        Alert.alert("Error", "Failed to sign up. Please try again.");
       }
     } catch (error) {
       console.error("Signup error:", error);
-      alert(
+      Alert.alert(
+        "Error",
         error.response?.data?.message ||
-          "Something went wrong. Please check your network connection."
+        "Something went wrong. Please check your network connection."
       );
     } finally {
       setIsSubmitting(false);
@@ -112,56 +114,185 @@ const SignUp = () => {
   );
 
   return (
-    <SafeAreaView className="bg-white flex-1">
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar style="dark" />
+      <ImageBackground
+        source={{ uri: 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1000' }}
+        style={styles.backgroundImage}
       >
-        <View className="w-full flex-1 justify-center items-center px-4 py-6">
-          <Text className="text-5xl font-semibold mt-10 self-start">Sign Up</Text>
+        <View style={styles.overlay} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardAvoidView}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollView}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.headerContainer}>
+              <View style={styles.logoCircle}>
+                <Text style={styles.logoText}>ES</Text>
+              </View>
+              <Text style={styles.appName}>Eco-Sankalp</Text>
+            </View>
 
-          {formFields.map(({ key, title, placeholder, value, secureTextEntry, keyboardType }) => (
-            <FormField
-              key={key}
-              title={title}
-              placeholder={placeholder}
-              value={value}
-              secureTextEntry={secureTextEntry}
-              keyboardType={keyboardType}
-              handleChangeText={(val) => handleInputChange(key, val)}
-              otherStyles="mt-3"
-            />
-          ))}
+            <View style={styles.formContainer}>
+              <Text style={styles.heading}>Create Account</Text>
+              <Text style={styles.subheading}>Join our community for a sustainable future</Text>
 
-          <CustomButton
-            title="Sign Up"
-            handlePress={handleSubmit}
-            containerStyles="mt-7 bg-options"
-            isLoading={isSubmitting}
-          />
+              {formFields.map(({ key, title, placeholder, value, secureTextEntry, keyboardType }) => (
+                <FormField
+                  key={key}
+                  title={title}
+                  placeholder={placeholder}
+                  value={value}
+                  secureTextEntry={secureTextEntry}
+                  keyboardType={keyboardType}
+                  handleChangeText={(val) => handleInputChange(key, val)}
+                  otherStyles="mt-2"
+                />
+              ))}
+              <View style={{ alignItems: 'center' }}>
+                <CustomButton
+                  title="Create Account"
+                  handlePress={handleSubmit}
+                  containerStyles="mt-5 bg-options"
+                  isLoading={isSubmitting}
+                />
+              </View>
 
-          <View className="flex-row justify-center items-center mt-9">
-            <Text className="text-secondary">ALREADY HAVE AN ACCOUNT? </Text>
-            <Text className="text-success font-semibold">
-              <Link href="/signIn">SIGN IN</Link>
-            </Text>
-          </View>
+              <View style={styles.dividerContainer}>
+                <View style={styles.divider} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.divider} />
+              </View>
+              <View style={{ alignItems: 'center' }}>
+                <CustomButton
+                  title="Sign Up as Organization"
+                  handlePress={navigateToOrgSignUp}
+                  containerStyles="mt-3 bg-smallText"
+                />
+              </View>
 
-          <View className="flex-row justify-center items-center mt-6">
-            <View className="h-[1px] bg-gray-300 flex-1"></View>
-            <Text className="mx-3 text-gray-500">OR</Text>
-            <View className="h-[1px] bg-gray-300 flex-1"></View>
-          </View>
-
-          <CustomButton
-            title="Sign Up as Organization"
-            handlePress={navigateToOrgSignUp}
-            containerStyles="mt-10 bg-smallText"
-          />
-        </View>
-      </ScrollView>
+              <View style={styles.signInContainer}>
+                <Text style={styles.secondaryText}>Already have an account? </Text>
+                <TouchableOpacity>
+                  <Text style={styles.linkText}>
+                    <Link href="/signIn">Sign In</Link>
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </ImageBackground>
     </SafeAreaView>
   );
 };
 
 export default SignUp;
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  backgroundImage: {
+    flex: 1,
+    width: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 60, 40, 0.85)', // Dark green overlay with transparency
+  },
+  keyboardAvoidView: {
+    flex: 1,
+  },
+  scrollView: {
+    flexGrow: 1,
+    paddingVertical: 20,
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingTop: 10,
+  },
+  logoCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  logoText: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: 'white',
+  },
+  appName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: 'white',
+    marginTop: 8,
+    letterSpacing: 1,
+  },
+  formContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  heading: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2E7D32',
+    marginBottom: 4,
+  },
+  subheading: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 10,
+  },
+  signInContainer: {
+    flexDirection: 'row',
+    marginTop: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  secondaryText: {
+    color: '#666',
+    fontSize: 13,
+  },
+  linkText: {
+    color: '#4CAF50',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 12,
+    width: '100%',
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    color: '#999',
+    fontSize: 13,
+  },
+});

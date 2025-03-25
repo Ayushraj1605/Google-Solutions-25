@@ -1,99 +1,141 @@
-import { View, Text, TouchableOpacity, Image, StatusBar } from 'react-native';
-import React from 'react';
+import { View, Text, TouchableOpacity, StatusBar, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
 import ButtonProfile from '../../components/buttonProfile';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
+import ProfileImage from '../../components/profileAvatar';
+import { router } from 'expo-router';
 
 
-const profile = () => {
+const ProfileScreen = () => {
   const navigation = useNavigation();
-  const OnClickHandler = async () => {
-    try {
-      // Clear all AsyncStorage data
-      await AsyncStorage.clear();
-      console.log('All AsyncStorage data has been cleared!');
+  const [userData, setUserData] = useState({
+    id: '',
+    name: '',
+    email: '',
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
-      // Reset navigation state and navigate to the SignIn screen in the Auth stack
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('ID');
+        const userName = await AsyncStorage.getItem('USERNAME');
+        const userEmail = await AsyncStorage.getItem('EMAIL');
+        
+        setUserData({
+          id: userId || '',
+          name: userName,
+          email: userEmail,
+        });
+        console.log('User data retrieved:', userData);
+      } catch (error) {
+        console.error('Error retrieving user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await AsyncStorage.clear();
+      console.log('AsyncStorage cleared!');
       navigation.dispatch(
         CommonActions.reset({
-          index: 0, // Start at the first screen in the stack
-          routes: [
-            { name: '(auth)', params: { screen: 'signIn' } }, // Navigate to (auth)/signIn
-          ],
+          index: 0,
+          routes: [{ name: '(auth)', params: { screen: 'signIn' } }],
         })
       );
     } catch (error) {
-      console.error('Error clearing AsyncStorage or navigating:', error);
+      console.error('Sign out error:', error);
     }
   };
 
+  const handleAnalytics = () => {
+    console.log('User Analytics');
+    router.push('/userAnalytics');
+  }
+
+  const handleOrders = () => {
+    console.log('Order History');
+    router.push('/orderHistory');
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
-      <StatusBar barStyle="light-content" backgroundColor="#609966" />
+    <>
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#609966"
+        translucent={Platform.OS === 'ios'} 
+      />
+      {/* <SafeAreaView style={{ flex: 1, backgroundColor: Platform.OS === 'ios' ? '#609966' : '#F3F4F6' }}> */}
+        <View style={{ flex: 1, backgroundColor: '#F3F4F6' }}>
+          {/* Header */}
+          <View
+            style={{
+              backgroundColor: '#609966',
+              paddingHorizontal: 24,
+              paddingVertical: 50,
+              borderBottomLeftRadius: 30,
+              borderBottomRightRadius: 30,
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOpacity: 0.1,
+              shadowRadius: 10,
+              elevation: 5,
+              height: 150,
+              paddingTop: Platform.OS === 'ios' ? 0 : 50,
+            }}
+          />
 
-      {/* Green Header */}
-      <View style={{
-        backgroundColor: '#609966',
-        height: 120,
-        paddingHorizontal: 24,
-        paddingTop: 32
-      }}>
-        <Text style={{
-          color: 'white',
-          fontSize: 24,
-          fontWeight: '600'
-        }}>
-          My Profile
-        </Text>
-      </View>
-
-      {/* Profile Card */}
-      <View style={{
-        backgroundColor: 'white',
-        marginHorizontal: 16,
-        marginTop: -16,
-        borderRadius: 12,
-        padding: 16,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
-            backgroundColor: '#E0E0E0'
-          }} />
-          <View style={{ marginLeft: 16, flex: 1 }}>
-            <Text style={{ fontSize: 18, fontWeight: '600' }}>Ayush Raj</Text>
-            <Text style={{ color: '#666666' }}>theboys.ewaste@gmail.com</Text>
+          {/* Profile Card */}
+          <View
+            style={{
+              backgroundColor: '#FFFFFF',
+              marginHorizontal: 20,
+              marginTop: -50,
+              padding: 24,
+              borderRadius: 24,
+              flexDirection: 'row',
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 10,
+              elevation: 6,
+            }}
+          >
+            <ProfileImage name={userData.name} />
+            {console.log(userData.name)}
+            <View style={{ marginLeft: 16, flex: 1 }}>
+              <Text style={{ fontSize: 22, fontWeight: '700', color: '#1F2937' }}>
+                {userData.name}
+              </Text>
+              <Text style={{ color: '#6B7280', fontSize: 16 }}>
+                {userData.email}
+              </Text>
+            </View>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={{ fontSize: 32, color: '#9CA3AF' }}>›</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity>
-            <Text style={{ fontSize: 24, color: '#666666' }}>›</Text>
-          </TouchableOpacity>
+
+          {/* Menu Options */}
+          <View style={{ marginTop: 40, paddingHorizontal: 20 }}>
+            {/* <ButtonProfile title="Order History" handlePress={handleOrders} /> */}
+            {/* <View style={{ height: 20 }} /> */}
+            {/* <ButtonProfile title="Analytics" handlePress={handleAnalytics} /> */}
+            {/* <View style={{ height: 20 }} /> */}
+            <ButtonProfile title="Sign Out" handlePress={handleSignOut} />
+          </View>
         </View>
-      </View>
-
-      {/* Menu Options */}
-      <View style={{ marginHorizontal: 16, marginTop: 24 }}>
-        {/* Order History */}
-        <ButtonProfile
-          title="Order History"
-          onPress={OnClickHandler}
-        />
-
-        {/* Sign Out */}
-        <ButtonProfile
-          title="Sign Out"
-          handlePress={OnClickHandler}
-        />
-
-      </View>
-    </View>
+      {/* </SafeAreaView> */}
+    </>
   );
 };
 
-export default profile;
+export default ProfileScreen;

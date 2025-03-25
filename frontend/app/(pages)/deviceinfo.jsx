@@ -98,16 +98,24 @@ const Deviceinfo = () => {
       setError('Please select an image first');
       return;
     }
-
+  
     setUploading(true);
     setError(null);
-
+  
     try {
+      // Get the userId from AsyncStorage
+      const userId = await AsyncStorage.getItem('ID');
+      if (!userId) {
+        setError('User not found. Please log in again.');
+        setUploading(false);
+        return;
+      }
+  
       // Create a reference to the file location in Firebase Storage
+      // Using userId as folder name
       const localUri = imageUri;
       const filename = localUri.split('/').pop();
-      const storageRef = ref(storage, `DeviceImages/${filename}`);
-      const userId = await AsyncStorage.getItem('ID');
+      const storageRef = ref(storage, `DeviceImages/${userId}/${filename}`);
       
       // Convert the image to a blob
       const response = await fetch(localUri);
@@ -130,6 +138,9 @@ const Deviceinfo = () => {
         type: type,
       });
       
+      // You might want to also pass the userId to your Flask app
+      formData.append('userId', userId);
+      
       const flaskResponse = await axios.post(
         'https://flaskapp-613599475137.asia-east2.run.app/',
         formData,
@@ -139,23 +150,8 @@ const Deviceinfo = () => {
           },
         }
       );
-
-      try {
-        const addDeviceEndpoint = await axios.post(
-          'https://cloudrunservice-254131401451.us-central1.run.app/user/addDevice',
-          {
-            deviceName: flaskResponse.data.predicted_class,
-            deviceType: flaskResponse.data.predicted_class,
-            createdAt: Timestamp.fromDate(new Date()),
-            userId: userId,
-          }
-        );
-      } catch (error) {
-        console.error('Error adding device:', error.response ? error.response.data : error.message);
-        throw new Error('Failed to add device to your account');
-      }
-
-      // Navigate to the device info page with the response data
+  
+      // Navigate to the devices screen with the response data
       router.replace({
         pathname: '/devices',
         params: {
@@ -164,12 +160,15 @@ const Deviceinfo = () => {
           imageUrl: downloadURL
         }
       });
-      
-    } catch(err) {
-      console.error('Error uploading image:', err);
-      setError(err.message || 'Failed to upload image. Please try again.');
-    } finally {
+  
       setUploading(false);
+      return { downloadURL, flaskResponse: flaskResponse.data };
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      setError('Failed to upload image: ' + error.message);
+      setUploading(false);
+      return null;
     }
   };
 

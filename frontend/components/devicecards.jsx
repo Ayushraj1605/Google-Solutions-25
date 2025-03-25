@@ -11,9 +11,33 @@ import {
   ScrollView 
 } from 'react-native';
 import { router } from 'expo-router';
+import { initializeApp } from 'firebase/app';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore, Timestamp } from 'firebase/firestore';
+import { getStorage, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import axios from 'axios';
+import { useEffect } from 'react';
 
 const { width } = Dimensions.get('window');
+
+// Firebase configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDXjzuJTIKRocH0w08HYCs5C7DB-MDhViU",
+    authDomain: "ewastemanagement-7bf01.firebaseapp.com",
+    databaseURL: "https://ewastemanagement-7bf01-default-rtdb.firebaseio.com",
+    projectId: "ewastemanagement-7bf01",
+    storageBucket:"ewastemanagement-7bf01.firebasestorage.app",
+    messagingSenderId: "254131401451",
+    appId: "1:254131401451:web:9f9891eef8c0e51d2dc4ae",
+    measurementId:"G-S320GS59SR"
+};
+
+// Initialize Firebase
+const firebaseApp = initializeApp(firebaseConfig);
+
+// Initialize Firestore
+const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
 // Keeping all your utility functions the same
 const parseFormattedList = (inputText) => {
@@ -159,6 +183,8 @@ const DeviceCard = ({ data }) => {
   const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [visible, setVisible] = useState(false);
   const [deviceTips, setDeviceTips] = useState('');
+  const [imageLoading, setImageLoading] = useState(true);
+  // const [imageUrl, setImageUrl] = useState(null);
   // Animation state for the pulse effect
   const [pulseAnimation, setPulseAnimation] = useState(false);
 
@@ -204,6 +230,7 @@ const DeviceCard = ({ data }) => {
       });
     }
   };
+  console.log(data);
   
   // Function to start pulse animation
   const startPulseAnimation = () => {
@@ -222,9 +249,63 @@ const DeviceCard = ({ data }) => {
   // Default values if data is incomplete
   const deviceName = data?.deviceName || "Eco-Friendly Recycling";
   const deviceType = data?.deviceType || "Make the world greener";
-  const imageUrl = data?.imageUrl || 'https://picsum.photos/700';
   const deviceId = data?.deviceId || "Unknown";
+  const imageUrl = data?.imageUrl || "https://www.clipartmax.com/png/middle/167-1673712_green-recycling-symbol-green-recycle-logo-png.png";
   const recycleStatus = data?.recycleStatus || false;
+
+  // useEffect(() => {
+  //   const fetchDeviceImage = async () => {
+  //     try {
+  //       setImageLoading(true);
+        
+  //       // If we already have a full URL in data.imageUrl, use it directly
+  //       if (data?.imageUrl && data.imageUrl.startsWith('http')) {
+  //         setImageUrl(data.imageUrl);
+  //         setImageLoading(false);
+  //         return;
+  //       }
+        
+  //       // Otherwise, we need to fetch it from Firebase Storage
+  //       const storage = getStorage(firebaseConfig);
+  //       let imagePath;
+        
+  //       // Get userId from AsyncStorage
+  //       const userId = await AsyncStorage.getItem('ID');
+
+  //       // If we have the image filename in data.imageUrl
+  //       if (data?.imageUrl) {
+  //         // If it's a full path, use it directly
+  //         if (data.imageUrl.includes('DeviceImages/')) {
+  //           imagePath = data.imageUrl;
+  //         } else {
+  //           // If it's just a filename, construct the path with userId
+  //           const filename = data.imageUrl.split('/').pop();
+  //           imagePath = `DeviceImages/${userId}/${filename}.jpg`;
+  //         }
+  //       } else if (data?.deviceId) {
+  //         // If no imageUrl but we have deviceId, try to use that
+  //         imagePath = `DeviceImages/${userId}/${data.deviceId}.jpg`;
+  //       } else {
+  //         // No identifiable information, use a default image
+  //         setImageUrl(null);
+  //         setImageLoading(false);
+  //         return;
+  //       }
+        
+  //       // Get the download URL from Firebase Storage
+  //       const imageRef = ref(storage, imagePath);
+  //       const url = await getDownloadURL(imageRef);
+  //       setImageUrl(url);
+  //     } catch (error) {
+  //       console.error('Error fetching device image:', error);
+  //       setImageUrl(null);
+  //     } finally {
+  //       setImageLoading(false);
+  //     }
+  //   };
+    
+  //   fetchDeviceImage();
+  // }, [data?.imageUrl, data?.deviceId]);
 
   // Status indicator color
   const statusColor = recycleStatus ? '#FFB74D' : '#4CAF50';

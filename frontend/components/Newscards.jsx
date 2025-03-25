@@ -14,7 +14,7 @@ const LeftContent = props => (
 const NewsCards = ({ 
   title = "Global E-Waste Surges to Record High",
   subtitle = "March 13, 2025 • By EcoWatch",
-  imageUri = 'https://source.unsplash.com/700x400/?ewaste,environment',
+  imageUri = 'https://tcocertified.com/wp-content/uploads/2019/10/international-e-waste-day.jpg',
   description = "A new report reveals that global electronic waste reached an all-time high in 2025, with over 60 million tons discarded. Experts call for immediate action through recycling, upcycling, and sustainable tech production.",
   avatarSource = null,
   category = "Environment",

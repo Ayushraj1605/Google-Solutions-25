@@ -1,14 +1,14 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import '../../global.css'
-import Segments from '../../components/segmentsOrg'
+import { View, Text } from 'react-native' 
+import React from 'react' 
+import '../../global.css' 
+import OrgAnalyticsScreen from '../../components/orgAnalytics'  
 
-const Order = () => {
+const Home = () => {   
   return (
-    <View className="items-center">
-      <Text>Hi</Text>
+    <View style={{ flex: 1 }}>
+      <OrgAnalyticsScreen />
     </View>
   )
-}
+}  
 
-export default Order
+export default Home

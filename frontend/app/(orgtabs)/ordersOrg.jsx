@@ -1,14 +1,14 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import '../../global.css'
-import Segments from '../../components/segmentsOrg'
+import OrderHistoryScreen from '../../components/userOrders'
 
-const Home = () => {
+const OrgOrders = () => {
   return (
-    <View className="items-center">
-      <Segments />
+    <View style={{ flex: 1 }}>
+      <OrderHistoryScreen />
     </View>
   )
 }
 
-export default Home
+export default OrgOrders;

@@ -31,14 +31,14 @@ const _layout = () => {
       <Stack.Screen
         name="signUpOrg"
         options={{
-          headerShown: true, // Show the header
+          headerShown: false, // Show the header
           headerTitle: '', // Remove the title
           headerBackTitleVisible: false, // Hide the back button title
         }}
       /><Stack.Screen
         name="orgadd"
         options={{
-          headerShown: true, // Show the header
+          headerShown: false, // Show the header
           headerTitle: '', // Remove the title
           headerBackTitleVisible: false, // Hide the back button title
         }}
