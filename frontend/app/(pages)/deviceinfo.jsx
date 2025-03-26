@@ -112,22 +112,17 @@ const Deviceinfo = () => {
       }
   
       // Create a reference to the file location in Firebase Storage
-      // Using userId as folder name
       const localUri = imageUri;
       const filename = localUri.split('/').pop();
       const storageRef = ref(storage, `DeviceImages/${userId}/${filename}`);
       
-      // Convert the image to a blob
+      // Convert the image to a blob and upload to Firebase
       const response = await fetch(localUri);
       const blob = await response.blob();
-      
-      // Upload the blob to Firebase Storage
       const snapshot = await uploadBytes(storageRef, blob);
-      
-      // Get the download URL
       const downloadURL = await getDownloadURL(snapshot.ref);
       
-      // Also upload to Flask app
+      // First, get device type from ML model
       const formData = new FormData();
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : 'image';
@@ -138,10 +133,8 @@ const Deviceinfo = () => {
         type: type,
       });
       
-      // You might want to also pass the userId to your Flask app
-      formData.append('userId', userId);
-      
-      const flaskResponse = await axios.post(
+      // Get device type from ML model
+      const mlResponse = await axios.post(
         'https://flaskapp-613599475137.asia-east2.run.app/',
         formData,
         {
@@ -151,23 +144,48 @@ const Deviceinfo = () => {
         }
       );
   
-      // Navigate to the devices screen with the response data
+      if (!mlResponse.data || !mlResponse.data.predicted_class) {
+        throw new Error('Device type not detected from the image');
+      }
+  
+      // Send device data to addDevice endpoint
+      const deviceData = {
+        deviceType: mlResponse.data.predicted_class.trim(),
+        deviceName: mlResponse.data.predicted_class.trim(),
+        userId: userId,
+        imageUrl: downloadURL  // Adding the image URL to the device data
+      };
+  
+      const addDeviceResponse = await axios.post(
+        'https://cloudrunservice-254131401451.us-central1.run.app/user/addDevice',
+        deviceData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+  
+      console.log('Device added successfully:', addDeviceResponse.data);
+      Alert.alert('Success', 'Device added successfully!');
+  
+      // Navigate to devices screen
       router.replace({
         pathname: '/devices',
         params: {
-          deviceType: flaskResponse.data.deviceType,
-          carbonEmission: flaskResponse.data.carbonEmission,
+          deviceType: mlResponse.data.predicted_class,
           imageUrl: downloadURL
         }
       });
   
       setUploading(false);
-      return { downloadURL, flaskResponse: flaskResponse.data };
-      
+      return { downloadURL, mlResponse: mlResponse.data };
+  
     } catch (error) {
-      console.error('Error uploading image:', error);
-      setError('Failed to upload image: ' + error.message);
+      console.error('Error:', error.response?.data || error.message);
+      setError(error.response?.data?.message || 'Failed to process image');
       setUploading(false);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to process image');
       return null;
     }
   };
