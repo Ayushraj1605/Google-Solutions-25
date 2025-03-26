@@ -1,5 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, Alert, FlatList, Animated, Dimensions, Image, StyleSheet, StatusBar } from "react-native";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  Modal, 
+  ActivityIndicator, 
+  Alert, 
+  FlatList, 
+  Animated, 
+  Dimensions, 
+  Image, 
+  StyleSheet, 
+  StatusBar,
+  Platform 
+} from "react-native";
 import MapView, { Marker, Circle, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import * as Location from "expo-location";
@@ -56,62 +70,55 @@ const Institutions = () => {
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
+  const [locationError, setLocationError] = useState(null);
 
   const mapRef = useRef(null);
   const drawerAnimation = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+  const cancelTokenSource = useRef(null);
 
+  // Cancellable API request utility
+  const createCancellableRequest = () => {
+    cancelTokenSource.current = axios.CancelToken.source();
+    return cancelTokenSource.current;
+  };
+
+  // Cleanup function to cancel ongoing requests
   useEffect(() => {
-    const fetchCurrentLocation = async () => {
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          Alert.alert("Permission Denied", "Location access is required");
-          return;
-        }
-
-        let location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-        
-        setCurrentLocation({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
-        
-        // Auto-fetch institutions on first load
-        if (isFirstLoad) {
-          setIsFirstLoad(false);
-          fetchNearbyInstitutions({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching current location:", error);
-        Alert.alert("Error", "Unable to fetch location.");
+    return () => {
+      if (cancelTokenSource.current) {
+        cancelTokenSource.current.cancel('Component unmounted');
       }
     };
+  }, []);
 
-    fetchCurrentLocation();
-  }, [isFirstLoad]);
+  // Fetch current location
+  const fetchCurrentLocation = useCallback(async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setLocationError("Location permission denied");
+        return null;
+      }
 
-  // Sort institutions by distance whenever they change
-  useEffect(() => {
-    if (institutions.length > 0 && currentLocation) {
-      sortInstitutionsByDistance();
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Platform.OS === 'android' 
+          ? Location.Accuracy.Low 
+          : Location.Accuracy.Balanced,
+      });
+      
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+    } catch (error) {
+      console.error("Location fetch error:", error);
+      setLocationError("Unable to fetch location");
+      return null;
     }
-  }, [institutions, currentLocation]);
+  }, []);
 
-  // Handle drawer animation
-  useEffect(() => {
-    Animated.timing(drawerAnimation, {
-      toValue: drawerOpen ? 1 : 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [drawerOpen]);
-
+  // Fetch nearby institutions
   const fetchNearbyInstitutions = async (location = currentLocation) => {
     if (!location) {
       Alert.alert("Location Not Available", "Please enable location services");
@@ -121,6 +128,7 @@ const Institutions = () => {
     setLoading(true);
 
     try {
+      const cancelToken = createCancellableRequest();
       const response = await axios.get(
         "https://cloudrunservice-254131401451.us-central1.run.app/user/orgLocations",
         {
@@ -129,23 +137,43 @@ const Institutions = () => {
             longitude: location.longitude,
             radius: 50, // 50 km radius
           },
+          cancelToken: cancelToken.token
         }
       );
 
       setInstitutions(response.data.locations || []);
     } catch (error) {
-      console.error("Error fetching institutions:", error);
-      Alert.alert("Error", "Could not fetch nearby institutions");
+      if (!axios.isCancel(error)) {
+        console.error("Error fetching institutions:", error);
+        Alert.alert("Error", "Could not fetch nearby institutions");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const sortInstitutionsByDistance = async () => {
+  // Initial location and institutions fetch
+  useEffect(() => {
+    const initializeLocation = async () => {
+      const location = await fetchCurrentLocation();
+      if (location) {
+        setCurrentLocation(location);
+        setIsFirstLoad(false);
+        fetchNearbyInstitutions(location);
+      }
+    };
+
+    if (isFirstLoad) {
+      initializeLocation();
+    }
+  }, [isFirstLoad]);
+
+  // Sort institutions by distance
+  const sortInstitutionsByDistance = useCallback(async () => {
     if (!currentLocation || institutions.length === 0) return;
 
     try {
-      // Calculate distances for all institutions
+      const cancelToken = createCancellableRequest();
       const promises = institutions.map(async (institution) => {
         try {
           const response = await axios.get(
@@ -156,44 +184,48 @@ const Institutions = () => {
                 destinations: `${institution.latitude},${institution.longitude}`,
                 key: GOOGLE_MAPS_API_KEY,
               },
+              cancelToken: cancelToken.token
             }
           );
 
-          if (
-            response.data &&
-            response.data.rows &&
-            response.data.rows[0] &&
-            response.data.rows[0].elements &&
-            response.data.rows[0].elements[0]
-          ) {
-            const distanceText = response.data.rows[0].elements[0].distance.text;
-            const distanceValue = response.data.rows[0].elements[0].distance.value;
+          const element = response.data.rows[0]?.elements[0];
+          if (element && element.status === 'OK') {
             return {
               ...institution,
-              distanceText,
-              distanceValue,
+              distanceText: element.distance.text,
+              distanceValue: element.distance.value,
             };
           }
           return institution;
         } catch (error) {
-          console.error("Error calculating distance for institution", error);
+          if (!axios.isCancel(error)) {
+            console.error("Distance calculation error:", error);
+          }
           return institution;
         }
       });
 
       const institutionsWithDistance = await Promise.all(promises);
-      
-      // Sort by distance
       const sorted = institutionsWithDistance
         .filter(inst => inst.distanceValue !== undefined)
         .sort((a, b) => a.distanceValue - b.distanceValue);
       
       setSortedInstitutions(sorted);
     } catch (error) {
-      console.error("Error sorting institutions:", error);
+      if (!axios.isCancel(error)) {
+        console.error("Sorting institutions error:", error);
+      }
     }
-  };
+  }, [currentLocation, institutions]);
 
+  // Trigger sorting when institutions or location changes
+  useEffect(() => {
+    if (institutions.length > 0 && currentLocation) {
+      sortInstitutionsByDistance();
+    }
+  }, [institutions, currentLocation, sortInstitutionsByDistance]);
+
+  // Calculate distance to selected institution
   const calculateDistance = async (destination) => {
     try {
       const response = await axios.get(
@@ -227,6 +259,7 @@ const Institutions = () => {
     }
   };
 
+  // Fetch route directions
   const fetchDirections = async (origin, destination) => {
     try {
       const response = await axios.get(
@@ -314,6 +347,7 @@ const Institutions = () => {
     return coordinates;
   };
 
+  // Handle get directions
   const handleGetDirections = () => {
     if (!currentLocation || !selectedInstitution) {
       Alert.alert("Error", "Current location or destination is missing");
@@ -338,6 +372,7 @@ const Institutions = () => {
     }
   };
 
+  // Select institution from drawer
   const selectInstitutionFromDrawer = (institution) => {
     setSelectedInstitution(institution);
     calculateDistance(institution);
@@ -356,11 +391,42 @@ const Institutions = () => {
     }
   };
 
+  // Drawer animation
+  useEffect(() => {
+    Animated.spring(drawerAnimation, {
+      toValue: drawerOpen ? 1 : 0,
+      friction: 10,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  }, [drawerOpen]);
+
   // Drawer transform for sliding effect
   const drawerTranslateX = drawerAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [width, 0],
   });
+
+  // Location error handling
+  const handleLocationError = () => {
+    Alert.alert(
+      "Location Error", 
+      locationError || "Unable to access location services",
+      [
+        { 
+          text: "Open Settings", 
+          onPress: () => Location.openSettings() 
+        },
+        { 
+          text: "Retry", 
+          onPress: () => {
+            setLocationError(null);
+            setIsFirstLoad(true);
+          }
+        }
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -370,7 +436,18 @@ const Institutions = () => {
         barStyle="light-content" 
       />
       
-      {currentLocation ? (
+      {locationError ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="warning" size={60} color="#FF6347" />
+          <Text style={styles.errorText}>{locationError}</Text>
+          <TouchableOpacity 
+            style={styles.errorButton} 
+            onPress={handleLocationError}
+          >
+            <Text style={styles.errorButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : currentLocation ? (
         <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
@@ -481,7 +558,7 @@ const Institutions = () => {
 
             <View style={styles.directionsInfo}>
               <Text style={styles.directionsTitle}>Directions</Text>
-              <Text style={styles.directionsText}>`{distance} • {duration}`</Text>
+              <Text style={styles.directionsText}>{`${distance} • ${duration}`}</Text>
             </View>
 
             <TouchableOpacity style={styles.directionsShare}>
@@ -622,11 +699,12 @@ const Institutions = () => {
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f7f7f7',
+    // backgroundColor:'red',
+    // paddingTop: 100,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -635,7 +713,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f7f7f7',
+    // backgroundColor: '#f7f7f7',
   },
   loadingText: {
     marginTop: 10,
@@ -644,7 +722,7 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'absolute',
-    top: 0,
+    top: 1,
     left: 0,
     right: 0,
     zIndex: 1,
@@ -654,6 +732,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 5,
+    paddingTop: 10,
+    justifyContent: 'center',
   },
   headerContent: {
     flexDirection: 'row',
@@ -723,6 +803,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 12,
+    // paddingTop: 12,
+    marginTop: 12,
+    // backgroundColor: 'red',
   },
   backButton: {
     padding: 8,
@@ -853,6 +936,8 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 20,
     zIndex: 100,
+    // backgroundColor: 'red',
+    paddingTop: 10,
   },
   drawerHeader: {
     borderBottomWidth: 1,
@@ -928,6 +1013,31 @@ const styles = StyleSheet.create({
   },
   emptyDrawerButtonText: {
     color: 'white',
+    fontWeight: 'bold',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f7f7f7',
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  errorButton: {
+    marginTop: 20,
+    backgroundColor: '#609966',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  errorButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });
