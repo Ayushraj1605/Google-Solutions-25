@@ -14,13 +14,15 @@ const FormField = ({
   const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
 
   return (
-    <View className={`space-y-2 w-full ${otherStyles}`}>
+    <View className={`space-y-2 w-full black-900 ${otherStyles}`}>
       <TextInput
         mode="outlined" // Outlined input style
+        
         label={title} // Use dynamic label
         value={value}
         placeholder={placeholder}
         placeholderTextColor="#D9D9D9"
+        textColor='#000000'
         onChangeText={handleChangeText}
         secureTextEntry={
           (title === 'Password' || title === 'Confirm Password') && !showPassword
@@ -38,6 +40,7 @@ const FormField = ({
           fontWeight: '600',
           width: '100%',
           height: 56, // Input height
+          backgroundColor: '#F9F9F9', // Input background color
         }}
       />
     </View>
