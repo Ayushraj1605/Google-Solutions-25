@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 import { Stack } from 'expo-router'
 import '../../global.css'
-
+import ChatbotScreen from '../../components/chatbotbutton'
 const _layout = () => {
   return (
     <Stack>
@@ -35,6 +35,13 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
+        name='chatbot'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
+      />
+      <Stack.Screen
         name='orderHistory'
         options={{
           headerShown: false,
@@ -42,6 +49,7 @@ const _layout = () => {
         }}
       />
     </Stack>
+    
   )
 }
 
