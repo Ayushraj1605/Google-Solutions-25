@@ -370,7 +370,13 @@ const DeviceCard = ({ data }) => {
                 <Text style={styles.loadingText}>Loading Gemini Tips...</Text>
               </View>
             ) : (
-              <Text style={styles.detailsButtonText}>Gemini assisted Reuse Tips</Text>
+              <View style={styles.buttonContent}>
+                <Image 
+                  source={require('../assets/gemini-icon.png')} 
+                  style={styles.geminiIcon}
+                />
+                <Text style={styles.detailsButtonText}>Gemini assisted Reuse Tips</Text>
+              </View>
             )}
           </TouchableOpacity>
         </View>
@@ -719,6 +725,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  geminiIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 8,
   }
 });
 

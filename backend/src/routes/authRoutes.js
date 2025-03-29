@@ -45,6 +45,6 @@ router.get('/users', async (req, res) => {
 });
 
 // AI endpoint
-router.post('/user/deviceSuggestions', deviceSuggestions)
+router.post('/user/deviceSuggestions', deviceSuggestions);
 
 export default router;
