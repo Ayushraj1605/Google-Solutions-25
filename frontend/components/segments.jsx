@@ -5,6 +5,8 @@ import { SegmentedButtons } from 'react-native-paper';
 import NewsCards from './Newscards';
 import BlogCards from './blogcards';
 import FactsCards from './factscard';
+import ChatBotButton from './chatbotbutton';
+
 
 // Real, verified blog content
 const blogData = [
@@ -200,7 +202,9 @@ const Segments = ({ name }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.contentWrapper}>{renderContent()}</View>
+        <View style={styles.contentWrapper}>{renderContent()}
+        </View>
+      
       </ScrollView>
     </SafeAreaView>
   );
