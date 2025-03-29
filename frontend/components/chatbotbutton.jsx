@@ -3,15 +3,14 @@ import React from 'react';
 import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // or any other icon library
-
+import { router } from 'expo-router'; // Import router from expo-router
 const ChatBotButton = ({ onPress }) => {
   const navigation = useNavigation();
   
   // Default action if no onPress is provided
   const handlePress = onPress || (() => {
-    // Default action - navigate to a screen or perform some action
-    navigation.navigate('home'); // Change this to your desired screen
-  });
+      router.push('/chatbot'); // Navigate to the chatbot screen
+    });
 
   return (
     <View style={styles.container}>

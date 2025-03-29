@@ -58,6 +58,7 @@ const Index = () => {
     <SafeAreaView className="h-full bg-black">
       <StatusBar barStyle="light-content" backgroundColor="black" />
       <Loader />
+      
     </SafeAreaView>
   );
 };
