@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-
+import { Icon } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 export default function ChatScreen() {
   const router = useRouter();
   const [messages, setMessages] = useState([
@@ -66,10 +67,12 @@ export default function ChatScreen() {
       item.isUser ? styles.userMessageContainer : styles.botMessageContainer
     ]}>
       {!item.isUser && (
-        <Image
-          source={require('../../assets/icons/search.png')}
-          style={styles.botAvatar}
-        />
+        <View style={styles.avatarContainer}>
+          <Image
+            source={require('../../assets/icons/search.png')}
+            style={styles.botAvatar}
+          />
+        </View>
       )}
       <View style={[
         styles.messageBubble,
@@ -80,10 +83,12 @@ export default function ChatScreen() {
         </Text>
       </View>
       {item.isUser && (
-        <Image
-          source={require('../../assets/icons/search.png')}
-          style={styles.userAvatar}
-        />
+        <View style={styles.avatarContainer}>
+          <Image
+            source={require('../../assets/icons/search.png')}
+            style={styles.userAvatar}
+          />
+        </View>
       )}
     </View>
   );
@@ -98,22 +103,29 @@ export default function ChatScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.backButton}>Back</Text>
+          <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color="#333" />
+        </TouchableOpacity>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Chat Assistant</Text>
-          <View style={{ width: 60 }} /> {/* For balance */}
+          <View style={{ width: 60 }} />
         </View>
 
         {/* Chat messages */}
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
-        />
+        <View style={styles.messagesContainer}>
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            renderItem={renderMessage}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.messagesList}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          />
+        </View>
 
         {/* Input area */}
         <View style={styles.inputContainer}>
@@ -137,7 +149,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#609966',
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -153,12 +165,15 @@ const styles = StyleSheet.create({
   },
   backButton: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#609966',
     width: 60,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  messagesContainer: {
+    flex: 1,
   },
   messagesList: {
     padding: 16,
@@ -175,6 +190,14 @@ const styles = StyleSheet.create({
   userMessageContainer: {
     justifyContent: 'flex-end',
   },
+  avatarContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginHorizontal: 4,
+  },
   messageBubble: {
     maxWidth: '70%',
     padding: 12,
@@ -186,7 +209,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   userMessageBubble: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#fff',
     borderBottomRightRadius: 4,
     marginRight: 8,
   },
@@ -195,8 +218,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   userMessageText: {
-    color: '#fff',
+    color: '#333',
     fontSize: 16,
+  },
+  botAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  userAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -221,22 +254,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#609966',
     borderRadius: 20,
   },
   sendButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-  },
-  botAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
   },
 });
