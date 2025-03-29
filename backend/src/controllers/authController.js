@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { collection, query, where, getDocs, addDoc, Timestamp, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc } from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
@@ -91,7 +91,7 @@ export const signupOrg = async (req, res) => {
         return res.status(200).json({
             message: "Organization registered successfully!",
             userId: docRef.id,
-            Token
+            token
         });
     } catch (err) {
         console.error("Signup error:", err.message);
@@ -132,8 +132,11 @@ export const signinOrg = async (req, res) => {
         );
         return res.status(200).json({
             message: "Organization successfully signed in!",
+            userId: orgDoc.id,
+            email: orgData.email,
+            username: orgData.name,
             name: orgData.name,
-            Token,
+            token,
         });
     } catch (error) {
         return res.status(500).json({
@@ -189,21 +192,26 @@ export const signup = async (req, res) => {
     const { username, email, password } = req.body;
 
     try {
-        const usersCollection = collection(db, "users"); // Reference to 'users' collection
+        const usersCollection = collection(db, "users");
         const hashedPassword = await bcrypt.hash(password, 10);
-
+        
+        // Create document without userId first
         const docRef = await addDoc(usersCollection, {
-            userId: docRef.id,
             username: username,
             email: email,
             password: hashedPassword,
         });
-
+        
+        // Update the document to add the userId
+        await updateDoc(docRef, {
+            userId: docRef.id
+        });
+        
         res.status(200).json({
             message: "User signed up successfully!",
             userId: docRef.id,
         });
-
+        
         console.log("Document written with ID:", docRef.id);
     } catch (error) {
         res.status(500).json({
