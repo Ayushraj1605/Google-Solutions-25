@@ -4,9 +4,9 @@ import { AnimatedFAB } from 'react-native-paper';
 import { router } from 'expo-router';
 import Cards from '../../components/devicecards';
 import SearchBar from '../../components/searchbar';
+import ChatBotButton from '../../components/chatbotbutton';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 const Devices = ({ visible = true, style }) => {
   const [isExtended, setIsExtended] = useState(true);
   const [data, setData] = useState([]);
@@ -134,6 +134,7 @@ const Devices = ({ visible = true, style }) => {
         labelStyle={{ color: '#FFFFFF', fontWeight: '600' }}
         style={[styles.fabStyle, style]}
       />
+      <ChatBotButton/>
     </View>
   );
 };

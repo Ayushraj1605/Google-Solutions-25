@@ -20,7 +20,7 @@ import * as Location from "expo-location";
 import axios from "axios";
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
+import ChatBotButton from "../../components/chatbotbutton";
 const { width, height } = Dimensions.get('window');
 const GOOGLE_MAPS_API_KEY = "AIzaSyB_KkJwx0da8l-clsHMXvYP4m4cV1ij3_E";
 
@@ -577,7 +577,7 @@ const Institutions = () => {
           <Ionicons name="refresh" size={24} color="white" />
         </TouchableOpacity>
       )}
-
+      <ChatBotButton/>
       {/* Institution Selection Modal */}
       <Modal
         visible={!!selectedInstitution && !showRoute}
@@ -631,7 +631,7 @@ const Institutions = () => {
           </View>
         </View>
       </Modal>
-
+            
       {/* Institutions Drawer */}
       <Animated.View 
         style={[
@@ -649,6 +649,7 @@ const Institutions = () => {
               <Ionicons name="close" size={24} color="#609966" />
             </TouchableOpacity>
           </View>
+          
         </View>
         
         {sortedInstitutions.length > 0 ? (
@@ -696,6 +697,7 @@ const Institutions = () => {
           </View>
         )}
       </Animated.View>
+      
     </View>
   );
 };
@@ -755,11 +757,12 @@ const styles = StyleSheet.create({
   myLocationButton: {
     position: 'absolute',
     right: 16,
-    bottom: 130,
+    // bottom: 130,
+    bottom:155,
     backgroundColor: 'white',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: "#000",
@@ -771,11 +774,11 @@ const styles = StyleSheet.create({
   refreshButton: {
     position: 'absolute',
     right: 16,
-    bottom: 70,
+    bottom: 90,
     backgroundColor: '#609966',
     width: 56,
     height: 56,
-    borderRadius: 28,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: "#000",
