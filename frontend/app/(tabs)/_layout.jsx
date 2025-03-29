@@ -8,6 +8,8 @@ import Devices from '../../assets/svg/devices';
 import Profile from '../../assets/svg/profile';
 import Name from "../../assets/svg/name"; // This is importing an SVG component
 import '../../global.css'
+// import ChatbotButton from './chatbot';
+import CustomButton from '../../components/customButton';
 
 // This TabIcon component will handle the enlargement and green background
 const TabIcon = ({ Component, focused }) => {
@@ -90,8 +92,7 @@ const _layout = () => {
             ),
           }}
         />
-
-        <Tabs.Screen
+          <Tabs.Screen
           name='profile'
           options={{
             title: 'Profile',

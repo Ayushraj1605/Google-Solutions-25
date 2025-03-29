@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import ProfileImage from '../../components/profileAvatar';
 import { router } from 'expo-router';
+import ChatBotButton from '../../components/chatbotbutton';
 
 
 const ProfileScreen = () => {
@@ -132,6 +133,7 @@ const ProfileScreen = () => {
             <View style={{ height: 20 }} />
             <ButtonProfile title="Sign Out" handlePress={handleSignOut} />
           </View>
+          <ChatBotButton/>
         </View>
       {/* </SafeAreaView> */}
     </>
