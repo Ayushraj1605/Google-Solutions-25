@@ -37,7 +37,7 @@ const BlogScreen = () => {
                             <Ionicons name="arrow-back" size={24} color="#333" />
                         </TouchableOpacity>
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Chat Assistant</Text>
+                    <Text style={styles.headerTitle}>Create New Blog</Text>
                     <View style={{ width: 60 }} />
                 </View>
                 <Text style={styles.label}>Title</Text>
