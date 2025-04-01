@@ -232,6 +232,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   inputContainer: {
+    position: 'absolute',
+    bottom: 0,
     flexDirection: 'row',
     padding: 8,
     backgroundColor: '#fff',
