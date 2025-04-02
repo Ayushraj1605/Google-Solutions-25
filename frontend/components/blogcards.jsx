@@ -289,9 +289,8 @@ const BlogCard = ({
 const styles = StyleSheet.create({
   cardContainer: {
     width: '95%',
-    // maxWidth: 360,
+    maxWidth: 360,
     backgroundColor: '#fff',
-    // backgroundColor:'red',
     borderRadius: 12,
     marginVertical: 12,
     overflow: 'hidden',

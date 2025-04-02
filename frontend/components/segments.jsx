@@ -191,7 +191,7 @@ const Segments = ({ name }) => {
         return (
           <>
             {blogs.map((blog) => (
-              <View key={blog-${blog.blogId}} style={styles.cardContainer}>
+              <View key={`blog-${blog.blogId}`} style={styles.cardContainer}>
                 <BlogCard
                   title={blog.title}
                   subtitle={blog.subtitle}
@@ -201,9 +201,9 @@ const Segments = ({ name }) => {
                   readTime="4 min read"
                   likes={Math.floor(Math.random() * 50) + 10}
                   comments={Math.floor(Math.random() * 10) + 1}
-                  onShare={() => console.log(Share blog: ${blog.blogId})}
-                  onReadMore={() => console.log(Read more blog: ${blog.blogId})}
-                  onBookmark={() => console.log(Bookmark blog: ${blog.blogId})}
+                  onShare={() => console.log(`Share blog: ${blog.blogId}`)}
+                  onReadMore={() => console.log(`Read more blog: ${blog.blogId}`)}
+                  onBookmark={() => console.log(`Bookmark blog: ${blog.blogId}`)}
                 />
               </View>
             ))}
