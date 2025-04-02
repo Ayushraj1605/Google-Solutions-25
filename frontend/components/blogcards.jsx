@@ -46,26 +46,6 @@ const BlogCard = ({
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
-<<<<<<< HEAD
-  // Route to the Editing current Blog Page
-  // const editBlog=()=>{
-  //     route.push('/');
-  // }
-
-  // Create a bookmark handler within the component
-  const handleBookmarkPress = () => {
-    setIsBookmarked(!isBookmarked); // Toggle local state
-    onBookmark(); // Call the parent's onBookmark function
-  };
-
-
-  const handleReadMorePress = () => {
-    setIsExpanded(!isExpanded); // Toggle expanded state
-    onReadMore(); // Call the parent's onReadMore function
-  };
-
-=======
->>>>>>> 206a31d2b664b7e0e61f4be958d8d0d2e475d33e
   // Handle image loading
   useEffect(() => {
     if (!isImageLoading) {
@@ -251,24 +231,6 @@ const BlogCard = ({
               {isExpanded ? "Show Less" : "Read More"}
             </Text>
           </TouchableOpacity>
-<<<<<<< HEAD
-          
-          {/* {BlogCard.author==currentUser &&  */}
-          {/* <TouchableOpacity 
-            style={styles.readMoreButton} 
-            onPress={editBlog}
-            activeOpacity={0.7}
-            accessibilityLabel={isExpanded ? "Show less" : "Read more"}
-            accessibilityRole="button"
-          >
-            <Text style={styles.readMoreButtonText}>
-              Edit
-            </Text>
-          </TouchableOpacity> */}
-          {/* } */}
-
-=======
->>>>>>> 206a31d2b664b7e0e61f4be958d8d0d2e475d33e
         </View>
       </Animated.View>
       
@@ -327,8 +289,9 @@ const BlogCard = ({
 const styles = StyleSheet.create({
   cardContainer: {
     width: '95%',
-    maxWidth: 360,
+    // maxWidth: 360,
     backgroundColor: '#fff',
+    // backgroundColor:'red',
     borderRadius: 12,
     marginVertical: 12,
     overflow: 'hidden',
