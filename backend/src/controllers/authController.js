@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc } from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
@@ -274,13 +274,24 @@ export const locations = async (req, res) => {
 
 export const addDevice = async (req, res) => 
 {
-    const {deviceType, deviceName, userId} = req.body;
+    const { deviceType, deviceName, userId } = req.body || null;
+    /* For the case of recycling the device */
+    const { 
+          organizationName,
+          organizationId, 
+          description,
+          imei, 
+          modelNumber, 
+          purchaseYear, 
+          status, 
+          submittedAt } = req.body || null;
+
     if (!deviceType || !deviceName) {
         return res.status(400).json({
             message: "deviceType and deviceName are required"
         });
     }
-    
+
     try
     {
         const deviceCollection = collection(db, "Devices");
@@ -288,19 +299,65 @@ export const addDevice = async (req, res) =>
             deviceType: deviceType,
             deviceName: deviceName,
             userId : userId,
-            createdAt: Timestamp.fromDate(new Date())
+            createdAt: Timestamp.fromDate(new Date()),
+            organizationId: organizationId,
+            description: description,
+            imei: imei,
+            modelNumber: modelNumber,
+            purchaseYear: purchaseYear,
+            status: status,
+            organizationName: organizationName,
+            submittedAt: submittedAt
         });
 
         return res.status(200).json({
             message: "Device added successfully!",
             deviceId: deviceDoc.id
         });
+        console.log(organizationId, description, imei, modelNumber, purchaseYear, status);
     }
     catch(err)
     {
         console.error("Error adding device:", err);
         return res.status(500).json({
             message: "Error adding device",
+            error: err.message
+        });
+    }
+}
+
+export const updateDevice = async (req, res) => {
+    const { deviceId } = req.query;
+
+    if (!deviceId) {
+        return res.status(400).json({
+            message: "deviceId is required"
+        });
+    }
+
+    try {
+        const deviceDocRef = doc(db, "Devices", deviceId);
+        const deviceSnapshot = await getDoc(deviceDocRef);
+        
+        if (!deviceSnapshot.exists()) {
+            return res.status(404).json({
+                message: "Device not found"
+            });
+        }
+        
+        // Get the data you want to update from the request body
+        const updateData = req.body;
+        
+        // Update the document
+        await updateDoc(deviceDocRef, updateData);
+        
+        return res.status(200).json({
+            message: "Device updated successfully"
+        });
+    } catch (err) {
+        console.error("Error updating device:", err);
+        return res.status(500).json({
+            message: "Failed to update device",
             error: err.message
         });
     }
@@ -417,6 +474,89 @@ export const getOrders = async (req, res) =>
     } catch (err) {
         return res.status(500).json({
             message: "Error retrieving user orders",
+            error: err.message
+        });
+    }
+}
+
+export const createBlog = async (req, res) => {
+    const { userId } = req.query;
+    const { body, title } = req.body;
+
+    if (!body || !title) {
+        return res.status(400).json({
+            message: "Body and title are required"
+        });
+    }
+
+    try {
+        // First, get the username from users collection by matching document ID
+        const usersCollection = collection(db, "users");
+        const userSnapshot = await getDocs(usersCollection);
+        
+        // Find the user document where doc.id matches userId
+        const userDoc = userSnapshot.docs.find(doc => doc.id === userId);
+
+        if (!userDoc) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        const userData = userDoc.data();
+        const username = userData.username;
+
+        // Reference the main blogs collection
+        const blogsCollection = collection(db, "blogs");
+        
+        // Add the blog document with user reference and username
+        const blogDoc = await addDoc(blogsCollection, {
+            userId: userId,
+            username: username,
+            body: body,
+            title: title,
+            createdAt: Timestamp.fromDate(new Date()),
+        });
+
+        return res.status(200).json({
+            message: "Blog created successfully!",
+            blogId: blogDoc.id,
+            username: username
+        });
+    } catch (err) {
+        console.error("Error creating blog:", err);
+        return res.status(500).json({
+            message: "Error creating blog",
+            error: err.message
+        });
+    }  
+}
+
+export const getBlogs = async (req, res) => {
+    try {
+        const blogsCollection = collection(db, "blogs");
+        const blogsSnapshot = await getDocs(blogsCollection);
+
+        const blogs = blogsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                blogId: doc.id,
+                userId: data.userId,
+                username: data.username,
+                body: data.body,
+                title: data.title,
+                createdAt: data.createdAt
+            };
+        });
+
+        return res.status(200).json({
+            message: "Blogs retrieved successfully!",
+            blogs: blogs
+        });
+    } catch (err) {
+        console.error("Error retrieving blogs:", err);
+        return res.status(500).json({
+            message: "Error retrieving blogs",
             error: err.message
         });
     }

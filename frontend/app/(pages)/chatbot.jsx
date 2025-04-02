@@ -544,6 +544,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   inputContainer: {
+    position: 'absolute',
+    bottom: 0,
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,

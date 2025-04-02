@@ -213,13 +213,14 @@ const Segments = ({ name }) => {
       >
         <View style={styles.contentWrapper}>{renderContent()}
         </View>
-      
+      {/* <View><BlogEditButton></BlogEditButton></View> */}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+
   container: {
     width: '90%',
     alignItems: 'center',
@@ -246,6 +247,13 @@ const styles = StyleSheet.create({
     minHeight: 100, // Minimum height (adjust as needed)
     marginBottom: 16, // Consistent spacing between cards
   },
+  saveButton: {
+    backgroundColor: '#007bff',
+    padding: 15,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+},
 });
 
 export default Segments;

@@ -42,6 +42,13 @@ const _layout = () => {
         }}
       />
       <Stack.Screen
+        name='blogediting'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
+      />
+      <Stack.Screen
         name='orderHistory'
         options={{
           headerShown: false,
