@@ -12,48 +12,51 @@ import {
   Animated,
   TextInput
 } from 'react-native';
+import React from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
-
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // Sample data for blogs and bookmarks
-const SAMPLE_BLOGS = [
-  {
-    id: '1',
-    title: 'Growing Herbs Indoors: A Beginner\'s Guide',
-    excerpt: 'Learn how to grow fresh herbs right in your kitchen with minimal effort.',
-    author: 'You',
-    date: 'Mar 15, 2025',
-    readTime: '4 min read',
-    // image: require('../../assets/icons/herb.png'),
-    likes: 24,
-    comments: 5
-  },
-  {
-    id: '2',
-    title: 'Sustainable Gardening Practices for Urban Spaces',
-    excerpt: 'How to create an eco-friendly garden in limited urban environments.',
-    author: 'You',
-    date: 'Feb 28, 2025',
-    readTime: '6 min read',
-    // image: require('../../assets/icons/urban-garden.png'),
-    likes: 42,
-    comments: 8
-  },
-  {
-    id: '3',
-    title: 'The Benefits of Native Plants in Your Garden',
-    excerpt: 'Why choosing native plant species can improve your garden\'s health and local ecosystem.',
-    author: 'You',
-    date: 'Jan 12, 2025',
-    readTime: '5 min read',
-    // image: require('../../assets/icons/native-plant.png'),
-    likes: 36,
-    comments: 12
-  }
-];
+// const SAMPLE_BLOGS = [
+//   {
+//     id: '1',
+//     title: 'Growing Herbs Indoors: A Beginner\'s Guide',
+//     excerpt: 'Learn how to grow fresh herbs right in your kitchen with minimal effort.',
+//     author: 'You',
+//     date: 'Mar 15, 2025',
+//     readTime: '4 min read',
+//     // image: require('../../assets/icons/herb.png'),
+//     likes: 24,
+//     comments: 5
+//   },
+//   {
+//     id: '2',
+//     title: 'Sustainable Gardening Practices for Urban Spaces',
+//     excerpt: 'How to create an eco-friendly garden in limited urban environments.',
+//     author: 'You',
+//     date: 'Feb 28, 2025',
+//     readTime: '6 min read',
+//     // image: require('../../assets/icons/urban-garden.png'),
+//     likes: 42,
+//     comments: 8
+//   },
+//   {
+//     id: '3',
+//     title: 'The Benefits of Native Plants in Your Garden',
+//     excerpt: 'Why choosing native plant species can improve your garden\'s health and local ecosystem.',
+//     author: 'You',
+//     date: 'Jan 12, 2025',
+//     readTime: '5 min read',
+//     // image: require('../../assets/icons/native-plant.png'),
+//     likes: 36,
+//     comments: 12
+//   }
+// ];
 
 const SAMPLE_BOOKMARKS = [
   {
@@ -106,21 +109,97 @@ export default function MyBlogsAndBookmarksScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('bookmarks');
   const [searchQuery, setSearchQuery] = useState('');
+  // const [value, setValue] = React.useState('Blogs');
   const [showSearchBar, setShowSearchBar] = useState(false);
   const searchAnimation = useRef(new Animated.Value(0)).current;
-  
+
+  const [blogs, setBlogs] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+  const [userData, setUserData] = useState({
+    id: '',
+    name: '',
+    email: '',
+  });
+  useEffect(() => {
+    if (userData.id) {
+      fetchBlogsOnlyUser();
+    }
+  }, [userData.id]);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('ID');
+        const userName = await AsyncStorage.getItem('USERNAME');
+        const userEmail = await AsyncStorage.getItem('EMAIL');
+
+        setUserData({
+          id: userId || '',
+          name: userName,
+          email: userEmail,
+        });
+        console.log('User data retrieved:', { id: userId, name: userName, email: userEmail });
+      } catch (error) {
+        console.error('Error retrieving user data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+  const fetchBlogsOnlyUser = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs?userId=${userData.id}`);
+      // console.log('API Response:', response.data);
+
+      if (response.data && response.data.blogs) {
+        setBlogs(response.data.blogs);
+        console.log(".........",blogs,".........");
+        // console.log(".........");
+      } else {
+        setError('No blogs found in the response');
+      }
+    } catch (err) {
+      console.error('Error fetching blogs:', err.message);
+      setError('Failed to fetch blogs: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format the date from timestamp
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+
+    try {
+      const date = new Date(timestamp.seconds * 1000);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return '';
+    }
+  };
+
   // Filter data based on search query
-  const filteredBookmarks = SAMPLE_BOOKMARKS.filter(item => 
+  const filteredBookmarks = SAMPLE_BOOKMARKS.filter(item =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
-  const filteredBlogs = SAMPLE_BLOGS.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
+  const filteredBlogs = blogs.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.body.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  // console.log("...",filteredBlogs,"...");
   const toggleSearchBar = () => {
     if (showSearchBar) {
       Animated.timing(searchAnimation, {
@@ -140,13 +219,13 @@ export default function MyBlogsAndBookmarksScreen() {
 
   const handleBlogPress = (blog) => {
     // Navigate to blog detail screen
-    console.log('Navigating to blog:', blog.id);
+    console.log('Navigating to blog:', blog.blogId);
     // router.push(`/blog/${blog.id}`);
     alert(`Opening blog: ${blog.title}`);
   };
 
   const renderBlogItem = ({ item }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.blogCard}
       onPress={() => handleBlogPress(item)}
       activeOpacity={0.7}
@@ -154,10 +233,10 @@ export default function MyBlogsAndBookmarksScreen() {
       <Image source={item.image} style={styles.blogImage} />
       <View style={styles.blogContent}>
         <Text style={styles.blogTitle}>{item.title}</Text>
-        <Text style={styles.blogExcerpt} numberOfLines={2}>{item.excerpt}</Text>
+        <Text style={styles.blogExcerpt} numberOfLines={2}>{item.body}</Text>
         <View style={styles.blogMeta}>
           <Text style={styles.authorText}>
-            {activeTab === 'bookmarks' ? `By ${item.author}` : 'By You'}
+            {activeTab === 'bookmarks' ? `By ${item.username}` : 'By You'}
           </Text>
           <View style={styles.blogStats}>
             <Text style={styles.dateText}>{item.date}</Text>
@@ -183,8 +262,17 @@ export default function MyBlogsAndBookmarksScreen() {
             </TouchableOpacity>
           )}
           {activeTab === 'myblogs' && (
-            <TouchableOpacity style={styles.interactionItem}>
-              <Ionicons name="create-outline" size={16} color="#609966" />
+            <TouchableOpacity style={styles.interactionItem} onPress={() => { router.push({pathname:'/blogediting',
+              params: { 
+                title: item.title,
+                // You can pass the entire blog object if needed
+                body: item.body,
+                blogId: item.blogId,
+                editing:true,
+                userId: userData.id,
+              }
+            }) }}>
+              <Ionicons name="create" size={16} color="#609966" />
             </TouchableOpacity>
           )}
         </View>
@@ -199,9 +287,9 @@ export default function MyBlogsAndBookmarksScreen() {
         {searchQuery ? 'No matches found' : activeTab === 'bookmarks' ? 'No bookmarks yet' : 'No blogs yet'}
       </Text>
       <Text style={styles.noResultsText}>
-        {searchQuery 
+        {searchQuery
           ? 'Try a different search term'
-          : activeTab === 'bookmarks' 
+          : activeTab === 'bookmarks'
             ? 'Bookmark blogs that interest you to read later'
             : 'Start writing to share your green journey'}
       </Text>
@@ -216,14 +304,14 @@ export default function MyBlogsAndBookmarksScreen() {
   );
 
   const currentData = activeTab === 'bookmarks' ? filteredBookmarks : filteredBlogs;
-
+  console.log("...",currentData,"...");
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
-      
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
@@ -233,7 +321,7 @@ export default function MyBlogsAndBookmarksScreen() {
           <>
             <Text style={styles.headerTitle}>My Collection</Text>
             <View style={styles.headerRightButtons}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.headerButton}
                 onPress={toggleSearchBar}
               >
@@ -245,9 +333,9 @@ export default function MyBlogsAndBookmarksScreen() {
             </View>
           </>
         ) : (
-          <Animated.View 
+          <Animated.View
             style={[
-              styles.searchBarContainer, 
+              styles.searchBarContainer,
               {
                 flex: searchAnimation.interpolate({
                   inputRange: [0, 1],
@@ -275,28 +363,28 @@ export default function MyBlogsAndBookmarksScreen() {
 
       {/* Tab selector */}
       <View style={styles.tabContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tabButton, activeTab === 'bookmarks' && styles.activeTabButton]}
           onPress={() => setActiveTab('bookmarks')}
         >
-          <Ionicons 
-            name={activeTab === 'bookmarks' ? 'bookmark' : 'bookmark-outline'} 
-            size={18} 
-            color={activeTab === 'bookmarks' ? '#609966' : '#666'} 
+          <Ionicons
+            name={activeTab === 'bookmarks' ? 'bookmark' : 'bookmark-outline'}
+            size={18}
+            color={activeTab === 'bookmarks' ? '#609966' : '#666'}
             style={styles.tabIcon}
           />
           <Text style={[styles.tabText, activeTab === 'bookmarks' && styles.activeTabText]}>
             Bookmarks
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.tabButton, activeTab === 'myblogs' && styles.activeTabButton]}
           onPress={() => setActiveTab('myblogs')}
         >
-          <Ionicons 
-            name={activeTab === 'myblogs' ? 'document-text' : 'document-text-outline'} 
-            size={18} 
-            color={activeTab === 'myblogs' ? '#609966' : '#666'} 
+          <Ionicons
+            name={activeTab === 'myblogs' ? 'document-text' : 'document-text-outline'}
+            size={18}
+            color={activeTab === 'myblogs' ? '#609966' : '#666'}
             style={styles.tabIcon}
           />
           <Text style={[styles.tabText, activeTab === 'myblogs' && styles.activeTabText]}>
@@ -311,7 +399,7 @@ export default function MyBlogsAndBookmarksScreen() {
           <FlatList
             data={currentData}
             renderItem={renderBlogItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.blogId}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContainer}
           />
@@ -322,11 +410,11 @@ export default function MyBlogsAndBookmarksScreen() {
 
       {/* Floating Action Button */}
       {activeTab === 'myblogs' && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.floatingButton}
           onPress={() => {
-                router.push('/blogediting'); // Navigate to the chatbot screen
-              }
+            router.push('/blogediting'); // Navigate to the chatbot screen
+          }
           }
         >
           <Ionicons name="add" size={24} color="#fff" />
