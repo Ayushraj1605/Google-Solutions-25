@@ -42,14 +42,19 @@ const Devices = ({ visible = true, style }) => {
             `https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}&cache=${refreshKey}`
           );
           if (response.data?.devices) {
+            // Map the devices and ensure consistent property naming
             const devicesWithStatus = response.data.devices.map(device => ({
               ...device,
-              recycleStatus: device.recycleStatus || false
+              // Ensure status exists and is passed as is (not coerced to boolean)
+              status: device.status || "", // default to empty string instead of false
+              deviceId: device.deviceId || device.deviceID,
+              deviceID: device.deviceId || device.deviceID
             }));
+            
+            console.log('Fetched devices data:', devicesWithStatus);
             setData(devicesWithStatus);
             setFilteredData(devicesWithStatus);
           }
-          // console.log(data);
         } catch (error) {
           console.error('Error fetching devices:', error);
         }
@@ -62,7 +67,7 @@ const Devices = ({ visible = true, style }) => {
     const filterData = () => {
       if (searchQuery) {
         const filtered = data.filter(item => {
-          const text = `${item.deviceName || ''} ${item.deviceID || ''} ${item.deviceType|| ''}`.toLowerCase();
+          const text = `${item.deviceName || ''} ${item.deviceId || item.deviceID || ''} ${item.deviceType|| ''}`.toLowerCase();
           return text.includes(searchQuery.toLowerCase());
         });
         setFilteredData(filtered);

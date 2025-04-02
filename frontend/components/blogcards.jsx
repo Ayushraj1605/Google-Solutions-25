@@ -8,8 +8,11 @@ import {
   Animated,
   Platform,
   Dimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  ScrollView
 } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
@@ -26,26 +29,22 @@ const BlogCard = ({
   onReadMore = () => console.log('Read More pressed'),
   onBookmark = () => console.log('Bookmark pressed'),
 }) => {
-  // Move isBookmarked state inside the component
+  // State management
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(imageUri ? true : false);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
+  const [commentCount, setCommentCount] = useState(Math.floor(Math.random() * 20));
+  const [commentVisible, setCommentVisible] = useState(false);
+  const [comments, setComments] = useState([
+    { id: 1, user: 'EcoExpert', text: 'Great insights on e-waste management!', time: '2 hours ago' },
+    { id: 2, user: 'GreenTech', text: 'We need more articles like this to raise awareness.', time: '1 day ago' }
+  ]);
 
   // Animation values
-  const [isImageLoading, setIsImageLoading] = useState(imageUri ? true : false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  // Create a bookmark handler within the component
-  const handleBookmarkPress = () => {
-    setIsBookmarked(!isBookmarked); // Toggle local state
-    onBookmark(); // Call the parent's onBookmark function
-  };
-
-
-  const handleReadMorePress = () => {
-    setIsExpanded(!isExpanded); // Toggle expanded state
-    onReadMore(); // Call the parent's onReadMore function
-  };
 
   // Handle image loading
   useEffect(() => {
@@ -65,28 +64,28 @@ const BlogCard = ({
     }
   }, [imageUri]);
 
-  // Fix for the require statement using a dynamic path
-  const defaultAvatar = require('../assets/svg/logo');
+  // Action handlers
+  const handleBookmarkPress = () => {
+    setIsBookmarked(!isBookmarked);
+    onBookmark();
+  };
 
-  // Card wrapper component decides if card is pressable
-  const CardWrapper = onCardPress
-    ? ({ children }) => (
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={onCardPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        style={{ width: '100%' }}
-      >
-        {children}
-      </TouchableOpacity>
-    )
-    : ({ children }) => <View style={{ width: '100%' }}>{children}</View>;
+  const handleReadMorePress = () => {
+    setIsExpanded(!isExpanded);
+    onReadMore();
+  };
+
+  const handleLike = () => {
+    setLiked(!liked);
+    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+  };
+
+  const showCommentModal = () => setCommentVisible(true);
+  const hideCommentModal = () => setCommentVisible(false);
 
   // Handle button press with feedback
   const handleButtonPress = (action) => {
     return () => {
-      // Visual feedback
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 0.95,
@@ -99,192 +98,251 @@ const BlogCard = ({
           useNativeDriver: true,
         })
       ]).start();
-      // Execute the action
       action();
     };
   };
+
+  // Default avatar if not provided
+  const defaultAvatar = require('../assets/svg/logo');
+
+  // Card wrapper component decides if card is pressable
+  const CardWrapper = onCardPress
+    ? ({ children }) => (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onCardPress}
+        style={{ width: '100%' }}
+      >
+        {children}
+      </TouchableOpacity>
+    )
+    : ({ children }) => <View style={{ width: '100%' }}>{children}</View>;
 
   return (
     <CardWrapper>
       <Animated.View
         style={[
-          styles.container,
+          styles.cardContainer,
           { transform: [{ scale: scaleAnim }] }
         ]}
       >
-        {/* Card Header with Avatar and Title */}
-        <View style={styles.header}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={avatarSource || defaultAvatar}
-              style={styles.avatar}
-              // Add default image in case of error
-              defaultSource={defaultAvatar}
-            />
+        {/* Card Header */}
+        <View style={styles.orderHeader}>
+          <View style={styles.orderInfo}>
+            <Text style={styles.orderId}>{title}</Text>
+            <Text style={styles.orderDate}>{subtitle}</Text>
           </View>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-              {title}
-            </Text>
-            <Text style={styles.subtitle} numberOfLines={1}>
-              {subtitle}
-            </Text>
-          </View>
-          <TouchableOpacity
+          <TouchableOpacity 
             style={styles.bookmarkButton}
             onPress={handleButtonPress(handleBookmarkPress)}
-            hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
-            accessibilityLabel={isBookmarked ? "Remove bookmark" : "Add bookmark"}
-            accessibilityRole="button"
           >
-            <Text style={[styles.bookmarkIcon, isBookmarked && styles.bookmarkedIcon]}>
-              {isBookmarked ? "★" : "☆"}
-            </Text>
+            <MaterialCommunityIcons 
+              name={isBookmarked ? "bookmark" : "bookmark-outline"} 
+              size={24} 
+              color={isBookmarked ? "#f39c12" : "#7f8c8d"} 
+            />
           </TouchableOpacity>
         </View>
-
+        
         {/* Category and Read Time */}
         <View style={styles.metaContainer}>
           <View style={styles.categoryPill}>
             <Text style={styles.categoryText}>{category}</Text>
           </View>
-          <Text style={styles.readTime}>{readTime}</Text>
-        </View>
-
-        {/* Card Image - Only render if imageUri is provided */}
-        {imageUri && (
-          <View style={styles.imageWrapper}>
-            <Animated.View style={[styles.imageContainer, { opacity: opacityAnim }]}>
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.coverImage}
-                resizeMode="cover"
-                onLoadStart={() => setIsImageLoading(true)}
-                onLoadEnd={() => setIsImageLoading(false)}
-                // Add error handling
-                onError={() => setIsImageLoading(false)}
-              />
-            </Animated.View>
-
-            {isImageLoading && (
-              <View style={styles.loaderContainer}>
-                <ActivityIndicator size="small" color="#4CAF50" />
-              </View>
-            )}
+          <View style={styles.readTimePill}>
+            <MaterialCommunityIcons name="clock-outline" size={12} color="#7f8c8d" />
+            <Text style={styles.readTimeText}>{readTime}</Text>
           </View>
-        )}
-
-        {/* Card Content */}
-        <View style={styles.content}>
-          <Text 
-            style={styles.description} 
-            numberOfLines={isExpanded ? null : 4} // Remove line limit when expanded
-          >
-            {description}
-          </Text>
         </View>
+        
+        {/* Card Content - Image and Text */}
+        <View style={styles.contentContainer}>
+          {/* Image */}
+          {imageUri && (
+            <View style={styles.imageWrapper}>
+              <Animated.View style={[styles.imageContainer, { opacity: opacityAnim }]}>
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.coverImage}
+                  resizeMode="cover"
+                  onLoadStart={() => setIsImageLoading(true)}
+                  onLoadEnd={() => setIsImageLoading(false)}
+                  onError={() => setIsImageLoading(false)}
+                />
+              </Animated.View>
 
-        {/* Card Actions */}
-        <View style={styles.actions}>
-          <TouchableOpacity 
-            style={styles.shareButton} 
-            onPress={handleButtonPress(onShare)}
-            activeOpacity={0.7}
-            accessibilityLabel="Share article"
-            accessibilityRole="button"
-          >
-            <Text style={styles.shareButtonText}>Share</Text>
+              {isImageLoading && (
+                <View style={styles.loaderContainer}>
+                  <ActivityIndicator size="small" color="#2ecc71" />
+                </View>
+              )}
+            </View>
+          )}
+          
+          {/* Description Text */}
+          <View style={styles.textContent}>
+            <Text 
+              style={styles.description} 
+              numberOfLines={isExpanded ? null : 4}
+            >
+              {description}
+            </Text>
+          </View>
+        </View>
+        
+        {/* Social Actions */}
+        <View style={styles.socialActions}>
+          <TouchableOpacity style={styles.socialButton} onPress={handleLike}>
+            <MaterialCommunityIcons 
+              name={liked ? "heart" : "heart-outline"} 
+              size={20} 
+              color={liked ? "#e74c3c" : "#7f8c8d"} 
+            />
+            <Text style={styles.socialButtonText}>{likeCount}</Text>
           </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.socialButton} onPress={showCommentModal}>
+            <MaterialCommunityIcons name="comment-outline" size={20} color="#7f8c8d" />
+            <Text style={styles.socialButtonText}>{commentCount}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.socialButton} onPress={handleButtonPress(onShare)}>
+            <MaterialCommunityIcons name="share-outline" size={20} color="#7f8c8d" />
+            <Text style={styles.socialButtonText}>Share</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {/* Card Footer */}
+        <View style={styles.orderFooter}>
+          <View style={styles.avatarContainer}>
+            <Image
+              source={avatarSource || defaultAvatar}
+              style={styles.avatar}
+              defaultSource={defaultAvatar}
+            />
+            <Text style={styles.authorText}>By GreenTech</Text>
+          </View>
           
           <TouchableOpacity 
             style={styles.readMoreButton} 
             onPress={handleButtonPress(handleReadMorePress)}
-            activeOpacity={0.7}
-            accessibilityLabel={isExpanded ? "Show less" : "Read more"}
-            accessibilityRole="button"
           >
             <Text style={styles.readMoreButtonText}>
               {isExpanded ? "Show Less" : "Read More"}
             </Text>
           </TouchableOpacity>
-
         </View>
       </Animated.View>
+      
+      {/* Comments Modal */}
+      <Modal
+        visible={commentVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={hideCommentModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Comments</Text>
+              <TouchableOpacity 
+                style={styles.closeButton} 
+                onPress={hideCommentModal}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.commentsList}>
+              {comments.map(comment => (
+                <View key={comment.id} style={styles.commentItem}>
+                  <View style={styles.commentUserCircle}>
+                    <Text style={styles.commentUserInitial}>{comment.user.charAt(0)}</Text>
+                  </View>
+                  <View style={styles.commentContent}>
+                    <View style={styles.commentHeader}>
+                      <Text style={styles.commentUser}>{comment.user}</Text>
+                      <Text style={styles.commentTime}>{comment.time}</Text>
+                    </View>
+                    <Text style={styles.commentText}>{comment.text}</Text>
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            
+            <View style={styles.commentInputContainer}>
+              <View style={styles.commentInput}>
+                <MaterialCommunityIcons name="pencil" size={20} color="#7f8c8d" style={styles.commentInputIcon} />
+                <Text style={styles.commentInputText}>Add a comment...</Text>
+              </View>
+              <TouchableOpacity style={styles.commentSendButton}>
+                <MaterialCommunityIcons name="send" size={20} color="#2ecc71" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </CardWrapper>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    alignSelf: 'center',
-    marginVertical: 16,
-    borderRadius: 16,
+  cardContainer: {
+    width: '95%',
+    maxWidth: 360,
     backgroundColor: '#fff',
+    borderRadius: 12,
+    marginVertical: 12,
     overflow: 'hidden',
+    alignSelf: 'center',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 8,
+        shadowRadius: 4,
       },
       android: {
-        elevation: 5,
+        elevation: 3,
       },
     }),
   },
-  header: {
+  orderHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E0F7FA',
-  },
-  titleContainer: {
+  orderInfo: {
     flex: 1,
+    flexDirection: 'column',
   },
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
+  orderId: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
   },
-  subtitle: {
-    fontSize: 14,
-    color: '#777',
+  orderDate: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    marginTop: 2,
   },
   bookmarkButton: {
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 8,
-  },
-  bookmarkIcon: {
-    fontSize: 24,
-    color: '#aaa',
-  },
-  bookmarkedIcon: {
-    color: '#FFD700',
   },
   metaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   categoryPill: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#e8f5e9',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
@@ -292,16 +350,24 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 12,
-    color: '#2E7D32',
+    color: '#2ecc71',
     fontWeight: '600',
   },
-  readTime: {
+  readTimePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  readTimeText: {
     fontSize: 12,
-    color: '#757575',
+    color: '#7f8c8d',
+    marginLeft: 4,
+  },
+  contentContainer: {
+    paddingBottom: 12,
   },
   imageWrapper: {
-    marginHorizontal: 16,
-    borderRadius: 12,
+    marginHorizontal: 12,
+    borderRadius: 8,
     overflow: 'hidden',
     height: 200,
     marginBottom: 12,
@@ -325,61 +391,191 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+  textContent: {
+    paddingHorizontal: 12,
   },
   description: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#555',
-    lineHeight: 22,
+    lineHeight: 20,
   },
-  actions: {
+  socialActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  socialButtonText: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginLeft: 4,
+  },
+  orderFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    paddingTop: 12,
-  },
-  shareButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    justifyContent: 'center',
     alignItems: 'center',
-    minWidth: 100,
+    backgroundColor: '#f8f9fa',
+    padding: 12,
   },
-  shareButtonText: {
-    color: '#555',
-    fontSize: 14,
-    fontWeight: '600',
+  avatarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#E0F7FA',
+  },
+  authorText: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    marginLeft: 8,
   },
   readMoreButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    backgroundColor: '#2ecc71',
     alignItems: 'center',
-    minWidth: 120,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    justifyContent: 'center',
   },
   readMoreButtonText: {
+    fontSize: 14,
     color: '#fff',
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: width * 0.9,
+    maxWidth: 400,
+    maxHeight: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  modalHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    backgroundColor: '#f9f9f9',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    paddingRight: 24,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#eee',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 14,
+    color: '#555',
+    fontWeight: 'bold',
+  },
+  commentsList: {
+    maxHeight: '70%',
+    padding: 16,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  commentUserCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#3498db',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  commentUserInitial: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  commentContent: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    padding: 10,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  commentUser: {
     fontSize: 14,
     fontWeight: '600',
+    color: '#2c3e50',
+  },
+  commentTime: {
+    fontSize: 12,
+    color: '#95a5a6',
+  },
+  commentText: {
+    fontSize: 14,
+    color: '#34495e',
+    lineHeight: 20,
+  },
+  commentInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  commentInput: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 8,
+  },
+  commentInputIcon: {
+    marginRight: 8,
+  },
+  commentInputText: {
+    color: '#95a5a6',
+    fontSize: 14,
+  },
+  commentSendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

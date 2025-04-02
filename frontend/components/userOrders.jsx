@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -7,109 +7,98 @@ import {
   TouchableOpacity, 
   SafeAreaView,
   Dimensions,
-  Image
+  Image,
+  ActivityIndicator
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { router } from 'expo-router';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
 const OrderHistoryScreen = () => {
   const [activeTab, setActiveTab] = useState('all');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+  const [error, setError] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   
-  // Hard-coded order data
-  const orders = [
-    {
-      id: 'ORD-2023-001',
-      deviceName: 'iPhone 11 Pro',
-      deviceId: 'APP-IP11-2853',
-      status: 'processing',
-      date: '12 Mar 2025',
-      organization: 'GreenTech Recyclers',
-      estimatedPickup: '26 Mar 2025',
-    //   image: require('../assets/phone.png'), // You'll need to add these image assets to your project
-      description: 'Minor screen damage, battery at 82% health',
-      points: 120
-    },
-    {
-      id: 'ORD-2023-002',
-      deviceName: 'Dell XPS 15',
-      deviceId: 'CMP-DEL-4291',
-      status: 'completed',
-      date: '28 Feb 2025',
-      organization: 'Eco-Sankalp Solutions',
-      completedDate: '10 Mar 2025',
-    //   image: require('../assets/laptop.png'),
-      description: 'Fully functional, upgrading to newer model',
-      points: 250,
-      carbonSaved: '18.5 kg'
-    },
-    {
-      id: 'ORD-2023-003',
-      deviceName: 'Samsung Smart TV',
-      deviceId: 'TV-SAM-7731',
-      status: 'completed',
-      date: '15 Jan 2025',
-      organization: 'GreenTech Recyclers',
-      completedDate: '22 Jan 2025',
-    //   image: require('../assets/tv.png'),
-      description: '55-inch LED, display issues',
-      points: 320,
-      carbonSaved: '24.8 kg'
-    },
-    {
-      id: 'ORD-2023-004',
-      deviceName: 'iPad Air 2',
-      deviceId: 'TAB-IP-1455',
-      status: 'cancelled',
-      date: '03 Mar 2025',
-      cancelledDate: '05 Mar 2025',
-      cancelReason: 'Decided to repair and donate instead',
-    //   image: require('../assets/tablet.png'),
-      description: 'Minor scratches, battery issues'
-    },
-    {
-      id: 'ORD-2023-005',
-      deviceName: 'Bose Headphones',
-      deviceId: 'AUD-BOS-2241',
-      status: 'processing',
-      date: '18 Mar 2025',
-      organization: 'Eco-Sankalp Solutions',
-      estimatedPickup: '30 Mar 2025',
-    //   image: require('../assets/headphones.png'),
-      description: 'Left ear not working, wear on headband',
-      points: 80
-    },
-    {
-      id: 'ORD-2023-006',
-      deviceName: 'HP Inkjet Printer',
-      deviceId: 'PRN-HP-8824',
-      status: 'completed',
-      date: '05 Feb 2025',
-      organization: 'GreenTech Recyclers',
-      completedDate: '12 Feb 2025',
-    //   image: require('../assets/printer.png'),
-      description: 'Functional but replacing with laser printer',
-      points: 150,
-      carbonSaved: '12.2 kg'
-    },
-    {
-      id: 'ORD-2023-007',
-      deviceName: 'Logitech Wireless Mouse',
-      deviceId: 'PER-LOG-1123',
-      status: 'cancelled',
-      date: '22 Feb 2025',
-      cancelledDate: '24 Feb 2025',
-      cancelReason: 'Found local repair service',
-    //   image: require('../assets/mouse.png'),
-      description: 'Tracking issues, button sticking'
+  // Retrieve user ID from AsyncStorage
+  const _retrieveData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('ID');
+      if (value !== null) {
+        setUserId(value);
+      }
+    } catch (error) {
+      console.error('Error retrieving data:', error);
+      setError('Failed to retrieve user information');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  // Initialize component
+  useEffect(() => {
+    _retrieveData();
+  }, []);
+
+  // Fetch orders when userId changes
+  useEffect(() => {
+    if (userId) {
+      const fetchOrders = async () => {
+        setLoading(true);
+        try {
+          const response = await axios.get(
+            `https://cloudrunservice-254131401451.us-central1.run.app//user/getOrders?userId=${userId}`
+          );
+          if (response.data?.devices) {
+            // Map the devices and ensure consistent property naming
+            const devicesWithStatus = response.data.devices
+              .filter(device => 
+                device.status === 'pending' || 
+                device.status === 'completed' || 
+                device.status === 'cancelled' 
+                // device.status === 'processing' // Include processing status
+              )
+              .map(device => ({
+                ...device,
+                // Ensure status exists and is passed as is (not coerced to boolean)
+                status: device.status || "", // default to empty string instead of false
+                deviceId: device.deviceId || device.deviceID,
+                deviceID: device.deviceId || device.deviceID,
+                id: device.id || device.deviceId || device.deviceID, // Ensure we have an id for the key prop
+                // Add any other properties needed for orders that might not be in devices
+                date: device.date || new Date().toLocaleDateString(),
+                description: device.description || device.deviceType || "Electronic device",
+                organization: device.organization || "GreenTech Recycling"
+              }));
+            
+            console.log('Fetched orders data:', devicesWithStatus);
+            setOrders(devicesWithStatus);
+          } else {
+            console.warn('No orders returned from API');
+            setOrders([]);
+          }
+        } catch (error) {
+          console.error('Error fetching orders:', error);
+          setError('Failed to load orders. Please try again later.');
+          setOrders([]);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchOrders();
+    }
+  }, [userId, refreshKey]);
   
   const getStatusColor = (status) => {
-    switch(status) {
-      case 'processing':
+    switch(status.toLowerCase()) {
+      case 'pending':
+      // case 'processing':
         return '#3498db'; // Blue
       case 'completed':
         return '#2ecc71'; // Green
@@ -121,8 +110,9 @@ const OrderHistoryScreen = () => {
   };
   
   const getStatusIcon = (status) => {
-    switch(status) {
-      case 'processing':
+    switch(status.toLowerCase()) {
+      case 'pending':
+      // case 'processing':
         return 'clock-outline';
       case 'completed':
         return 'check-circle-outline';
@@ -137,51 +127,65 @@ const OrderHistoryScreen = () => {
     if (activeTab === 'all') {
       return orders;
     } else {
-      return orders.filter(order => order.status === activeTab);
+      return orders.filter(order => order.status.toLowerCase() === activeTab);
     }
   };
   
+  const navigateToOrderDetails = (orderId) => {
+    router.push(`/order-details?id=${orderId}`);
+  };
+
   const renderOrderCard = (order) => {
+    // Handle both capitalized and lowercase status
+    const status = order.status.toLowerCase();
+    
     return (
       <TouchableOpacity 
         key={order.id} 
         style={styles.orderCard}
-        onPress={() => {/* Navigate to order details */}}
+        onPress={() => navigateToOrderDetails(order.id)}
       >
         <View style={styles.orderHeader}>
           <View style={styles.orderInfo}>
             <Text style={styles.orderId}>{order.id}</Text>
             <Text style={styles.orderDate}>{order.date}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
-            <MaterialCommunityIcons name={getStatusIcon(order.status)} size={14} color="#fff" />
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) }]}>
+            <MaterialCommunityIcons name={getStatusIcon(status)} size={14} color="#fff" />
             <Text style={styles.statusText}>
-              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+              {status.charAt(0).toUpperCase() + status.slice(1)}
             </Text>
           </View>
         </View>
         
         <View style={styles.orderContent}>
           <View style={styles.deviceImageContainer}>
-            {/* Using a placeholder for demo purposes - replace with actual images */}
-            <View style={styles.deviceImagePlaceholder}>
-              <MaterialCommunityIcons 
-                name={
-                  order.deviceName.toLowerCase().includes('iphone') || 
-                  order.deviceName.toLowerCase().includes('smartphone') ? 'cellphone' :
-                  order.deviceName.toLowerCase().includes('laptop') ? 'laptop' :
-                  order.deviceName.toLowerCase().includes('tv') ? 'television' :
-                  order.deviceName.toLowerCase().includes('ipad') || 
-                  order.deviceName.toLowerCase().includes('tablet') ? 'tablet' :
-                  order.deviceName.toLowerCase().includes('headphone') ? 'headphones' :
-                  order.deviceName.toLowerCase().includes('printer') ? 'printer' :
-                  order.deviceName.toLowerCase().includes('mouse') ? 'mouse' :
-                  'devices'
-                } 
-                size={36} 
-                color="#7f8c8d" 
+            {order.imageUrl ? (
+              <Image 
+                source={{ uri: order.imageUrl }} 
+                style={styles.deviceImage}
+                resizeMode="cover"
               />
-            </View>
+            ) : (
+              <View style={styles.deviceImagePlaceholder}>
+                <MaterialCommunityIcons 
+                  name={
+                    (order.deviceName || '').toLowerCase().includes('iphone') || 
+                    (order.deviceName || '').toLowerCase().includes('smartphone') ? 'cellphone' :
+                    (order.deviceName || '').toLowerCase().includes('laptop') ? 'laptop' :
+                    (order.deviceName || '').toLowerCase().includes('tv') ? 'television' :
+                    (order.deviceName || '').toLowerCase().includes('ipad') || 
+                    (order.deviceName || '').toLowerCase().includes('tablet') ? 'tablet' :
+                    (order.deviceName || '').toLowerCase().includes('headphone') ? 'headphones' :
+                    (order.deviceName || '').toLowerCase().includes('printer') ? 'printer' :
+                    (order.deviceName || '').toLowerCase().includes('mouse') ? 'mouse' :
+                    'devices'
+                  } 
+                  size={36} 
+                  color="#7f8c8d" 
+                />
+              </View>
+            )}
           </View>
           
           <View style={styles.deviceInfo}>
@@ -194,30 +198,30 @@ const OrderHistoryScreen = () => {
         </View>
         
         <View style={styles.orderFooter}>
-          {order.status === 'processing' && (
+          {status === 'pending' && (
             <View style={styles.footerInfo}>
               <MaterialCommunityIcons name="truck-delivery-outline" size={16} color="#7f8c8d" />
-              <Text style={styles.footerText}>Pickup: {order.estimatedPickup}</Text>
+              <Text style={styles.footerText}>Pickup: {order.estimatedPickup || 'Pending'}</Text>
             </View>
           )}
           
-          {order.status === 'completed' && (
+          {status === 'completed' && (
             <View style={styles.footerInfo}>
               <MaterialCommunityIcons name="leaf" size={16} color="#2ecc71" />
-              <Text style={styles.footerText}>Carbon Saved: {order.carbonSaved}</Text>
+              <Text style={styles.footerText}>Carbon Saved: {order.carbonSaved || 'N/A'}</Text>
             </View>
           )}
           
-          {order.status === 'cancelled' && (
+          {status === 'cancelled' && (
             <View style={styles.footerInfo}>
               <MaterialCommunityIcons name="information-outline" size={16} color="#e74c3c" />
-              <Text style={styles.footerText} numberOfLines={1}>{order.cancelReason}</Text>
+              <Text style={styles.footerText} numberOfLines={1}>{order.cancelReason || 'No reason provided'}</Text>
             </View>
           )}
           
           <View style={styles.footerInfo}>
             <MaterialCommunityIcons 
-              name={order.status === 'completed' ? 'office-building' : 'office-building-outline'} 
+              name={status === 'completed' ? 'office-building' : 'office-building-outline'} 
               size={16} 
               color="#7f8c8d" 
             />
@@ -227,13 +231,18 @@ const OrderHistoryScreen = () => {
           </View>
         </View>
         
-        {order.status === 'completed' && (
+        {status === 'completed' && order.points > 0 && (
           <View style={styles.pointsBadge}>
             <Text style={styles.pointsText}>+{order.points} pts</Text>
           </View>
         )}
       </TouchableOpacity>
     );
+  };
+
+  // Retry function for error state
+  const handleRetry = () => {
+    setRefreshKey(prevKey => prevKey + 1);
   };
   
   return (
@@ -256,10 +265,10 @@ const OrderHistoryScreen = () => {
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.tab, activeTab === 'processing' && styles.activeTab]}
-          onPress={() => setActiveTab('processing')}
+          style={[styles.tab, activeTab === 'pending' && styles.activeTab]}
+          onPress={() => setActiveTab('pending')}
         >
-          <Text style={[styles.tabText, activeTab === 'processing' && styles.activeTabText]}>Processing</Text>
+          <Text style={[styles.tabText, activeTab === 'pending' && styles.activeTabText]}>Processing</Text>
         </TouchableOpacity>
         
         <TouchableOpacity 
@@ -277,21 +286,47 @@ const OrderHistoryScreen = () => {
         </TouchableOpacity>
       </View>
       
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.ordersContainer}>
-          {getFilteredOrders().map(renderOrderCard)}
-          {getFilteredOrders().length === 0 && (
-            <View style={styles.emptyState}>
-              <MaterialCommunityIcons name="archive-outline" size={64} color="#bdc3c7" />
-              <Text style={styles.emptyStateTitle}>No orders found</Text>
-              <Text style={styles.emptyStateText}>
-                You don't have any {activeTab !== 'all' ? activeTab : ''} recycling orders yet.
-              </Text>
-            </View>
-          )}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2ecc71" />
+          <Text style={styles.loadingText}>Loading orders...</Text>
         </View>
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <MaterialCommunityIcons name="alert-circle-outline" size={64} color="#e74c3c" />
+          <Text style={styles.errorTitle}>Something went wrong</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={handleRetry}
+          >
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <View style={styles.ordersContainer}>
+            {getFilteredOrders().length > 0 ? (
+              getFilteredOrders().map(renderOrderCard)
+            ) : (
+              <View style={styles.emptyState}>
+                <MaterialCommunityIcons name="archive-outline" size={64} color="#bdc3c7" />
+                <Text style={styles.emptyStateTitle}>No orders found</Text>
+                <Text style={styles.emptyStateText}>
+                  You don't have any {activeTab !== 'all' ? activeTab : ''} recycling orders yet.
+                </Text>
+                <TouchableOpacity 
+                  style={styles.startRecyclingButton}
+                  onPress={() => router.push('/')}
+                >
+                  <Text style={styles.startRecyclingButtonText}>Start Recycling</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+          <View style={styles.bottomSpacer} />
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -406,6 +441,11 @@ const styles = StyleSheet.create({
   deviceImageContainer: {
     marginRight: 12,
   },
+  deviceImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 8,
+  },
   deviceImagePlaceholder: {
     width: 70,
     height: 70,
@@ -468,6 +508,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
+    marginTop: 40,
   },
   emptyStateTitle: {
     fontSize: 18,
@@ -480,6 +521,59 @@ const styles = StyleSheet.create({
     color: '#7f8c8d',
     textAlign: 'center',
     marginTop: 8,
+    marginBottom: 20,
+  },
+  startRecyclingButton: {
+    backgroundColor: '#2ecc71',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  startRecyclingButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#2c3e50',
+    marginTop: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginTop: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  retryButton: {
+    backgroundColor: '#3498db',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   bottomSpacer: {
     height: 30,
