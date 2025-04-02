@@ -36,9 +36,9 @@ const BlogCard = ({
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
   // Route to the Editing current Blog Page
-  const editBlog=()=>{
-      route.push('/');
-  }
+  // const editBlog=()=>{
+  //     route.push('/');
+  // }
 
   // Create a bookmark handler within the component
   const handleBookmarkPress = () => {
