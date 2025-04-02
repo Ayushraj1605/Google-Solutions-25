@@ -10,7 +10,7 @@ const Home = () => {
     <View className="items-center" style={{display:'flex',flexDirection:'column'}}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
       <Segments />
-      <BlogEditButton></BlogEditButton>
+      {/* <BlogEditButton></BlogEditButton> */}
     </View>
   )
 }

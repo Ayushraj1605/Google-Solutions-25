@@ -324,7 +324,10 @@ export default function MyBlogsAndBookmarksScreen() {
       {activeTab === 'myblogs' && (
         <TouchableOpacity 
           style={styles.floatingButton}
-          onPress={() => alert('Create a new blog')}
+          onPress={() => {
+                router.push('/blogediting'); // Navigate to the chatbot screen
+              }
+          }
         >
           <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>

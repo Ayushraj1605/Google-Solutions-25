@@ -384,7 +384,15 @@ export const getDevices = async (req, res) =>
                 deviceId: doc.id,
                 deviceType: data.deviceType,
                 deviceName: data.deviceName,
-                createdAt: data.createdAt
+                createdAt: data.createdAt,
+                status: data.status,
+                imei: data.imei,
+                modelNumber: data.modelNumber,
+                organizationId: data.organizationId,
+                organizationName: data.organizationName,
+                purchaseYear: data.purchaseYear,
+                modelNumber: data.modelNumber,
+                description: data.description,
             };
         });
 
@@ -481,7 +489,10 @@ export const getOrders = async (req, res) =>
 
 export const createBlog = async (req, res) => {
     const { userId } = req.query;
-    const { body, title } = req.body;
+    // const { title,description } = req.body;
+    const title=req.body.title;
+    const body=req.body.body;
+    
 
     if (!body || !title) {
         return res.status(400).json({
