@@ -26,8 +26,8 @@ const BlogEditButton = ({ onPress }) => {
 const styles = StyleSheet.create({
   button: {
     position: 'absolute',
-    left: 300,
-    bottom: 100,
+    right: 0,
+    bottom: 0,
     backgroundColor: '#4CAF50',
     width: 56,
     height: 56,

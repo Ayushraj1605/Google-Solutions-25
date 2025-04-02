@@ -205,7 +205,7 @@ const Segments = ({ name }) => {
       >
         <View style={styles.contentWrapper}>{renderContent()}
         </View>
-      {/* <View><BlogEditButton></BlogEditButton></View> */}
+      <View><BlogEditButton></BlogEditButton></View>
       </ScrollView>
     </SafeAreaView>
   );

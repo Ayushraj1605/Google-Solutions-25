@@ -35,6 +35,11 @@ const BlogCard = ({
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  // Route to the Editing current Blog Page
+  const editBlog=()=>{
+      route.push('/');
+  }
+
   // Create a bookmark handler within the component
   const handleBookmarkPress = () => {
     setIsBookmarked(!isBookmarked); // Toggle local state
@@ -207,6 +212,20 @@ const BlogCard = ({
               {isExpanded ? "Show Less" : "Read More"}
             </Text>
           </TouchableOpacity>
+          
+          {/* {BlogCard.author==currentUser &&  */}
+          {/* <TouchableOpacity 
+            style={styles.readMoreButton} 
+            onPress={editBlog}
+            activeOpacity={0.7}
+            accessibilityLabel={isExpanded ? "Show less" : "Read more"}
+            accessibilityRole="button"
+          >
+            <Text style={styles.readMoreButtonText}>
+              Edit
+            </Text>
+          </TouchableOpacity> */}
+          {/* } */}
 
         </View>
       </Animated.View>
