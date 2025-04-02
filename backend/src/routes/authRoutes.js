@@ -30,9 +30,9 @@ router.post('/user/addDevice', addDevice);
 router.put('/user/updateDevice', updateDevice);
 router.get('/user/getDevices', getDevices);
 
-/* community Endpoints */
+/* Blogs Endpoints */
 router.post('/user/blogs', createBlog);
-router.get('/user/getBlogs', getBlogs)
+router.get('/user/getBlogs', getBlogs);
 
 /* order Endpoints */
 router.get('/user/getOrders', getOrders);

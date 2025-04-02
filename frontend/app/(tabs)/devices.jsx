@@ -7,6 +7,7 @@ import SearchBar from '../../components/searchbar';
 import ChatBotButton from '../../components/chatbotbutton';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const Devices = ({ visible = true, style }) => {
   const [isExtended, setIsExtended] = useState(true);
   const [data, setData] = useState([]);
