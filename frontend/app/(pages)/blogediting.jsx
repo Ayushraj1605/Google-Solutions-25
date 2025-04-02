@@ -4,20 +4,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView,Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import axios from 'axios';
 const BlogScreen = () => {
     const router=useRouter();
+
+    // useState hook for storing the variable title and content of blog
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const handleSave = () => {
+    const saveBlog = async () =>  {
+        // Does not allow Empty Title or Content of Blog
         if (title.trim() === '' || content.trim() === '') {
             Alert.alert("Error", "Title and content cannot be empty!");
             return;
         }
 
-        console.log("Saved Blog:", { title, content });
         Alert.alert("Success", "Blog saved successfully!");
-
-        // You can integrate API or local storage here.
+        // We need to either add to the existing array or use a json or database for storing blogs
+        // make a post request to 'https://cloudrunservice-254131401451.us-central1.run.app/user/login/'
+        const endpoint='https://cloudrunservice-254131401451.us-central1.run.app/user/createblog'
+        const { data, status } = await axios.post(endpoint, {title:title, content:content});
     };
 
     return (
@@ -46,6 +51,7 @@ const BlogScreen = () => {
                     placeholder="Enter blog title..."
                     value={title}
                     onChangeText={setTitle}
+                    //setTitle("A") is called.
                 />
 
                 <Text style={styles.label}>Content</Text>
@@ -58,7 +64,7 @@ const BlogScreen = () => {
                     onChangeText={setContent}
                 />
 
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <TouchableOpacity style={styles.saveButton} onPress={saveBlog}>
                     <Text style={styles.saveButtonText}>Save</Text>
                 </TouchableOpacity>
                 </KeyboardAvoidingView>
