@@ -21,7 +21,6 @@ router.post('/org/login', signinOrg);
 /* user Endpoints */
 router.post('/user/signup', signup);
 router.post('/user/login', signin);     
-router.post('/user/order', orders);
 router.get('/user/profile', authMiddleware, getProfile);
 router.get('/user/orgLocations', locations);
 
@@ -35,6 +34,7 @@ router.post('/user/blogs', createBlog);
 router.get('/user/getBlogs', getBlogs);
 
 /* order Endpoints */
+router.post('/user/order', orders);
 router.get('/user/getOrders', getOrders);
 router.get('/users', async (req, res) => {
     try {
