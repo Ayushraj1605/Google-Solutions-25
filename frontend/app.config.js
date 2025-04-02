@@ -63,7 +63,7 @@ export default {
         },
         extra: {
             eas: {
-                projectId: "4c67de67-82fa-4d55-a097-33940f1c1755"
+                projectId: "d02a87e5-01ad-42d9-a97e-b65efd589493"
             }
         },
         owner: "ayushraj1605"
