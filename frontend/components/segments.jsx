@@ -3,10 +3,9 @@ import { ScrollView, View } from 'react-native';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
 import NewsCards from './Newscards';
-import BlogCards from './blogcards';
+import BlogCard from './blogcards'; // Changed from BlogCards to BlogCard
 import FactsCards from './factscard';
 import ChatBotButton from './chatbotbutton';
-
 
 // Real, verified blog content
 const blogData = [
@@ -16,6 +15,7 @@ const blogData = [
     subtitle: "March 13, 2025 • By GreenTech Insights",
     imageUri: "https://images.unsplash.com/photo-1612965110667-4175024b0dcc?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     description: "With global e-waste expected to reach 74 million tons annually by 2030 according to the UN's Global E-waste Monitor 2023, innovative recycling technologies like automated disassembly robots and molecular separation processes are becoming essential. Companies like Apple and Samsung have committed to 100% recycled materials in their products by 2030, while the EU's Right to Repair legislation is extending device lifespans and reducing waste.",
+    category: "Environment",
   },
   {
     id: 2,
@@ -23,6 +23,7 @@ const blogData = [
     subtitle: "March 10, 2025 • By EcoFarm Quarterly",
     imageUri: "https://images.unsplash.com/photo-1649595409836-71bfe4c5ec6c?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     description: "Vertical farming is revolutionizing agriculture by using up to 95% less water than traditional farming while producing crops with 30-40% higher nutritional value, according to research published in Nature Food (October 2023). Cities like Singapore now produce 30% of their vegetables locally through vertical farms, reducing transportation emissions while creating urban green spaces that improve air quality and community well-being.",
+    category: "Agriculture",
   },
   {
     id: 3,
@@ -30,6 +31,7 @@ const blogData = [
     subtitle: "March 5, 2025 • By Clean Energy Report",
     imageUri: "https://plus.unsplash.com/premium_photo-1682309652843-ed4eb60d473e?q=80&w=2112&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     description: "Solid-state batteries are poised to transform energy storage with 2-3x higher energy density than lithium-ion batteries and significantly reduced fire risk. According to MIT Technology Review, commercial production is expected by 2026. Meanwhile, gravity-based storage systems like Energy Vault's concrete block towers and Advanced Rail Energy Storage have achieved 80-90% round-trip efficiency while providing storage durations of 8-12 hours, addressing renewable energy intermittency.",
+    category: "Energy",
   },
   {
     id: 4,
@@ -37,6 +39,7 @@ const blogData = [
     subtitle: "February 28, 2025 • By Ocean Conservation Digest",
     imageUri: "https://images.unsplash.com/photo-1717667745934-53091623e8ee?q=80&w=1935&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     description: "Kelp and seaweed farming are emerging as powerful climate solutions, sequestering up to 20 times more carbon per acre than land forests according to the National Oceanic and Atmospheric Administration. Beyond carbon benefits, these underwater gardens require no freshwater, fertilizer, or land while providing habitat for marine life and producing nutritious food. The World Bank estimates the seaweed industry could create 50 million direct jobs globally by 2030.",
+    category: "Ocean",
   },
   {
     id: 5,
@@ -44,6 +47,7 @@ const blogData = [
     subtitle: "February 20, 2025 • By Green Computing Journal",
     imageUri: "https://images.unsplash.com/photo-1614201756100-1ccde6a6589e?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTF8fGUlMjB3YXN0ZXxlbnwwfHwwfHx8MA%3D%3D",
     description: "Researchers at Stanford and the University of California have developed electronic components using cellulose-based substrates and conductive polymers that decompose completely within 3-6 months in composting conditions. These biodegradable circuits maintain 90% functionality of conventional electronics with only a 15% cost increase. Major tech companies have begun implementing these materials in peripheral devices, potentially reducing electronic waste by millions of tons annually.",
+    category: "Technology",
   }
 ];
 
@@ -135,13 +139,18 @@ const Segments = ({ name }) => {
           <>
             {blogData.map((blog) => (
               <View key={`blog-${blog.id}`} style={styles.cardContainer}>
-                <BlogCards
+                <BlogCard
                   title={blog.title}
                   subtitle={blog.subtitle}
                   imageUri={blog.imageUri}
                   description={blog.description}
+                  category={blog.category || "Environment"}
+                  readTime="4 min read"
+                  likes={Math.floor(Math.random() * 50) + 10}
+                  comments={Math.floor(Math.random() * 10) + 1}
                   onShare={() => console.log(`Share blog: ${blog.id}`)}
                   onReadMore={() => console.log(`Read more blog: ${blog.id}`)}
+                  onBookmark={() => console.log(`Bookmark blog: ${blog.id}`)}
                 />
               </View>
             ))}

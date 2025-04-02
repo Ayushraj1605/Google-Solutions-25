@@ -48,6 +48,13 @@ const _layout = () => {
           // headerTitle: 'Upload Device Info',
         }}
       />
+      <Stack.Screen
+        name='blogsBookmarks'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
+      />
     </Stack>
     
   )
