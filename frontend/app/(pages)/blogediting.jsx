@@ -12,28 +12,50 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { LocalRouteParamsContext, Route } from 'expo-router/build/Route';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-
+import { use } from 'react';
 const BlogScreen = () => {
-  const router = useRouter();
-  const [title, setTitle] = useState('');
-  const [desc, setDesc] = useState('');
-  const [userData, setUserData] = useState({
-    id: '',
-    name: '',
-    email: '',
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    const params = useLocalSearchParams();
+    const router = useRouter();
+    // const [title, setTitle] = useState('');
+    const [title, setTitle] = useState(params?.title || '');
+    // useState hook for storing the variable title and content of blog
+    const [desc, setDesc] = useState(params?.body || '');
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userId = await AsyncStorage.getItem('ID');
-        const userName = await AsyncStorage.getItem('USERNAME');
-        const userEmail = await AsyncStorage.getItem('EMAIL');
+    const [userData, setUserData] = useState({
+        id: '',
+        name: '',
+        email: '',
+    });
+    const [isLoading, setIsLoading] = useState(true);
+    // const [title, setTitle] = useState('');
+
+    // const saveBlog = async () =>  {
+
+    //     // Does not allow Empty Title or Content of Blog
+    //     if (title.trim() === '' || content.trim() === '') {
+    //         Alert.alert("Error", "Title and content cannot be empty!");
+    //         return;
+    //     }
+
+    //     // We need to either add to the existing array or use a json or database for storing blogs
+    //     // make a post request to 'https://cloudrunservice-254131401451.us-central1.run.app/user/blog/'
+    //     const endpoint=`https://cloudrunservice-254131401451.us-central1.run.app/user/blog?userId`
+    //     const { data, status } = await axios.post(endpoint, {title:title, description:desc});
+    //     if(status==200)
+    //         Alert.alert("Success", "Blog saved successfully!");
+    // };
+    // Fetch user data (including userId) on component mount
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const userId = await AsyncStorage.getItem('ID');
+                const userName = await AsyncStorage.getItem('USERNAME');
+                const userEmail = await AsyncStorage.getItem('EMAIL');
 
         setUserData({
           id: userId || '',
@@ -65,37 +87,55 @@ const BlogScreen = () => {
       return;
     }
 
-    if (!userData.id) {
-      Alert.alert("Authentication Error", "User session expired. Please log in again.");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      const endpoint = `https://cloudrunservice-254131401451.us-central1.run.app/user/blogs?userId=${userData.id}`;
-      const { status } = await axios.post(endpoint, {
-        title: title,
-        body: desc
-      });
+        if (!userData.id) {
+            Alert.alert("Error", "User ID not found. Please log in again.");
+            return;
+        }
+        if (params?.editing) {
+            try {
+                // console.log(desc);
+                const endpoint = `https://cloudrunservice-254131401451.us-central1.run.app/user/updateBlog?blogId=${params?.blogId}`;
+                const { data, status } = await axios.put(
+                    endpoint,
+                    {
+                      userId: params?.userId,
+                      title: title,
+                      body: desc,
+                      blogId: params?.blogId,
+                    },
+                    {
+                      headers: {
+                        "Content-Type": "application/json", // Explicitly set headers
+                      },
+                    }
+                  );
 
-      if (status === 200) {
-        Alert.alert("Success", "Blog published successfully!", [
-          { text: "OK", onPress: () => router.back() }
-        ]);
-      }
-    } catch (error) {
-      console.error('Error saving blog:', error);
-      Alert.alert(
-        "Error", 
-        error.response?.data?.message || "Failed to save blog. Please try again."
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+                if (status === 200) {
+                    Alert.alert("Success", "Blog saved successfully!");
+                }
+            } catch (error) {
+                console.error('Error saving blog:', error);
+                Alert.alert("Error", "Failed to save blog. Please try again.");
+            }
+        }
+        else {
+            try {
+                // console.log(desc);
+                const endpoint = `https://cloudrunservice-254131401451.us-central1.run.app/user/blogs?userId=${userData.id}`;
+                const { data, status } = await axios.post(endpoint, {
+                    title: title,
+                    body: desc
+                });
 
-  if (isLoading) {
+                if (status === 200) {
+                    Alert.alert("Success", "Blog saved successfully!");
+                }
+            } catch (error) {
+                console.error('Error saving blog:', error);
+                Alert.alert("Error", "Failed to save blog. Please try again.");
+            }
+        }
+    };
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />
