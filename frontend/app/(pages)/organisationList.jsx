@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,14 +8,40 @@ import {
     ActivityIndicator,
     SafeAreaView,
     Platform,
-    StatusBar
+    StatusBar,
+    Alert
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import axios from 'axios';
 
 export default function OrganisationList() {
+    // Get URL parameters using useLocalSearchParams hook
+    const params = useLocalSearchParams();
+    
+    // Create a state to store all form data (from previous screen + organization selection)
+    const [formData, setFormData] = useState({});
+    
     // State management
     const [selectedOrg, setSelectedOrg] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [deviceId, setDeviceId] =useState("");
+
+    // Extract params when component mounts
+    useEffect(() => {
+        // Log received params for debugging
+        console.log("Received params:", params);
+        setDeviceId(params.deviceId);
+        // Initialize form data with the received parameters
+        setFormData({
+            deviceId: params.deviceId,
+            modelNumber: params.modelNumber,
+            imei: params.imei,
+            purchaseYear: params.purchaseYear,
+            description: params.description,
+            status:"Pending",
+            // Note: invoice file cannot be passed via URL params
+        });
+    }, []);
 
     // Dummy organizations list
     const organizations = [
@@ -42,21 +68,94 @@ export default function OrganisationList() {
         },
     ];
 
-    // Handle submission
-    const handleSubmit = () => {
-        if (selectedOrg) {
-            setIsLoading(true);
-            // Simulate API call with timeout
-            setTimeout(() => {
-                setIsLoading(false);
-                // Show success and navigate
-                alert('Submission successful!');
-                router.push('/devices');
-            }, 1500);
-        } else {
-            alert('Please select an organization');
-        }
+    // Handle organization selection
+    const handleSelectOrg = (org) => {
+        setSelectedOrg(org);
+        setFormData(prev => ({
+            ...prev,
+            organizationId: org.id,
+            organizationName: org.name
+        }));
     };
+
+    // Handle submission to backend API
+// Handle submission to backend API
+const handleSubmit = async () => {
+    if (!selectedOrg) {
+        Alert.alert('Selection Required', 'Please select an organization');
+        return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+        // Prepare data for submission
+        const dataToSubmit = {
+            ...formData,
+            submittedAt: new Date().toISOString()
+        };
+        
+        console.log("Submitting data to API:", dataToSubmit);
+        console.log(deviceId);
+        // API endpoint - replace with your actual API endpoint
+        const API_URL = `https://cloudrunservice-254131401451.us-central1.run.app/user/updateDevice?deviceId=${deviceId}`;
+        
+        // Set proper headers
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        };
+        
+        // Make the API request
+        const response = await axios.put(API_URL, dataToSubmit, config);
+        
+        console.log("API response:", response.data);
+        
+        // Check if the request was successful
+        if (response.status === 200 || response.status === 201) {
+            // Show success message
+            Alert.alert(
+                'Success',
+                'Your device has been successfully submitted for recycling',
+                [
+                    { 
+                        text: 'OK', 
+                        onPress: () => router.push('/devices') 
+                    }
+                ]
+            );
+        } else {
+            throw new Error(`Server responded with status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('API submission error:', error);
+        let errorMessage = 'There was a problem submitting your device. Please try again.';
+        
+        // More specific error handling
+        if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.log("Error response data:", error.response.data);
+            console.log("Error response status:", error.response.status);
+            errorMessage = error.response.data?.message || errorMessage;
+        } else if (error.request) {
+            // The request was made but no response was received
+            console.log("Error request:", error.request);
+            errorMessage = 'No response received from server. Please check your connection.';
+        }
+        
+        // Show error message
+        Alert.alert(
+            'Submission Failed',
+            errorMessage,
+            [{ text: 'OK' }]
+        );
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     // Custom card component
     const OrganizationCard = ({ item, onSelect, isSelected }) => (
@@ -97,6 +196,15 @@ export default function OrganisationList() {
 
             <View style={styles.container}>
                 <Text style={styles.title}>Select Organization</Text>
+                
+                {/* Display summary of the device details */}
+                {formData.deviceId && (
+                    <View style={styles.summaryContainer}>
+                        <Text style={styles.summaryTitle}>Device Details</Text>
+                        <Text style={styles.summaryItem}>Model: {formData.modelNumber}</Text>
+                        {formData.imei && <Text style={styles.summaryItem}>IMEI: {formData.imei}</Text>}
+                    </View>
+                )}
 
                 <FlatList
                     data={organizations}
@@ -104,7 +212,7 @@ export default function OrganisationList() {
                     renderItem={({ item }) => (
                         <OrganizationCard
                             item={item}
-                            onSelect={setSelectedOrg}
+                            onSelect={handleSelectOrg}
                             isSelected={selectedOrg?.id === item.id}
                         />
                     )}
@@ -125,7 +233,7 @@ export default function OrganisationList() {
                         {isLoading ? (
                             <ActivityIndicator color="#FFFFFF" size="small" />
                         ) : (
-                            <Text style={styles.submitText}>Continue</Text>
+                            <Text style={styles.submitText}>Submit Device</Text>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -151,6 +259,25 @@ const styles = StyleSheet.create({
         color: '#333',
         marginVertical: 24,
         paddingHorizontal: 4,
+    },
+    summaryContainer: {
+        backgroundColor: '#EEFBEF',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+        borderLeftWidth: 3,
+        borderLeftColor: '#609966',
+    },
+    summaryTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 8,
+    },
+    summaryItem: {
+        fontSize: 14,
+        color: '#555',
+        marginBottom: 4,
     },
     listContainer: {
         paddingBottom: 100, // Space for the fixed button
