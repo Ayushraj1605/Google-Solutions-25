@@ -196,7 +196,7 @@ const Segments = ({ name }) => {
                   title={blog.title}
                   subtitle={blog.subtitle}
                   imageUri={blog.imageUri}
-                  description={blog.description}
+                  description={blog.body}
                   category={blog.category || "Environment"}
                   readTime="4 min read"
                   likes={Math.floor(Math.random() * 50) + 10}
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
 
   container: {
     width: '100%',
-    alignItems: 'center',
+    // alignItems: 'center',
     marginTop: 10,
     // backgroundColor: 'red'
   },
