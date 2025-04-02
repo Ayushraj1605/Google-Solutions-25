@@ -126,7 +126,7 @@ export default function MyBlogsAndBookmarksScreen() {
       fetchBlogsOnlyUser();
     }
   }, [userData.id]);
-  
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -154,11 +154,12 @@ export default function MyBlogsAndBookmarksScreen() {
     setError(null);
     try {
       const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs?userId=i3vZfk6ycQqSRxT02XLS`);
-      console.log('API Response:', response.data);
-      
+      // console.log('API Response:', response.data);
+
       if (response.data && response.data.blogs) {
         setBlogs(response.data.blogs);
-        console.log(blogs);
+        console.log(".........",blogs,".........");
+        // console.log(".........");
       } else {
         setError('No blogs found in the response');
       }
@@ -193,12 +194,12 @@ export default function MyBlogsAndBookmarksScreen() {
     item.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.author.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   const filteredBlogs = blogs.filter(item =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
+    item.body.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  // console.log("...",filteredBlogs,"...");
   const toggleSearchBar = () => {
     if (showSearchBar) {
       Animated.timing(searchAnimation, {
@@ -232,10 +233,10 @@ export default function MyBlogsAndBookmarksScreen() {
       <Image source={item.image} style={styles.blogImage} />
       <View style={styles.blogContent}>
         <Text style={styles.blogTitle}>{item.title}</Text>
-        <Text style={styles.blogExcerpt} numberOfLines={2}>{item.excerpt}</Text>
+        <Text style={styles.blogExcerpt} numberOfLines={2}>{item.body}</Text>
         <View style={styles.blogMeta}>
           <Text style={styles.authorText}>
-            {activeTab === 'bookmarks' ? `By ${item.author}` : 'By You'}
+            {activeTab === 'bookmarks' ? `By ${item.username}` : 'By You'}
           </Text>
           <View style={styles.blogStats}>
             <Text style={styles.dateText}>{item.date}</Text>
@@ -261,8 +262,17 @@ export default function MyBlogsAndBookmarksScreen() {
             </TouchableOpacity>
           )}
           {activeTab === 'myblogs' && (
-            <TouchableOpacity style={styles.interactionItem}>
-              <Ionicons name="create-outline" size={16} color="#609966" />
+            <TouchableOpacity style={styles.interactionItem} onPress={() => { router.push({pathname:'/blogediting',
+              params: { 
+                title: item.title,
+                // You can pass the entire blog object if needed
+                body: item.body,
+                blogId: item.blogId,
+                editing:true,
+                userId: userData.id,
+              }
+            }) }}>
+              <Ionicons name="create" size={16} color="#609966" />
             </TouchableOpacity>
           )}
         </View>
@@ -294,7 +304,7 @@ export default function MyBlogsAndBookmarksScreen() {
   );
 
   const currentData = activeTab === 'bookmarks' ? filteredBookmarks : filteredBlogs;
-
+  console.log("...",currentData,"...");
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
@@ -389,7 +399,7 @@ export default function MyBlogsAndBookmarksScreen() {
           <FlatList
             data={currentData}
             renderItem={renderBlogItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.blogId}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.listContainer}
           />
