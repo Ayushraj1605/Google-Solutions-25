@@ -153,7 +153,7 @@ export default function MyBlogsAndBookmarksScreen() {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs?userId=i3vZfk6ycQqSRxT02XLS`);
+      const response = await axios.get(`https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs?userId=${userData.id}`);
       // console.log('API Response:', response.data);
 
       if (response.data && response.data.blogs) {
