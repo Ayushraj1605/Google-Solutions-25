@@ -82,20 +82,25 @@ const BlogScreen = () => {
                 const { data, status } = await axios.put(
                     endpoint,
                     {
-                      userId: params?.userId,
-                      title: title,
-                      body: desc,
-                      blogId: params?.blogId,
+                        userId: params?.userId,
+                        title: title,
+                        body: desc,
+                        blogId: params?.blogId,
                     },
                     {
-                      headers: {
-                        "Content-Type": "application/json", // Explicitly set headers
-                      },
+                        headers: {
+                            "Content-Type": "application/json", // Explicitly set headers
+                        },
                     }
-                  );
+                );
 
                 if (status === 200) {
-                    Alert.alert("Success", "Blog saved successfully!");
+                    Alert.alert("Success", "Blog saved successfully!", [
+                        {
+                            text: "OK",
+                            onPress: () => router.back(), // Navigate back after user presses OK
+                        },
+                    ]);
                 }
             } catch (error) {
                 console.error('Error saving blog:', error);
@@ -137,7 +142,9 @@ const BlogScreen = () => {
                             <Ionicons name="arrow-back" size={24} color="#333" />
                         </TouchableOpacity>
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Create New Blog</Text>
+                    <Text style={styles.headerTitle}>
+                        {params?.editing ? "Update Blog" : "Create New Blog"}
+                    </Text>
                     <View style={{ width: 60 }} />
                 </View>
                 <Text style={styles.label}>Title</Text>
