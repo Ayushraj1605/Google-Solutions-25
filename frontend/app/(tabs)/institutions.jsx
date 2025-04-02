@@ -513,7 +513,7 @@ const Institutions = () => {
       {!showRoute && (
         <View style={styles.header}>
           <View style={[styles.headerContent, { paddingTop: insets.top }]}>
-            <Text style={styles.headerTitle}>E-cycle Institutions</Text>
+            <Text style={styles.headerTitle}>Eco-Sankalp Institutions</Text>
             
             <TouchableOpacity 
               style={styles.drawerButton}
