@@ -113,7 +113,7 @@ const factsData = [
     title: "Energy Fact",
     subtitle: "Renewable Power",
     // imageUri: "https://source.unsplash.com/700x400/?solar,panels",
-    description: "The amount of solar energy that reaches Earth's surface in one hour exceeds the world's total energy consumption for an entire year. If we could harness just 0.02% of this incoming solar energy, it would replace all other energy sources currently in use. ☀️",
+    description: "The amount of solar energy that reaches Earth's surface in one hour exceeds the world's total energy consumption for an entire year. If we could harness just 0.02% of this incoming solar energy, it would replace all other energy sources currently in use. ☀",
   },
   {
     id: 3,
@@ -196,7 +196,7 @@ const Segments = ({ name }) => {
                   title={blog.title}
                   subtitle={blog.subtitle}
                   imageUri={blog.imageUri}
-                  description={blog.description}
+                  description={blog.body}
                   category={blog.category || "Environment"}
                   readTime="4 min read"
                   likes={Math.floor(Math.random() * 50) + 10}
@@ -232,8 +232,8 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     alignItems: 'center',
-    marginTop: 10,
-    // backgroundColor: 'red'
+    // marginTop: 10,
+    backgroundColor: 'red'
   },
   buttons: {
     width: '100%',

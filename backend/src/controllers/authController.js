@@ -489,7 +489,10 @@ export const getOrders = async (req, res) =>
 
 export const createBlog = async (req, res) => {
     const { userId } = req.query;
-    const { body, title } = req.body;
+    // const { title,description } = req.body;
+    const title=req.body.title;
+    const body=req.body.body;
+    
 
     if (!body || !title) {
         return res.status(400).json({
