@@ -8,6 +8,10 @@ import FactsCards from './factscard';
 import ChatBotButton from './chatbotbutton';
 import BlogEditButton from './blogeditbutton';
 import axios from 'axios';
+<<<<<<< HEAD
+=======
+
+>>>>>>> 206a31d2b664b7e0e61f4be958d8d0d2e475d33e
 // Real, verified blog content
 // const blogData = [
 //   {
@@ -130,13 +134,18 @@ const factsData = [
   },
 ];
 
+
+
 const Segments = ({ name }) => {
   const [value, setValue] = React.useState('Blogs');
   const [blogs, setBlogs] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
 
+<<<<<<< HEAD
   // Function to fetch blogs from the API
+=======
+>>>>>>> 206a31d2b664b7e0e61f4be958d8d0d2e475d33e
   const fetchBlogs = async () => {
     setLoading(true);
     setError(null);
@@ -207,56 +216,11 @@ const Segments = ({ name }) => {
             ))}
           </>
         );
-      case 'News':
-        return (
-          <>
-            {newsData.map((news) => (
-              <View key={`news-${news.id}`} style={styles.cardContainer}>
-                <NewsCards
-                  title={news.title}
-                  subtitle={news.subtitle}
-                  imageUri={news.imageUri}
-                  description={news.description}
-                  onShare={() => console.log(`Share news: ${news.id}`)}
-                  onReadMore={() => console.log(`Read more news: ${news.id}`)}
-                />
-              </View>
-            ))}
-          </>
-        );
-      case 'Facts':
-        return (
-          <>
-            {factsData.map((fact) => (
-              <View key={`fact-${fact.id}`} style={styles.cardContainer}>
-                <FactsCards
-                  title={fact.title}
-                  subtitle={fact.subtitle}
-                  // imageUri={fact.imageUri}
-                  description={fact.description}
-                />
-              </View>
-            ))}
-          </>
-        );
-      default:
-        return null;
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <SegmentedButtons
-        value={value}
-        onValueChange={setValue}
-        buttons={[
-          { value: 'Blogs', label: 'Blogs' },
-          { value: 'News', label: 'News' },
-          { value: 'Facts', label: 'Facts' },
-        ]}
-        style={styles.buttons}
-      />
-
       {/* Single ScrollView wrapping the content to avoid multiple scroll areas */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -272,7 +236,7 @@ const Segments = ({ name }) => {
 const styles = StyleSheet.create({
 
   container: {
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
     marginTop: 10,
     // backgroundColor: 'red'

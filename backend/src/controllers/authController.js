@@ -384,7 +384,15 @@ export const getDevices = async (req, res) =>
                 deviceId: doc.id,
                 deviceType: data.deviceType,
                 deviceName: data.deviceName,
-                createdAt: data.createdAt
+                createdAt: data.createdAt,
+                status: data.status,
+                imei: data.imei,
+                modelNumber: data.modelNumber,
+                organizationId: data.organizationId,
+                organizationName: data.organizationName,
+                purchaseYear: data.purchaseYear,
+                modelNumber: data.modelNumber,
+                description: data.description,
             };
         });
 
