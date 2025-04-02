@@ -2,9 +2,9 @@ import 'dotenv/config';
 
 export default {
     expo: {
-        name: "E-cycle",
-        scheme: "E-cycle",
-        slug: "e-cycle",
+        name: "Eco-Sankalp",
+        scheme: "Eco-Sankalp",
+        slug: "e-waste",
         version: "1.0.0",
         orientation: "portrait",
         icon: "./assets/logo.png",

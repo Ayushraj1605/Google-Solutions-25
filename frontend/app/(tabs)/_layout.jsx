@@ -62,7 +62,7 @@ const _layout = () => {
           options={{
             title: 'Leaderboard',
             headerShown: false,
-            headerTitle: 'E-cycle Now',
+            headerTitle: 'Eco-Sankalp Now',
             headerBackTitleVisible: false,
             headerTitleAlign: '',
             tabBarIcon: ({ focused }) => (
