@@ -99,7 +99,7 @@ const handleSubmit = async () => {
         console.log(deviceId);
         // API endpoint - replace with your actual API endpoint
         const API_URL = `https://cloudrunservice-254131401451.us-central1.run.app/user/updateDevice?deviceId=${deviceId}`;
-        
+        const API_URL_ORDERS=`https://cloudrunservice-254131401451.us-central1.run.app//user/order?deviceId=${deviceId}`
         // Set proper headers
         const config = {
             headers: {
@@ -110,6 +110,7 @@ const handleSubmit = async () => {
         
         // Make the API request
         const response = await axios.put(API_URL, dataToSubmit, config);
+        const orderResponse= await axios.post(API_URL_ORDERS,config);
         
         console.log("API response:", response.data);
         

@@ -6,6 +6,8 @@ import NewsCards from './Newscards';
 import BlogCard from './blogcards'; // Changed from BlogCards to BlogCard
 import FactsCards from './factscard';
 import ChatBotButton from './chatbotbutton';
+import BlogEditButton from './blogeditbutton';
+import axios from 'axios';
 
 // Real, verified blog content
 const blogData = [
@@ -129,16 +131,67 @@ const factsData = [
   },
 ];
 
+
+
 const Segments = ({ name }) => {
   const [value, setValue] = React.useState('Blogs');
+  const [blogs, setBlogs] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
+
+  const fetchBlogs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs/');
+      console.log('API Response:', response.data);
+      
+      if (response.data && response.data.blogs) {
+        setBlogs(response.data.blogs);
+        console.log(blogs);
+      } else {
+        setError('No blogs found in the response');
+      }
+    } catch (err) {
+      console.error('Error fetching blogs:', err);
+      setError('Failed to fetch blogs: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // Fetch blogs when the component mounts or when the selected segment is 'Blogs'
+  React.useEffect(() => {
+    if (value === 'Blogs') {
+      fetchBlogs();
+    }
+  }, [value]);
+
+  // Format the date from timestamp
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    
+    try {
+      const date = new Date(timestamp.seconds * 1000);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return '';
+    }
+  };
 
   const renderContent = () => {
     switch (value) {
       case 'Blogs':
         return (
           <>
-            {blogData.map((blog) => (
-              <View key={`blog-${blog.id}`} style={styles.cardContainer}>
+            {blogs.map((blog) => (
+              <View key={`blog-${blog.blogId}`} style={styles.cardContainer}>
                 <BlogCard
                   title={blog.title}
                   subtitle={blog.subtitle}
@@ -148,64 +201,19 @@ const Segments = ({ name }) => {
                   readTime="4 min read"
                   likes={Math.floor(Math.random() * 50) + 10}
                   comments={Math.floor(Math.random() * 10) + 1}
-                  onShare={() => console.log(`Share blog: ${blog.id}`)}
-                  onReadMore={() => console.log(`Read more blog: ${blog.id}`)}
-                  onBookmark={() => console.log(`Bookmark blog: ${blog.id}`)}
+                  onShare={() => console.log(`Share blog: ${blog.blogId}`)}
+                  onReadMore={() => console.log(`Read more blog: ${blog.blogId}`)}
+                  onBookmark={() => console.log(`Bookmark blog: ${blog.blogId}`)}
                 />
               </View>
             ))}
           </>
         );
-      case 'News':
-        return (
-          <>
-            {newsData.map((news) => (
-              <View key={`news-${news.id}`} style={styles.cardContainer}>
-                <NewsCards
-                  title={news.title}
-                  subtitle={news.subtitle}
-                  imageUri={news.imageUri}
-                  description={news.description}
-                  onShare={() => console.log(`Share news: ${news.id}`)}
-                  onReadMore={() => console.log(`Read more news: ${news.id}`)}
-                />
-              </View>
-            ))}
-          </>
-        );
-      case 'Facts':
-        return (
-          <>
-            {factsData.map((fact) => (
-              <View key={`fact-${fact.id}`} style={styles.cardContainer}>
-                <FactsCards
-                  title={fact.title}
-                  subtitle={fact.subtitle}
-                  // imageUri={fact.imageUri}
-                  description={fact.description}
-                />
-              </View>
-            ))}
-          </>
-        );
-      default:
-        return null;
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <SegmentedButtons
-        value={value}
-        onValueChange={setValue}
-        buttons={[
-          { value: 'Blogs', label: 'Blogs' },
-          { value: 'News', label: 'News' },
-          { value: 'Facts', label: 'Facts' },
-        ]}
-        style={styles.buttons}
-      />
-
       {/* Single ScrollView wrapping the content to avoid multiple scroll areas */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -222,7 +230,7 @@ const Segments = ({ name }) => {
 const styles = StyleSheet.create({
 
   container: {
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
     marginTop: 10,
     // backgroundColor: 'red'
