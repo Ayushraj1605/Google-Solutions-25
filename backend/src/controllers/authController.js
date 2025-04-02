@@ -707,3 +707,41 @@ export const getBlogs = async (req, res) => {
         });
     }
 }
+
+export const updateBlog=async (req,res)=>{
+    const { blogId } = req.query;
+    const { title, body } = req.body;
+
+    if (!blogId) {
+        return res.status(400).json({
+            message: "blogId is required"
+        });
+    }
+
+    try {
+        const blogDocRef = doc(db, "blogs", blogId);
+        const blogSnapshot = await getDoc(blogDocRef);
+
+        if (!blogSnapshot.exists()) {
+            return res.status(404).json({
+                message: "Blog not found"
+            });
+        }
+
+        // Update the document with new title and body
+        await updateDoc(blogDocRef, {
+            title: title,
+            body: body
+        });
+
+        return res.status(200).json({
+            message: "Blog updated successfully"
+        });
+    } catch (err) {
+        console.error("Error updating blog:", err);
+        return res.status(500).json({
+            message: "Failed to update blog",
+            error: err.message
+        });
+    }
+}
