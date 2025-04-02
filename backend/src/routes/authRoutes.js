@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, signin, getProfile, locations, orders, getOrders, getDevices, addDevice, deviceSuggestions } from '../controllers/authController.js';
+import { signup, signin, getProfile, locations, orders, getBlogs, getOrders, getDevices, addDevice, deviceSuggestions, createBlog, updateDevice } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -27,7 +27,12 @@ router.get('/user/orgLocations', locations);
 
 /* Adding Devices endpoints */
 router.post('/user/addDevice', addDevice);
+router.put('/user/updateDevice', updateDevice);
 router.get('/user/getDevices', getDevices);
+
+/* community Endpoints */
+router.post('/user/blogs', createBlog);
+router.get('/user/getBlogs', getBlogs)
 
 /* order Endpoints */
 router.get('/user/getOrders', getOrders);

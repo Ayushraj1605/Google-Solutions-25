@@ -26,10 +26,10 @@ const firebaseApp = initializeApp(firebaseConfig); // Renamed to avoid conflict 
 export const db = getFirestore(firebaseApp);
 export const storage = getStorage(firebaseApp);
 
-let imagePath;
-const imageRef = ref(storage, imagePath);
-const url = await getDownloadURL(imageRef);
-console.log(imageRef);
+// let imagePath;
+// const imageRef = ref(storage, imagePath);
+// const url = await getDownloadURL(imageRef);
+// console.log(imageRef);
 
 // Initialize Express
 const app = express();
