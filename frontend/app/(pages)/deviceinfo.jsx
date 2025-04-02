@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  Image, 
-  TouchableOpacity, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
   Alert,
   SafeAreaView,
   StatusBar,
@@ -22,14 +22,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDXjzuJTIKRocH0w08HYCs5C7DB-MDhViU",
-    authDomain: "ewastemanagement-7bf01.firebaseapp.com",
-    databaseURL: "https://ewastemanagement-7bf01-default-rtdb.firebaseio.com",
-    projectId: "ewastemanagement-7bf01",
-    storageBucket:"ewastemanagement-7bf01.firebasestorage.app",
-    messagingSenderId: "254131401451",
-    appId: "1:254131401451:web:9f9891eef8c0e51d2dc4ae",
-    measurementId:"G-S320GS59SR"
+  apiKey: "AIzaSyDXjzuJTIKRocH0w08HYCs5C7DB-MDhViU",
+  authDomain: "ewastemanagement-7bf01.firebaseapp.com",
+  databaseURL: "https://ewastemanagement-7bf01-default-rtdb.firebaseio.com",
+  projectId: "ewastemanagement-7bf01",
+  storageBucket: "ewastemanagement-7bf01.firebasestorage.app",
+  messagingSenderId: "254131401451",
+  appId: "1:254131401451:web:9f9891eef8c0e51d2dc4ae",
+  measurementId: "G-S320GS59SR"
 };
 
 // Initialize Firebase
@@ -71,7 +71,7 @@ const Deviceinfo = () => {
       setError(null);
       // Request camera permissions
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      
+
       if (status !== 'granted') {
         setError('Camera permission is required to take photos');
         return;
@@ -98,10 +98,10 @@ const Deviceinfo = () => {
       setError('Please select an image first');
       return;
     }
-  
+
     setUploading(true);
     setError(null);
-  
+
     try {
       // Get the userId from AsyncStorage
       const userId = await AsyncStorage.getItem('ID');
@@ -110,29 +110,29 @@ const Deviceinfo = () => {
         setUploading(false);
         return;
       }
-  
+
       // Create a reference to the file location in Firebase Storage
       const localUri = imageUri;
       const filename = localUri.split('/').pop();
       const storageRef = ref(storage, `DeviceImages/${userId}/${filename}`);
-      
+
       // Convert the image to a blob and upload to Firebase
       const response = await fetch(localUri);
       const blob = await response.blob();
       const snapshot = await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(snapshot.ref);
-      
+
       // First, get device type from ML model
       const formData = new FormData();
       const match = /\.(\w+)$/.exec(filename);
       const type = match ? `image/${match[1]}` : 'image';
-      
+
       formData.append('file', {
         uri: localUri,
         name: filename,
         type: type,
       });
-      
+
       // Get device type from ML model
       const mlResponse = await axios.post(
         'https://flaskapp-613599475137.asia-east2.run.app/',
@@ -143,19 +143,27 @@ const Deviceinfo = () => {
           },
         }
       );
-  
+
       if (!mlResponse.data || !mlResponse.data.predicted_class) {
         throw new Error('Device type not detected from the image');
       }
-  
+
       // Send device data to addDevice endpoint
       const deviceData = {
         deviceType: mlResponse.data.predicted_class.trim(),
         deviceName: mlResponse.data.predicted_class.trim(),
         userId: userId,
+        organizationName: null,
+        organizationId: null,
+        description: null,
+        imei: null,
+        modelNumber: null,
+        purchaseYear: null,
+        status: "In Use",
+        submittedAt: null,
         imageUrl: downloadURL  // Adding the image URL to the device data
       };
-  
+
       const addDeviceResponse = await axios.post(
         'https://cloudrunservice-254131401451.us-central1.run.app/user/addDevice',
         deviceData,
@@ -165,10 +173,10 @@ const Deviceinfo = () => {
           }
         }
       );
-  
+
       console.log('Device added successfully:', addDeviceResponse.data);
       Alert.alert('Success', 'Device added successfully!');
-  
+
       // Navigate to devices screen
       router.replace({
         pathname: '/devices',
@@ -177,10 +185,10 @@ const Deviceinfo = () => {
           imageUrl: downloadURL
         }
       });
-  
+
       setUploading(false);
       return { downloadURL, mlResponse: mlResponse.data };
-  
+
     } catch (error) {
       console.error('Error:', error.response?.data || error.message);
       setError(error.response?.data?.message || 'Failed to process image');
@@ -195,7 +203,7 @@ const Deviceinfo = () => {
       setError(null);
       // Request media library permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
+
       if (status !== 'granted') {
         setError('Gallery permission is required to select images');
         return;
@@ -221,9 +229,9 @@ const Deviceinfo = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#F5F5F5" />
-      
+
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
@@ -233,7 +241,7 @@ const Deviceinfo = () => {
         <View style={styles.backButtonPlaceholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -246,10 +254,10 @@ const Deviceinfo = () => {
           {image ? (
             <View style={styles.imageContainer}>
               <Image source={{ uri: image }} style={styles.image} />
-              
+
               <View style={styles.imageActions}>
-                <TouchableOpacity 
-                  style={styles.changeImageButton} 
+                <TouchableOpacity
+                  style={styles.changeImageButton}
                   onPress={showImageSourceOptions}
                 >
                   <Ionicons name="camera-outline" size={20} color="#609966" />
@@ -258,7 +266,7 @@ const Deviceinfo = () => {
               </View>
             </View>
           ) : (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.imagePlaceholder}
               onPress={showImageSourceOptions}
               activeOpacity={0.7}
@@ -335,7 +343,7 @@ const Deviceinfo = () => {
     </SafeAreaView>
   );
 };
-  
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,

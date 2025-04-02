@@ -10,20 +10,23 @@ import {
   KeyboardAvoidingView, 
   Platform,
   TextInput,
-  Text
+  Text,
+  Alert
 } from 'react-native';
 import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Completely simplified version with direct use of React Native components
 const RecycleForm = () => {
   const params = useLocalSearchParams();
   const deviceId = params.deviceId;
-
+  
   // Form state
   const [formData, setFormData] = useState({
+    deviceId: deviceId || '',
     modelNumber: '',
     imei: '',
     purchaseYear: '',
@@ -42,10 +45,15 @@ const RecycleForm = () => {
     validateForm();
   }, [formData]);
 
+  // Log deviceId when component mounts to verify it's being received properly
+  useEffect(() => {
+    console.log('Device ID received:', deviceId);
+  }, [deviceId]);
+
   const validateForm = () => {
     const newErrors = {};
     let valid = true;
-
+    
     // Model number validation
     if (!formData.modelNumber.trim()) {
       newErrors.modelNumber = 'Model number is required';
@@ -110,33 +118,34 @@ const RecycleForm = () => {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-
+    
+    // Ensure deviceId is included in the submission
+    const submitData = {
+      ...formData,
+      deviceId: deviceId || formData.deviceId
+    };
+    
+    console.log('Submitting form with data:', submitData);
     setLoading(true);
+    
     try {
-      const formPayload = new FormData();
-      formPayload.append('deviceId', deviceId);
-      formPayload.append('modelNumber', formData.modelNumber);
-      formPayload.append('imei', formData.imei);
-      formPayload.append('purchaseYear', formData.purchaseYear);
-      formPayload.append('description', formData.description);
+      // Create URL params string for all form data
+      const queryParams = new URLSearchParams();
       
-      if (formData.invoice) {
-        formPayload.append('invoice', {
-          uri: formData.invoice.uri,
-          name: formData.invoice.name,
-          type: formData.invoice.mimeType
-        });
-      }
-
-      // For demo, show loading for a moment
-      setTimeout(() => {
-        setLoading(false);
-        router.back();
-        router.replace({ pathname: '/organisationList', params: { refresh: Date.now() } });
-      }, 1500);
+      // Add all form data to query params (except invoice which can't be serialized easily)
+      Object.entries(submitData).forEach(([key, value]) => {
+        if (key !== 'invoice' && value !== null && value !== undefined) {
+          queryParams.append(key, value);
+        }
+      });
+      
+      // Navigate to the organisation list with form data as query params
+      router.push(`/organisationList?${queryParams.toString()}`);
     } catch (err) {
-      console.error('Submission error:', err);
-      setErrors(prev => ({...prev, general: 'Submission failed. Please try again.'}));
+      console.error('Error during form submission:', err);
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+      setErrors(prev => ({...prev, general: 'Failed to submit form. Please try again.'}));
+    } finally {
       setLoading(false);
     }
   };
@@ -205,6 +214,14 @@ const RecycleForm = () => {
           </View>
 
           <View style={styles.formContainer}>
+            {/* Device ID display (optional) */}
+            {deviceId && (
+              <View style={styles.deviceIdContainer}>
+                <Text style={styles.deviceIdLabel}>Device ID:</Text>
+                <Text style={styles.deviceIdValue}>{deviceId}</Text>
+              </View>
+            )}
+            
             {renderField('Model Number', 'modelNumber', formData.modelNumber)}
             {renderField('IMEI', 'imei', formData.imei, 'numeric', false, true)}
             {renderField('Year of Purchase', 'purchaseYear', formData.purchaseYear, 'numeric', false, true)}
@@ -261,7 +278,7 @@ const RecycleForm = () => {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.submitButtonText}>Submit Recycling Request</Text>
+              <Text style={styles.submitButtonText}>Continue</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -310,6 +327,24 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     padding: 24,
+  },
+  deviceIdContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    padding: 12,
+    backgroundColor: '#EEFBEF',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#609966',
+  },
+  deviceIdLabel: {
+    fontWeight: '600',
+    color: '#333',
+    marginRight: 6,
+  },
+  deviceIdValue: {
+    color: '#609966',
+    fontWeight: '500',
   },
   inputContainer: {
     marginBottom: 20,

@@ -66,6 +66,16 @@ const ProfileScreen = () => {
     router.push('/orderHistory');
   }
 
+  const handleBlogsBookmarks = () => {
+    console.log('My Blogs and Bookmarks');
+    router.push('/blogsBookmarks');
+  }
+
+  const handleDonationsRequests = () => {
+    console.log('My Donations and Requests');
+    router.push('/donationsRequests');
+  }
+
   return (
     <>
       <StatusBar 
@@ -128,9 +138,13 @@ const ProfileScreen = () => {
           {/* Menu Options */}
           <View style={{ marginTop: 40, paddingHorizontal: 20 }}>
             <ButtonProfile title="Order History" handlePress={handleOrders} />
-            <View style={{ height: 20 }} />
+            <View style={{ height: 1 }} />
             <ButtonProfile title="Analytics" handlePress={handleAnalytics} />
-            <View style={{ height: 20 }} />
+            <View style={{ height: 1 }} />
+            <ButtonProfile title="My Blogs & Bookmarks" handlePress={handleBlogsBookmarks} />
+            <View style={{ height: 1 }} />
+            <ButtonProfile title="Donations & Requests" handlePress={handleDonationsRequests} />
+            <View style={{ height: 1 }} />
             <ButtonProfile title="Sign Out" handlePress={handleSignOut} />
           </View>
           <ChatBotButton/>

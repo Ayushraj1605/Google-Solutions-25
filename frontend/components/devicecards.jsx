@@ -193,7 +193,8 @@ const DeviceCard = ({ data }) => {
 
   const handleRecyclePress = () => {
     setIsSubmitting(true);
-    router.push('/recycleform');
+    console.log(data.Id);
+    router.push(`/recycleform?deviceId=${data.deviceId}`)
     setIsSubmitting(false);
   };
 
