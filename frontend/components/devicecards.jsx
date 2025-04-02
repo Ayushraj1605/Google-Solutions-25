@@ -11,143 +11,14 @@ import {
   ScrollView 
 } from 'react-native';
 import { router } from 'expo-router';
-import { initializeApp } from 'firebase/app';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getFirestore, Timestamp } from 'firebase/firestore';
-import { getStorage, getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import axios from 'axios';
-import { useEffect } from 'react';
 
 const { width } = Dimensions.get('window');
 
-// Firebase configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyDXjzuJTIKRocH0w08HYCs5C7DB-MDhViU",
-    authDomain: "ewastemanagement-7bf01.firebaseapp.com",
-    databaseURL: "https://ewastemanagement-7bf01-default-rtdb.firebaseio.com",
-    projectId: "ewastemanagement-7bf01",
-    storageBucket:"ewastemanagement-7bf01.firebasestorage.app",
-    messagingSenderId: "254131401451",
-    appId: "1:254131401451:web:9f9891eef8c0e51d2dc4ae",
-    measurementId:"G-S320GS59SR"
-};
-
-// Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-
-// Initialize Firestore
-const db = getFirestore(firebaseApp);
-const storage = getStorage(firebaseApp);
-
-// Keeping all your utility functions the same
-const parseFormattedList = (inputText) => {
-  if (!inputText || typeof inputText !== 'string') {
-    return { title: '', items: [] };
-  }
-
-  // Split the input text into lines
-  const lines = inputText.split('\n').filter(line => line.trim());
-  
-  let title = '';
-  const items = [];
-  
-  // Extract title (any text before the first bullet point)
-  if (lines.length > 0) {
-    const titleMatch = lines[0].match(/^\s*\*\*([^:*]+):\*\*\s*$/);
-    if (titleMatch) {
-      title = titleMatch[1].trim();
-      lines.shift(); // Remove the title line
-    } else if (!lines[0].includes('*')) {
-      title = lines[0].trim();
-      lines.shift(); // Remove the title line
-    }
-  }
-  
-  // Process list items
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    
-    // Match main bullet points (first level)
-    const mainPointMatch = line.match(/^\s*\*\s+\*\*([^:*]+):\*\*/);
-    if (mainPointMatch) {
-      const mainPoint = mainPointMatch[1].trim();
-      
-      // Look for the description that follows
-      let description = '';
-      
-      // Check if description is on the same line
-      const descMatch = line.match(/\*\*([^:*]+):\*\*\s+(.*)/);
-      if (descMatch && descMatch[2]) {
-        description = descMatch[2].trim();
-      } 
-      // Check if description is on the next line(s)
-      else if (i + 1 < lines.length) {
-        let nextIndex = i + 1;
-        while (nextIndex < lines.length && !lines[nextIndex].match(/^\s*\*\s+\*\*/)) {
-          if (description) description += ' ';
-          description += lines[nextIndex].trim();
-          nextIndex++;
-        }
-        i = nextIndex - 1; // Adjust i to skip the description lines
-      }
-      
-      items.push({
-        key: mainPoint,
-        value: description
-      });
-    }
-    i++;
-  }
-  
-  return { title, items };
-};
-
-const formatParsedList = (parsedData) => {
-  const { title, items } = parsedData;
-  
-  let result = title ? `${title}\n` : '';
-  
-  items.forEach(item => {
-    result += `  -${item.key}: ${item.value}\n`;
-  });
-  
-  return result.trim();
-};
-
+// Format text function simplified to only what's needed
 const formatText = (text) => {
   if (!text) return [];
   
-  // Check if text seems to be a bullet point list
-  if (text.includes('*   **') || text.match(/\*\s+\*\*/)) {
-    // Process as a bullet point list
-    const parsedData = parseFormattedList(text);
-    
-    // Create formatted sections from parsed data
-    const sections = [];
-    
-    // Add title if it exists
-    if (parsedData.title) {
-      sections.push({
-        isHeader: true,
-        title: parsedData.title,
-        content: ''
-      });
-    }
-    
-    // Add items as sections
-    parsedData.items.forEach(item => {
-      sections.push({
-        isHeader: true,
-        title: item.key,
-        content: item.value
-      });
-    });
-    
-    return sections;
-  }
-  
-  // Original formatting logic for non-bullet point text
   return text.split('\n\n').map(section => {
     // Check if section has a bold title format: "*Title:* Content"
     if (section.includes('') && section.includes(':')) {
@@ -168,7 +39,6 @@ const formatText = (text) => {
     }
     
     // Handle paragraphs that might contain bold formatting
-    // Replace any remaining ** formatting in regular paragraphs
     const formattedContent = section.replace(/\\(.?)\\*/g, '$1').trim();
     
     return { 
@@ -183,59 +53,51 @@ const DeviceCard = ({ data }) => {
   const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [visible, setVisible] = useState(false);
   const [deviceTips, setDeviceTips] = useState('');
-  const [imageLoading, setImageLoading] = useState(true);
-  // const [imageUrl, setImageUrl] = useState(null);
-  // Animation state for the pulse effect
   const [pulseAnimation, setPulseAnimation] = useState(false);
+
+  // Improved console logs for debugging
+  console.log('Device data:', data);
+  console.log('Device status (type):', typeof data?.status, data?.status);
+  console.log('Device ID:', data?.deviceId || data?.deviceID);
+  console.log('Device type:', data?.deviceType);
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
 
   const handleRecyclePress = () => {
     setIsSubmitting(true);
-    console.log(data.Id);
-    router.push(`/recycleform?deviceId=${data.deviceId}`)
+    console.log('Recycling device with ID:', data.deviceId || data.deviceID);
+    router.push(`/recycleform?deviceId=${data.deviceId || data.deviceID}`)
     setIsSubmitting(false);
   };
 
   const handleViewDetails = async () => {
     try {
-      // Set loading state
       setIsLoadingTips(true);
-      
-      // Start pulse animation
       startPulseAnimation();
       
-      // Fetch recycling tips and information
+      console.log('Fetching suggestions for device type:', data?.deviceType || "generic");
+      
       const response = await axios.post('https://cloudrunservice-254131401451.us-central1.run.app/user/deviceSuggestions', {
         deviceType: data?.deviceType || "generic"
       });
       
+      console.log('Received suggestions:', response.data.suggestions ? 'Success' : 'Empty');
       setDeviceTips(response.data.suggestions);
-      
-      // Stop loading state
       setIsLoadingTips(false);
-      
-      // Show modal with the tips
       showModal();
     } catch(err) {
       console.error('Error fetching device details:', err);
-      
-      // Stop loading state
       setIsLoadingTips(false);
-      
-      // Navigate to details page as fallback
       router.push({
         pathname: '/device-details',
-        params: { deviceId: data?.deviceId || "unknown" }
+        params: { deviceId: data?.deviceId || data?.deviceID || "unknown" }
       });
     }
   };
-  console.log(data);
   
   // Function to start pulse animation
   const startPulseAnimation = () => {
-    // Start a pulse effect
     let pulseCount = 0;
     const interval = setInterval(() => {
       setPulseAnimation(prev => !prev);
@@ -244,73 +106,25 @@ const DeviceCard = ({ data }) => {
         clearInterval(interval);
         setPulseAnimation(false);
       }
-    }, 500); // Pulse every 500ms
+    }, 500);
   };
 
   // Default values if data is incomplete
   const deviceName = data?.deviceName || "Eco-Friendly Recycling";
   const deviceType = data?.deviceType || "Make the world greener";
-  const deviceId = data?.deviceId || "Unknown";
+  const deviceId = data?.deviceId || data?.deviceID || "Unknown";
   const imageUrl = data?.imageUrl || "https://www.clipartmax.com/png/middle/167-1673712_green-recycling-symbol-green-recycle-logo-png.png";
-  const recycleStatus = data?.recycleStatus || false;
-
-  // useEffect(() => {
-  //   const fetchDeviceImage = async () => {
-  //     try {
-  //       setImageLoading(true);
-        
-  //       // If we already have a full URL in data.imageUrl, use it directly
-  //       if (data?.imageUrl && data.imageUrl.startsWith('http')) {
-  //         setImageUrl(data.imageUrl);
-  //         setImageLoading(false);
-  //         return;
-  //       }
-        
-  //       // Otherwise, we need to fetch it from Firebase Storage
-  //       const storage = getStorage(firebaseConfig);
-  //       let imagePath;
-        
-  //       // Get userId from AsyncStorage
-  //       const userId = await AsyncStorage.getItem('ID');
-
-  //       // If we have the image filename in data.imageUrl
-  //       if (data?.imageUrl) {
-  //         // If it's a full path, use it directly
-  //         if (data.imageUrl.includes('DeviceImages/')) {
-  //           imagePath = data.imageUrl;
-  //         } else {
-  //           // If it's just a filename, construct the path with userId
-  //           const filename = data.imageUrl.split('/').pop();
-  //           imagePath = `DeviceImages/${userId}/${filename}.jpg`;
-  //         }
-  //       } else if (data?.deviceId) {
-  //         // If no imageUrl but we have deviceId, try to use that
-  //         imagePath = `DeviceImages/${userId}/${data.deviceId}.jpg`;
-  //       } else {
-  //         // No identifiable information, use a default image
-  //         setImageUrl(null);
-  //         setImageLoading(false);
-  //         return;
-  //       }
-        
-  //       // Get the download URL from Firebase Storage
-  //       const imageRef = ref(storage, imagePath);
-  //       const url = await getDownloadURL(imageRef);
-  //       setImageUrl(url);
-  //     } catch (error) {
-  //       console.error('Error fetching device image:', error);
-  //       setImageUrl(null);
-  //     } finally {
-  //       setImageLoading(false);
-  //     }
-  //   };
-    
-  //   fetchDeviceImage();
-  // }, [data?.imageUrl, data?.deviceId]);
-
-  // Status indicator color
-  const statusColor = recycleStatus ? '#FFB74D' : '#4CAF50';
-  const statusText = recycleStatus ? "In Progress" : "Ready to Recycle";
+  
+  // Check if status indicates the device is in progress
+  // If status is a string, we need to check for values that mean "in progress"
+  const recycleStatus = data?.status ? data.status !== "" : false;
+  
+  // Determine if the device is in a recycling state based on status string
+  const isInRecyclingProcess = recycleStatus && data?.status !== "Ready";
+  
+  // Status indicator color - adjust based on your actual status values
+  const statusColor = isInRecyclingProcess ? '#FFB74D' : '#4CAF50';
+  const statusText = isInRecyclingProcess ? "In Progress":"";
 
   // Format tips for display
   const formattedTips = formatText(deviceTips);
@@ -349,11 +163,12 @@ const DeviceCard = ({ data }) => {
                 <Text style={styles.idLabel}>ID:</Text>
                 <Text style={styles.idValue}>{deviceId}</Text>
               </View>
+              {/* <Text style={styles.statusInfoText}>Status: {data?.status || "Ready to Recycle"}</Text> */}
             </View>
           </View>
         </View>
         
-        {/* Action buttons - Now in a separate row beneath the card content */}
+        {/* Action buttons */}
         <View style={styles.actionContainer}>
           <TouchableOpacity 
             style={[
@@ -387,17 +202,17 @@ const DeviceCard = ({ data }) => {
       <TouchableOpacity 
         style={[
           styles.recycleButton, 
-          recycleStatus && styles.recycleButtonDisabled
+          isInRecyclingProcess && styles.recycleButtonDisabled
         ]}
-        onPress={!recycleStatus ? handleRecyclePress : null}
-        disabled={recycleStatus || isSubmitting}
-        activeOpacity={recycleStatus ? 1 : 0.7}
+        onPress={!isInRecyclingProcess ? handleRecyclePress : null}
+        disabled={isInRecyclingProcess || isSubmitting}
+        activeOpacity={isInRecyclingProcess ? 1 : 0.7}
       >
         {isSubmitting ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
           <Text style={styles.recycleButtonText}>
-            {recycleStatus ? "Processing" : "Recycle"}
+            {isInRecyclingProcess ? "Processing" : "Recycle"}
           </Text>
         )}
       </TouchableOpacity>
@@ -456,12 +271,12 @@ const DeviceCard = ({ data }) => {
                 style={styles.modalRecycleButton}
                 onPress={() => {
                   hideModal();
-                  if (!recycleStatus) handleRecyclePress();
+                  if (!isInRecyclingProcess) handleRecyclePress();
                 }}
-                disabled={recycleStatus}
+                disabled={isInRecyclingProcess}
               >
                 <Text style={styles.modalButtonText}>
-                  {recycleStatus ? "Already in Progress" : "Recycle Now"}
+                  {isInRecyclingProcess ? "Already in Progress" : "Recycle Now"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -473,6 +288,7 @@ const DeviceCard = ({ data }) => {
 };
 
 const styles = StyleSheet.create({
+  // Styles remain unchanged
   outerContainer: {
     width: '95%',
     maxWidth: 500,
@@ -504,9 +320,14 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
   },
+  statusInfoText: {
+    fontSize: 11,
+    color: '#555',
+    marginTop: 4,
+  },
   contentContainer: {
     flexDirection: 'row',
-    height: 120, // Keep the main content height the same
+    height: 120,
   },
   imageContainer: {
     width: 120,
@@ -579,10 +400,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    minHeight: 36, // Ensure consistent height during loading
+    minHeight: 36,
   },
   detailsButtonPulse: {
-    backgroundColor: '#e6f7ed', // Light green background for pulse effect
+    backgroundColor: '#e6f7ed',
   },
   detailsButtonLoading: {
     borderColor: '#34C759',
@@ -624,8 +445,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-
-  // Modal styles remain unchanged
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -655,7 +474,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    paddingRight: 24, // Make room for close button
+    paddingRight: 24,
   },
   modalSubtitle: {
     fontSize: 14,
