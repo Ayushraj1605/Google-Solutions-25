@@ -17,7 +17,7 @@ export const deviceSuggestions = async (req, res) => {
         const prompt = "Give me some really nice creative ewaste recycling tips for: " + deviceType;
         const result = await model.generateContent(prompt);
         const response = await result.response.text();
-        
+
         return res.status(200).json({
             message: "Suggestions generated successfully",
             suggestions: response
@@ -194,24 +194,24 @@ export const signup = async (req, res) => {
     try {
         const usersCollection = collection(db, "users");
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         // Create document without userId first
         const docRef = await addDoc(usersCollection, {
             username: username,
             email: email,
             password: hashedPassword,
         });
-        
+
         // Update the document to add the userId
         await updateDoc(docRef, {
             userId: docRef.id
         });
-        
+
         res.status(200).json({
             message: "User signed up successfully!",
             userId: docRef.id,
         });
-        
+
         console.log("Document written with ID:", docRef.id);
     } catch (error) {
         res.status(500).json({
@@ -272,19 +272,18 @@ export const locations = async (req, res) => {
     }
 };
 
-export const addDevice = async (req, res) => 
-{
+export const addDevice = async (req, res) => {
     const { deviceType, deviceName, userId } = req.body || null;
     /* For the case of recycling the device */
-    const { 
-          organizationName,
-          organizationId, 
-          description,
-          imei, 
-          modelNumber, 
-          purchaseYear, 
-          status, 
-          submittedAt } = req.body || null;
+    const {
+        organizationName,
+        organizationId,
+        description,
+        imei,
+        modelNumber,
+        purchaseYear,
+        status,
+        submittedAt } = req.body || null;
 
     if (!deviceType || !deviceName) {
         return res.status(400).json({
@@ -292,13 +291,12 @@ export const addDevice = async (req, res) =>
         });
     }
 
-    try
-    {
+    try {
         const deviceCollection = collection(db, "Devices");
         const deviceDoc = await addDoc(deviceCollection, {
             deviceType: deviceType,
             deviceName: deviceName,
-            userId : userId,
+            userId: userId,
             createdAt: Timestamp.fromDate(new Date()),
             organizationId: organizationId,
             description: description,
@@ -316,8 +314,7 @@ export const addDevice = async (req, res) =>
         });
         console.log(organizationId, description, imei, modelNumber, purchaseYear, status);
     }
-    catch(err)
-    {
+    catch (err) {
         console.error("Error adding device:", err);
         return res.status(500).json({
             message: "Error adding device",
@@ -338,19 +335,19 @@ export const updateDevice = async (req, res) => {
     try {
         const deviceDocRef = doc(db, "Devices", deviceId);
         const deviceSnapshot = await getDoc(deviceDocRef);
-        
+
         if (!deviceSnapshot.exists()) {
             return res.status(404).json({
                 message: "Device not found"
             });
         }
-        
+
         // Get the data you want to update from the request body
         const updateData = req.body;
-        
+
         // Update the document
         await updateDoc(deviceDocRef, updateData);
-        
+
         return res.status(200).json({
             message: "Device updated successfully"
         });
@@ -363,8 +360,7 @@ export const updateDevice = async (req, res) => {
     }
 }
 
-export const getDevices = async (req, res) => 
-{
+export const getDevices = async (req, res) => {
     const { userId } = req.query;
 
     if (!userId) {
@@ -420,10 +416,10 @@ export const orders = async (req, res) => {
     try {
         // Reference the user document
         const userDoc = doc(db, "users", userId);
-        
+
         // Create orders subcollection inside the user document
         const ordersCollection = collection(userDoc, "orders");
-        
+
         // Add a new order to the subcollection
         const orderDoc = await addDoc(ordersCollection, {
             userId: userId,
@@ -448,8 +444,7 @@ export const orders = async (req, res) => {
     }
 }
 
-export const getOrders = async (req, res) => 
-{
+export const getOrders = async (req, res) => {
     const { userId } = req.query;
 
     if (!userId) {
@@ -490,9 +485,9 @@ export const getOrders = async (req, res) =>
 export const createBlog = async (req, res) => {
     const { userId } = req.query;
     // const { title,description } = req.body;
-    const title=req.body.title;
-    const body=req.body.body;
-    
+    const title = req.body.title;
+    const body = req.body.body;
+
 
     if (!body || !title) {
         return res.status(400).json({
@@ -504,7 +499,7 @@ export const createBlog = async (req, res) => {
         // First, get the username from users collection by matching document ID
         const usersCollection = collection(db, "users");
         const userSnapshot = await getDocs(usersCollection);
-        
+
         // Find the user document where doc.id matches userId
         const userDoc = userSnapshot.docs.find(doc => doc.id === userId);
 
@@ -519,7 +514,7 @@ export const createBlog = async (req, res) => {
 
         // Reference the main blogs collection
         const blogsCollection = collection(db, "blogs");
-        
+
         // Add the blog document with user reference and username
         const blogDoc = await addDoc(blogsCollection, {
             userId: userId,
@@ -540,28 +535,132 @@ export const createBlog = async (req, res) => {
             message: "Error creating blog",
             error: err.message
         });
-    }  
+    }
 }
 
+// export const getBlogs = async (req, res) => {
+//     const userId = req.query.userId;
+//     if (userId) {
+//         // here fetch only those blogs that have blog.userId==userId
+//         return res.status(400).json({
+//             message: "User received",
+//             error: "None"
+//         });
+//     }
+//     else {
+//         try {
+//             const blogsCollection = collection(db, "blogs");
+//             const blogsSnapshot = await getDocs(blogsCollection);
+
+//             const blogs = blogsSnapshot.docs.map(doc => {
+//                 const data = doc.data();
+//                 return {
+//                     blogId: doc.id,
+//                     userId: data.userId,
+//                     username: data.username,
+//                     body: data.body,
+//                     title: data.title,
+//                     createdAt: data.createdAt
+//                 };
+//             });
+
+//             return res.status(200).json({
+//                 message: "Blogs retrieved successfully!",
+//                 blogs: blogs
+//             });
+//         } catch (err) {
+//             console.error("Error retrieving blogs:", err);
+//             return res.status(500).json({
+//                 message: "Error retrieving blogs",
+//                 error: err.message
+//             });
+//         }
+//     }
+// }
+
+// export const getBlogs = async (req, res) => {
+//     const userId = req.query.userId;
+    
+//     try {
+//         const blogsCollection = collection(db, "blogs");
+//         let blogsQuery;
+        
+//         if (userId) {
+//             // If userId is provided, fetch only blogs with matching userId
+//             blogsQuery = query(blogsCollection, where("userId", "==", userId));
+//         } else {
+//             // If no userId, fetch all blogs
+//             blogsQuery = blogsCollection;
+//         }
+        
+//         const blogsSnapshot = await getDocs(blogsQuery);
+        
+//         const blogs = blogsSnapshot.docs.map(doc => {
+//             const data = doc.data();
+//             return {
+//                 blogId: doc.id,
+//                 userId: data.userId,
+//                 username: data.username,
+//                 body: data.body,
+//                 title: data.title,
+//                 createdAt: data.createdAt
+//             };
+//         });
+        
+//         return res.status(200).json({
+//             message: userId ? "User blogs retrieved successfully!" : "Blogs retrieved successfully!",
+//             blogs: blogs
+//         });
+//     } catch (err) {
+//         console.error("Error retrieving blogs:", err);
+//         return res.status(500).json({
+//             message: "Error retrieving blogs",
+//             error: err.message
+//         });
+//     }
+// }
+
 export const getBlogs = async (req, res) => {
+    const userId = req.query.userId;
+    
     try {
         const blogsCollection = collection(db, "blogs");
         const blogsSnapshot = await getDocs(blogsCollection);
-
-        const blogs = blogsSnapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                blogId: doc.id,
-                userId: data.userId,
-                username: data.username,
-                body: data.body,
-                title: data.title,
-                createdAt: data.createdAt
-            };
-        });
-
+        
+        let blogs;
+        
+        if (userId) {
+            // If userId is provided, filter blogs with matching userId
+            blogs = blogsSnapshot.docs
+                .filter(doc => doc.data().userId === userId)
+                .map(doc => {
+                    const data = doc.data();
+                    return {
+                        blogId: doc.id,
+                        userId: data.userId,
+                        username: data.username,
+                        body: data.body,
+                        title: data.title,
+                        createdAt: data.createdAt
+                    };
+                });
+        } else {
+            // If no userId, return all blogs
+            blogs = blogsSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    blogId: doc.id,
+                    userId: data.userId,
+                    username: data.username,
+                    body: data.body,
+                    title: data.title,
+                    createdAt: data.createdAt
+                };
+            });
+        }
+        
         return res.status(200).json({
-            message: "Blogs retrieved successfully!",
+            message: userId ? "User blogs retrieved successfully!" : "Blogs retrieved successfully!",
             blogs: blogs
         });
     } catch (err) {
