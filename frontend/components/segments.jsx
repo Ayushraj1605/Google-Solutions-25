@@ -231,9 +231,9 @@ const styles = StyleSheet.create({
 
   container: {
     width: '100%',
-    alignItems: 'center',
+    // alignItems: 'center',
     // marginTop: 10,
-    backgroundColor: 'red'
+    // backgroundColor: 'red'
   },
   buttons: {
     width: '100%',

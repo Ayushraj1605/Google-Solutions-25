@@ -49,56 +49,73 @@ const OrderHistoryScreen = () => {
   // Fetch orders when userId changes
   useEffect(() => {
     if (userId) {
-      const fetchOrders = async () => {
+      const fetchOrdersAndDevices = async () => {
         setLoading(true);
         try {
-          const response = await axios.get(
-            `https://cloudrunservice-254131401451.us-central1.run.app//user/getOrders?userId=${userId}`
+          // First fetch orders
+          const ordersResponse = await axios.get(
+            `https://cloudrunservice-254131401451.us-central1.run.app/user/getOrders?userId=${userId}`
           );
-          if (response.data?.devices) {
-            // Map the devices and ensure consistent property naming
-            const devicesWithStatus = response.data.devices
-              .filter(device => 
-                device.status === 'pending' || 
-                device.status === 'completed' || 
-                device.status === 'cancelled' 
-                // device.status === 'processing' // Include processing status
-              )
-              .map(device => ({
-                ...device,
-                // Ensure status exists and is passed as is (not coerced to boolean)
-                status: device.status || "", // default to empty string instead of false
-                deviceId: device.deviceId || device.deviceID,
-                deviceID: device.deviceId || device.deviceID,
-                id: device.id || device.deviceId || device.deviceID, // Ensure we have an id for the key prop
-                // Add any other properties needed for orders that might not be in devices
-                date: device.date || new Date().toLocaleDateString(),
-                description: device.description || device.deviceType || "Electronic device",
-                organization: device.organization || "GreenTech Recycling"
-              }));
-            
-            console.log('Fetched orders data:', devicesWithStatus);
-            setOrders(devicesWithStatus);
-          } else {
+          
+          console.log('Orders response:', ordersResponse.data);
+          
+          if (!ordersResponse.data?.orders || !ordersResponse.data.orders.length) {
             console.warn('No orders returned from API');
             setOrders([]);
+            setLoading(false);
+            return;
           }
+          
+          // Now fetch devices to get more details
+          const devicesResponse = await axios.get(
+            `https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}&cache=${refreshKey}`
+          );
+          
+          console.log('Devices response:', devicesResponse.data);
+          
+          // Create a map of deviceId to its device details
+          const deviceDetailsMap = {};
+          if (devicesResponse.data?.devices && Array.isArray(devicesResponse.data.devices)) {
+            devicesResponse.data.devices.forEach(device => {
+              deviceDetailsMap[device.deviceId || device.deviceID || device.id] = device;
+            });
+          }
+          
+          // Merge order data with device details
+          const completeOrders = ordersResponse.data.orders.map(order => {
+            const deviceId = order.deviceId;
+            const deviceDetails = deviceDetailsMap[deviceId] || {};
+            
+            return {
+              ...order,
+              ...deviceDetails,
+              id: order.orderId || order.id || deviceId, // Ensure we have an id for the key prop
+              deviceId: deviceId,
+              deviceName: deviceDetails.deviceName || deviceDetails.modelNumber || 'Unknown Device',
+              description: deviceDetails.description || deviceDetails.deviceType || 'Electronic device',
+              status: order.status || 'pending',
+              date: new Date(order.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString(),
+              organization: deviceDetails.organization || 'GreenTech Recycling'
+            };
+          });
+          
+          console.log('Complete merged orders:', completeOrders);
+          setOrders(completeOrders);
         } catch (error) {
-          console.error('Error fetching orders:', error);
+          console.error('Error fetching orders and devices:', error);
           setError('Failed to load orders. Please try again later.');
           setOrders([]);
         } finally {
           setLoading(false);
         }
       };
-      fetchOrders();
+      fetchOrdersAndDevices();
     }
   }, [userId, refreshKey]);
   
   const getStatusColor = (status) => {
     switch(status.toLowerCase()) {
       case 'pending':
-      // case 'processing':
         return '#3498db'; // Blue
       case 'completed':
         return '#2ecc71'; // Green
@@ -112,7 +129,6 @@ const OrderHistoryScreen = () => {
   const getStatusIcon = (status) => {
     switch(status.toLowerCase()) {
       case 'pending':
-      // case 'processing':
         return 'clock-outline';
       case 'completed':
         return 'check-circle-outline';
@@ -147,7 +163,7 @@ const OrderHistoryScreen = () => {
       >
         <View style={styles.orderHeader}>
           <View style={styles.orderInfo}>
-            <Text style={styles.orderId}>{order.id}</Text>
+            <Text style={styles.orderId}>Order: {order.orderId || order.id}</Text>
             <Text style={styles.orderDate}>{order.date}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) }]}>
@@ -190,7 +206,7 @@ const OrderHistoryScreen = () => {
           
           <View style={styles.deviceInfo}>
             <Text style={styles.deviceName}>{order.deviceName}</Text>
-            <Text style={styles.deviceId}>ID: {order.deviceId}</Text>
+            <Text style={styles.deviceId}>Device ID: {order.deviceId}</Text>
             <Text style={styles.deviceDescription} numberOfLines={2}>
               {order.description}
             </Text>
@@ -226,7 +242,7 @@ const OrderHistoryScreen = () => {
               color="#7f8c8d" 
             />
             <Text style={styles.footerText}>
-              {order.organization || 'Not assigned'}
+              {order.organization || `Org ID: ${order.organizationId}` || 'Not assigned'}
             </Text>
           </View>
         </View>
