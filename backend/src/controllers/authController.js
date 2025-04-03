@@ -220,7 +220,6 @@ export const signup = async (req, res) => {
         });
     }
 };
-
 // Get Profile Function (Optional, Implement Based on Requirements)
 export const getProfile = async (req, res) => {
     try {
@@ -358,6 +357,42 @@ export const updateDevice = async (req, res) => {
             error: err.message
         });
     }
+}
+
+export const donateDevice = async (req, res) => {
+    const { deviceId } = req.query;
+
+if (!deviceId) {
+    return res.status(400).json({
+        message: "deviceId is required"
+    });
+}
+
+try {
+    const deviceDocRef = doc(db, "Devices", deviceId);
+    const deviceSnapshot = await getDoc(deviceDocRef);
+
+    if (!deviceSnapshot.exists()) {
+        return res.status(404).json({
+            message: "Device not found"
+        });
+    }
+
+    // Only update the status field to "InDonation"
+    await updateDoc(deviceDocRef, {
+        status: "InDonation"
+    });
+
+    return res.status(200).json({
+        message: "Device status updated to InDonation successfully"
+    });
+} catch (err) {
+    console.error("Error updating device status:", err);
+    return res.status(500).json({
+        message: "Failed to update device status",
+        error: err.message
+    });
+}
 }
 
 export const getDevices = async (req, res) => {

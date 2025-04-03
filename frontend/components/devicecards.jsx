@@ -121,7 +121,7 @@ const DeviceCard = ({ data }) => {
   
   // Determine if the device is in a recycling state based on status string
   const isInRecyclingProcess = recycleStatus && data?.status !== "Ready";
-  
+  const isInDonation=donationStatus && data?.status!=="InDonation";
   // Status indicator color - adjust based on your actual status values
   const statusColor = isInRecyclingProcess ? '#FFB74D' : '#4CAF50';
   const statusText = isInRecyclingProcess ? "In Progress":"";
@@ -162,7 +162,26 @@ const DeviceCard = ({ data }) => {
               <View style={styles.idContainer}>
                 <Text style={styles.idLabel}>ID:</Text>
                 <Text style={styles.idValue}>{deviceId}</Text>
+                
               </View>
+              <TouchableOpacity 
+        style={[
+          styles.recycleButton, 
+          isInRecyclingProcess && styles.recycleButtonDisabled
+        ]}
+        onPress={!isInDonation ? handleRecyclePress : null}
+        disabled={isInDonation}
+        activeOpacity={isInDonation ? 0.7 : 1}
+      >
+        {/* { ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : ( */}
+          <Text style={styles.recycleButtonText}>
+            {isInDonation ? "Withdraw" : "Donate"}
+          </Text>
+        {/* )} */}
+      </TouchableOpacity>
+        
               {/* <Text style={styles.statusInfoText}>Status: {data?.status || "Ready to Recycle"}</Text> */}
             </View>
           </View>
@@ -195,6 +214,7 @@ const DeviceCard = ({ data }) => {
               </View>
             )}
           </TouchableOpacity>
+          
         </View>
       </View>
       
@@ -216,7 +236,7 @@ const DeviceCard = ({ data }) => {
           </Text>
         )}
       </TouchableOpacity>
-
+      
       {/* Modal for device details and recycling tips */}
       <Modal
         visible={visible}
