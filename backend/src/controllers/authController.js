@@ -405,7 +405,8 @@ export const getDevices = async (req, res) => {
 }
 
 export const orders = async (req, res) => {
-    const { userId, deviceId, organizationId } = req.body;
+    const userId = req.query.userId;
+    const { deviceId, organizationId } = req.body;
 
     if (!userId) {
         return res.status(400).json({
@@ -445,7 +446,7 @@ export const orders = async (req, res) => {
 }
 
 export const getOrders = async (req, res) => {
-    const { userId } = req.query;
+    const  userId  = req.query.userId;
 
     if (!userId) {
         return res.status(400).json({
@@ -619,43 +620,7 @@ export const createBlog = async (req, res) => {
 //         });
 //     }
 // }
-// export const updateBlog=async (req,res)=>{
-//     const { blogId } = req.query;
-//     const { title, body } = req.body;
 
-//     if (!blogId) {
-//         return res.status(400).json({
-//             message: "blogId is required"
-//         });
-//     }
-
-//     try {
-//         const blogDocRef = doc(db, "blogs", blogId);
-//         const blogSnapshot = await getDoc(blogDocRef);
-
-//         if (!blogSnapshot.exists()) {
-//             return res.status(404).json({
-//                 message: "Blog not found"
-//             });
-//         }
-
-//         // Update the document with new title and body
-//         await updateDoc(blogDocRef, {
-//             title: title,
-//             body: body
-//         });
-
-//         return res.status(200).json({
-//             message: "Blog updated successfully"
-//         });
-//     } catch (err) {
-//         console.error("Error updating blog:", err);
-//         return res.status(500).json({
-//             message: "Failed to update blog",
-//             error: err.message
-//         });
-//     }
-// }
 export const deleteBlog = async (req, res) => {
     const { blogId } = req.query;
 
@@ -776,5 +741,30 @@ export const updateBlog=async (req,res)=>{
             message: "Failed to update blog",
             error: err.message
         });
+    }
+}
+
+export const deleteBlog = async (req, res) => {
+    const blogId=req.query.blogId;
+    if (!blogId) {
+        return res.status(400).json({
+            message: "blogId is required"
+        });
+    }
+    else{
+        try {
+            const blogDocRef = doc(db, "blogs", blogId);
+            await deleteDoc(blogDocRef);
+
+            return res.status(200).json({
+                message: "Blog deleted successfully"
+            });
+        } catch (err) {
+            console.error("Error deleting blog:", err);
+            return res.status(500).json({
+                message: "Failed to delete blog",
+                error: err.message
+            });
+        }
     }
 }
