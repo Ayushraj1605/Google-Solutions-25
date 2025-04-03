@@ -33,8 +33,10 @@ router.put('/user/donateDevice', donateDevice);
 /* Blogs Endpoints */
 router.post('/user/blogs', createBlog);
 router.get('/user/getBlogs', getBlogs);
-router.put('/user/updateBlog',updateBlog);
-router.delete('/user/deleteBlog',deleteBlog);
+
+router.put('/user/updateBlog', updateBlog);
+router.delete('/user/deleteBlog', deleteBlog);
+
 /* order Endpoints */
 router.post('/user/order', orders);
 router.get('/user/getOrders', getOrders);

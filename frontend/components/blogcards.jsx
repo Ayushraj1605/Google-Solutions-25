@@ -41,6 +41,9 @@ const BlogCard = ({
     { id: 1, user: 'EcoExpert', text: 'Great insights on e-waste management!', time: '2 hours ago' },
     { id: 2, user: 'GreenTech', text: 'We need more articles like this to raise awareness.', time: '1 day ago' }
   ]);
+  
+  // Check if description is long enough to need "Read More"
+  const needsReadMore = description.length > 150;
 
   // Animation values
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -187,11 +190,34 @@ const BlogCard = ({
             >
               {description}
             </Text>
+            
+            {/* Inline Read More link that only appears if content is long enough */}
+            {needsReadMore && !isExpanded && (
+              <TouchableOpacity 
+                onPress={handleButtonPress(handleReadMorePress)}
+                style={styles.inlineReadMore}
+              >
+                <Text style={styles.inlineReadMoreText}>Read more</Text>
+              </TouchableOpacity>
+            )}
+            
+            {/* Show Less link that only appears when expanded */}
+            {isExpanded && (
+              <TouchableOpacity 
+                onPress={handleButtonPress(handleReadMorePress)}
+                style={styles.inlineReadMore}
+              >
+                <Text style={styles.inlineReadMoreText}>Show less</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         
         {/* Social Actions */}
-        <View style={styles.socialActions}>
+        
+        
+        {/* Card Footer */}
+        <View style={styles.orderFooter}>
           <TouchableOpacity style={styles.socialButton} onPress={handleLike}>
             <MaterialCommunityIcons 
               name={liked ? "heart" : "heart-outline"} 
@@ -208,28 +234,7 @@ const BlogCard = ({
           
           <TouchableOpacity style={styles.socialButton} onPress={handleButtonPress(onShare)}>
             <MaterialCommunityIcons name="share-outline" size={20} color="#7f8c8d" />
-            <Text style={styles.socialButtonText}>Share</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Card Footer */}
-        <View style={styles.orderFooter}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={avatarSource || defaultAvatar}
-              style={styles.avatar}
-              defaultSource={defaultAvatar}
-            />
-            <Text style={styles.authorText}>By GreenTech</Text>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.readMoreButton} 
-            onPress={handleButtonPress(handleReadMorePress)}
-          >
-            <Text style={styles.readMoreButtonText}>
-              {isExpanded ? "Show Less" : "Read More"}
-            </Text>
+            <Text style={styles.socialButtonText}>Share </Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -289,10 +294,8 @@ const BlogCard = ({
 const styles = StyleSheet.create({
   cardContainer: {
     width: '95%',
-    maxWidth: 360,
     backgroundColor: '#fff',
     borderRadius: 12,
-    marginVertical: 12,
     overflow: 'hidden',
     alignSelf: 'center',
     ...Platform.select({
@@ -399,10 +402,19 @@ const styles = StyleSheet.create({
     color: '#555',
     lineHeight: 20,
   },
+  inlineReadMore: {
+    marginTop: 4,
+    paddingVertical: 2,
+  },
+  inlineReadMoreText: {
+    color: '#2ecc71',
+    fontWeight: '600',
+    fontSize: 14,
+  },
   socialActions: {
     flexDirection: 'row',
     paddingHorizontal: 12,
-    paddingBottom: 12,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -419,6 +431,7 @@ const styles = StyleSheet.create({
   orderFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    // justifyContent:"space-around",
     alignItems: 'center',
     backgroundColor: '#f8f9fa',
     padding: 12,
@@ -437,19 +450,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#7f8c8d',
     marginLeft: 8,
-  },
-  readMoreButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    backgroundColor: '#2ecc71',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  readMoreButtonText: {
-    fontSize: 14,
-    color: '#fff',
-    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,

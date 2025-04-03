@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function OrganisationList() {
     // Get URL parameters using useLocalSearchParams hook
@@ -25,6 +26,12 @@ export default function OrganisationList() {
     const [selectedOrg, setSelectedOrg] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [deviceId, setDeviceId] =useState("");
+
+    const [userData, setUserData] = useState({
+        id: '',
+        name: '',
+        email: '',
+    });
 
     // Extract params when component mounts
     useEffect(() => {
@@ -42,6 +49,29 @@ export default function OrganisationList() {
             // Note: invoice file cannot be passed via URL params
         });
     }, []);
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+          try {
+            const userId = await AsyncStorage.getItem('ID');
+            const userName = await AsyncStorage.getItem('USERNAME');
+            const userEmail = await AsyncStorage.getItem('EMAIL');
+    
+            setUserData({
+              id: userId || '',
+              name: userName || '',
+              email: userEmail || '',
+            });
+          } catch (error) {
+            console.error('Error retrieving user data:', error);
+            Alert.alert("Error", "Failed to load user data");
+          } finally {
+            setIsLoading(false);
+          }
+        };
+    
+        fetchUserData();
+      }, []);
 
     // Dummy organizations list
     const organizations = [
@@ -89,17 +119,23 @@ const handleSubmit = async () => {
     setIsLoading(true);
     
     try {
-        // Prepare data for submission
+        // Prepare data for first API (device update)
         const dataToSubmit = {
             ...formData,
             submittedAt: new Date().toISOString()
         };
         
-        console.log("Submitting data to API:", dataToSubmit);
-        console.log(deviceId);
-        // API endpoint - replace with your actual API endpoint
+        // API endpoint for device update
         const API_URL = `https://cloudrunservice-254131401451.us-central1.run.app/user/updateDevice?deviceId=${deviceId}`;
-        const API_URL_ORDERS=`https://cloudrunservice-254131401451.us-central1.run.app//user/order?deviceId=${deviceId}`
+        
+        // Prepare data for orders API (only deviceId and organizationId)
+        const orderData = {
+            deviceId: deviceId,
+            organizationId: selectedOrg.id.toString()
+        };
+        
+        const API_URL_ORDERS = `https://cloudrunservice-254131401451.us-central1.run.app/user/order?userId=${userData.id}`;
+        
         // Set proper headers
         const config = {
             headers: {
@@ -108,13 +144,13 @@ const handleSubmit = async () => {
             }
         };
         
-        // Make the API request
+        // Make the API requests
         const response = await axios.put(API_URL, dataToSubmit, config);
-        const orderResponse= await axios.post(API_URL_ORDERS,config);
+        const orderResponse = await axios.post(API_URL_ORDERS, orderData, config);
         
-        console.log("API response:", response.data);
+        // console.log("Device update response:", response.data);
+        // console.log("Order response:", orderResponse.data);
         
-        // Check if the request was successful
         if (response.status === 200 || response.status === 201) {
             // Show success message
             Alert.alert(
@@ -157,7 +193,6 @@ const handleSubmit = async () => {
         setIsLoading(false);
     }
 };
-
     // Custom card component
     const OrganizationCard = ({ item, onSelect, isSelected }) => (
         <TouchableOpacity
