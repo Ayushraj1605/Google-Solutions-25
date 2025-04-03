@@ -1,9 +1,5 @@
 import express from 'express';
-<<<<<<< HEAD
-import { signup, signin, getProfile, locations, orders, getBlogs, getOrders, getDevices, addDevice, deviceSuggestions, createBlog, updateDevice,updateBlog } from '../controllers/authController.js';
-=======
-import { signup, signin, getProfile, locations, orders, getBlogs, getOrders, getDevices, addDevice, deviceSuggestions, createBlog, updateDevice, updateBlog } from '../controllers/authController.js';
->>>>>>> 9cd96da5f6322f4461ba02197338344b9d10fa75
+import { signup, signin, getProfile, locations, orders, getBlogs, getOrders, getDevices, addDevice, deviceSuggestions, createBlog, updateDevice, updateBlog, deleteBlog } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -36,7 +32,9 @@ router.get('/user/getDevices', getDevices);
 /* Blogs Endpoints */
 router.post('/user/blogs', createBlog);
 router.get('/user/getBlogs', getBlogs);
-router.put('/user/updateBlog',updateBlog);
+router.put('/user/updateBlog', updateBlog);
+router.delete('/user/deleteBlog', deleteBlog);
+
 /* order Endpoints */
 router.post('/user/order', orders);
 router.get('/user/getOrders', getOrders);
