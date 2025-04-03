@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc ,deleteDoc} from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
@@ -620,6 +620,39 @@ export const createBlog = async (req, res) => {
 //         });
 //     }
 // }
+
+export const deleteBlog = async (req, res) => {
+    const { blogId } = req.query;
+
+    if (!blogId) {
+        return res.status(400).json({
+            message: "blogId is required"
+        });
+    }
+
+    try {
+        const blogDocRef = doc(db, "blogs", blogId);
+        const blogSnapshot = await getDoc(blogDocRef);
+
+        if (!blogSnapshot.exists()) {
+            return res.status(404).json({
+                message: "Blog not found"
+            });
+        }
+
+        await deleteDoc(blogDocRef);
+
+        return res.status(200).json({
+            message: "Blog deleted successfully"
+        });
+    } catch (err) {
+        console.error("Error deleting blog:", err);
+        return res.status(500).json({
+            message: "Failed to delete blog",
+            error: err.message
+        });
+    }
+}
 
 export const getBlogs = async (req, res) => {
     const userId = req.query.userId;
