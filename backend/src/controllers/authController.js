@@ -292,7 +292,6 @@ export const getAddresses = async (req, res) => {
         });
     }
 }
-
 // Get Profile Function (Optional, Implement Based on Requirements)
 export const getProfile = async (req, res) => {
     const { userId } = req.query;  // Destructure userId from query params
@@ -440,6 +439,8 @@ export const updateDevice = async (req, res) => {
     }
 }
 
+// Duplicate donateDevice function removed to fix the issue
+
 export const getDevices = async (req, res) => {
     const { userId } = req.query;
 
@@ -580,7 +581,7 @@ export const getOrgOrders = async (req, res) => {
 }
 
 export const getOrders = async (req, res) => {
-    const  userId  = req.query.userId;
+    const userId = req.query.userId;
 
     if (!userId) {
         return res.status(400).json({
@@ -675,13 +676,13 @@ export const createBlog = async (req, res) => {
 
 export const getBlogs = async (req, res) => {
     const userId = req.query.userId;
-    
+
     try {
         const blogsCollection = collection(db, "blogs");
         const blogsSnapshot = await getDocs(blogsCollection);
-        
+
         let blogs;
-        
+
         if (userId) {
             // If userId is provided, filter blogs with matching userId
             blogs = blogsSnapshot.docs
@@ -711,7 +712,7 @@ export const getBlogs = async (req, res) => {
                 };
             });
         }
-        
+
         return res.status(200).json({
             message: userId ? "User blogs retrieved successfully!" : "Blogs retrieved successfully!",
             blogs: blogs
@@ -725,7 +726,7 @@ export const getBlogs = async (req, res) => {
     }
 }
 
-export const updateBlog=async (req,res)=>{
+export const updateBlog = async (req, res) => {
     const { blogId } = req.query;
     const { title, body } = req.body;
 
@@ -764,35 +765,27 @@ export const updateBlog=async (req,res)=>{
 }
 
 export const deleteBlog = async (req, res) => {
-    const { blogId } = req.query;
-
+    const blogId = req.query.blogId;
     if (!blogId) {
         return res.status(400).json({
             message: "blogId is required"
         });
     }
+    else {
+        try {
+            const blogDocRef = doc(db, "blogs", blogId);
+            await deleteDoc(blogDocRef);
 
-    try {
-        const blogDocRef = doc(db, "blogs", blogId);
-        const blogSnapshot = await getDoc(blogDocRef);
-
-        if (!blogSnapshot.exists()) {
-            return res.status(404).json({
-                message: "Blog not found"
+            return res.status(200).json({
+                message: "Blog deleted successfully"
+            });
+        } catch (err) {
+            console.error("Error deleting blog:", err);
+            return res.status(500).json({
+                message: "Failed to delete blog",
+                error: err.message
             });
         }
-
-        await deleteDoc(blogDocRef);
-
-        return res.status(200).json({
-            message: "Blog deleted successfully"
-        });
-    } catch (err) {
-        console.error("Error deleting blog:", err);
-        return res.status(500).json({
-            message: "Failed to delete blog",
-            error: err.message
-        });
     }
 }
 
@@ -830,4 +823,38 @@ try {
         error: err.message
     });
 }
+}
+
+export const getInDonationDevices = async (req, res) => {
+    try {
+        const devicesCollection = collection(db, "Devices");
+        const devicesSnapshot = await getDocs(devicesCollection);
+
+        // Filter devices with status "InDonation" and map to desired format
+        const devices = devicesSnapshot.docs
+            .filter(doc => doc.data().status === "InDonation")
+            .map(doc => {
+                const data = doc.data();
+                return {
+                    deviceId: doc.id,
+                    deviceName: data.deviceName,
+                    deviceType: data.deviceType,
+                    status: data.status,
+                    imageUrl: data.imageUrl,
+                    userId: data.userId,
+                    createdAt: data.createdAt
+                };
+            });
+
+        return res.status(200).json({
+            message: "Devices with 'InDonation' status retrieved successfully!",
+            devices: devices
+        });
+    } catch (err) {
+        console.error("Error retrieving devices:", err);
+        return res.status(500).json({
+            message: "Error retrieving devices",
+            error: err.message
+        });
+    }
 }

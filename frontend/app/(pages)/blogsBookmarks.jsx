@@ -20,7 +20,7 @@ import { BlurView } from 'expo-blur';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const SCREEN_WIDTH = Dimensions.get('window').width;
-
+import { Alert } from 'react-native';
 // Sample data for blogs and bookmarks
 // const SAMPLE_BLOGS = [
 //   {
@@ -158,7 +158,7 @@ export default function MyBlogsAndBookmarksScreen() {
 
       if (response.data && response.data.blogs) {
         setBlogs(response.data.blogs);
-        console.log(".........",blogs,".........");
+        // console.log(".........",blogs,".........");
         // console.log(".........");
       } else {
         setError('No blogs found in the response');
@@ -223,7 +223,58 @@ export default function MyBlogsAndBookmarksScreen() {
     // router.push(`/blog/${blog.id}`);
     alert(`Opening blog: ${blog.title}`);
   };
-
+  const deleteBlog = (blogId) => {
+    console.log("Deleting blog with ID:", blogId);
+    // Alert.alert("Confirm Deletion", "Are you sure you want to delete this blog? This action cannot be undone.", [{text:"Yes"},{text:"No"}]);
+    // Show confirmation dialog first
+    Alert.alert(
+      "Confirm Deletion",
+      "Are you sure you want to delete this blog?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Deletion cancelled"),
+          style: "cancel"
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              console.log("Proceeding with deletion...");
+              const endpoint = `https://cloudrunservice-254131401451.us-central1.run.app/user/deleteBlog?blogId=${blogId}`;
+              const response = await axios.delete(endpoint);
+  
+              if (response.status === 200) {
+                Alert.alert(
+                  "Success", 
+                  "Blog deleted successfully!",
+                  [
+                    {
+                      text: "OK",
+                      onPress: () => {
+                        console.log("Navigating back...");
+                        router.back();
+                      }
+                    }
+                  ]
+                );
+              } else {
+                throw new Error(`Unexpected status code: ${response.status}`);
+              }
+            } catch (error) {
+              console.error('Error deleting blog:', error);
+              Alert.alert(
+                "Error", 
+                error.response?.data?.message || "Failed to delete blog. Please try again."
+              );
+            }
+          }
+        }
+      ],
+      { cancelable: true }
+    );
+  };
   const renderBlogItem = ({ item }) => (
     <TouchableOpacity
       style={styles.blogCard}
@@ -250,7 +301,9 @@ export default function MyBlogsAndBookmarksScreen() {
             <Text style={styles.interactionText}>{item.likes}</Text>
           </View>
           <View style={styles.interactionItem}>
-            <Ionicons name="chatbubble-outline" size={16} color="#609966" />
+            <TouchableOpacity style={styles.interactionItem} onPress={() => { deleteBlog(item.blogId) }}>
+              <Ionicons name="trash-outline" size={16} color="#609966" />
+            </TouchableOpacity>
             <Text style={styles.interactionText}>{item.comments}</Text>
           </View>
           <TouchableOpacity style={styles.interactionItem}>
@@ -262,17 +315,20 @@ export default function MyBlogsAndBookmarksScreen() {
             </TouchableOpacity>
           )}
           {activeTab === 'myblogs' && (
-            <TouchableOpacity style={styles.interactionItem} onPress={() => { router.push({pathname:'/blogediting',
-              params: { 
-                title: item.title,
-                // You can pass the entire blog object if needed
-                body: item.body,
-                blogId: item.blogId,
-                editing:true,
-                userId: userData.id,
-              }
-            }) }}>
-              <Ionicons name="create" size={16} color="#609966" />
+            <TouchableOpacity style={styles.interactionItem} onPress={() => {
+              router.push({
+                pathname: '/blogediting',
+                params: {
+                  title: item.title,
+                  // You can pass the entire blog object if needed
+                  body: item.body,
+                  blogId: item.blogId,
+                  editing: true,
+                  userId: userData.id,
+                }
+              })
+            }}>
+              <Ionicons name="create-outline" size={16} color="#609966" />
             </TouchableOpacity>
           )}
         </View>
@@ -304,7 +360,7 @@ export default function MyBlogsAndBookmarksScreen() {
   );
 
   const currentData = activeTab === 'bookmarks' ? filteredBookmarks : filteredBlogs;
-  console.log("...",currentData,"...");
+  console.log("...", currentData, "...");
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
