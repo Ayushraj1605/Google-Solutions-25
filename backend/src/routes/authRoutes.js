@@ -6,7 +6,7 @@ import { signup, signin, getProfile, locations, orders, getBlogs,
     addAddress,
     getAddresses,
     getOrgOrders, 
-   ,donateDevice, getInDonationDevices } from '../controllers/authController.js';
+   donateDevice, getInDonationDevices } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
