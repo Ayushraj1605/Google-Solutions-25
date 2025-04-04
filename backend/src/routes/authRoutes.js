@@ -4,7 +4,8 @@ import { signup, signin, getProfile, locations, orders, getBlogs,
     createBlog, updateDevice,
     updateBlog, deleteBlog, donateDevice,
     addAddress,
-    getAddresses, 
+    getAddresses,
+    getOrgOrders, 
     } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
@@ -23,6 +24,7 @@ router.get('/user', (req, res) => {
 /* Org Endpoints */
 router.post('/org/signup', signupOrg);
 router.post('/org/login', signinOrg);
+router.get('/org/getOrgOrders', getOrgOrders);
 
 /* user Endpoints */
 router.post('/user/signup', signup);

@@ -541,12 +541,50 @@ export const orders = async (req, res) => {
     }
 }
 
+export const getOrgOrders = async (req, res) => {
+    const organizationId = req.query.organizationId;
+
+    if (!organizationId) {
+        return res.status(400).json({
+            message: "organizationId is missing"
+        });
+    }
+
+    try {
+        const organizationDoc = doc(db, "Organization", organizationId);
+        const ordersCollection = collection(organizationDoc, "orders");
+        const ordersSnapshot = await getDocs(ordersCollection);
+
+        const orgOrders = ordersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                orderId: doc.id,
+                userId: data.userId,
+                deviceId: data.deviceId,
+                organizationId: data.organizationId,
+                createdAt: data.createdAt,
+                status: data.status
+            };
+        });
+
+        return res.status(200).json({
+            message: "Organization orders retrieved successfully!",
+            orders: orgOrders
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Error retrieving organization orders",
+            error: err.message
+        });
+    }
+}
+
 export const getOrders = async (req, res) => {
     const  userId  = req.query.userId;
 
     if (!userId) {
         return res.status(400).json({
-            message: "userId is required"
+            message: "userId is missing"
         });
     }
 
