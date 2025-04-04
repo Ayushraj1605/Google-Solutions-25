@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc ,deleteDoc} from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
@@ -362,37 +362,37 @@ export const updateDevice = async (req, res) => {
 export const donateDevice = async (req, res) => {
     const { deviceId } = req.query;
 
-if (!deviceId) {
-    return res.status(400).json({
-        message: "deviceId is required"
-    });
-}
-
-try {
-    const deviceDocRef = doc(db, "Devices", deviceId);
-    const deviceSnapshot = await getDoc(deviceDocRef);
-
-    if (!deviceSnapshot.exists()) {
-        return res.status(404).json({
-            message: "Device not found"
+    if (!deviceId) {
+        return res.status(400).json({
+            message: "deviceId is required"
         });
     }
 
-    // Only update the status field to "InDonation"
-    await updateDoc(deviceDocRef, {
-        status: "InDonation"
-    });
+    try {
+        const deviceDocRef = doc(db, "Devices", deviceId);
+        const deviceSnapshot = await getDoc(deviceDocRef);
 
-    return res.status(200).json({
-        message: "Device status updated to InDonation successfully"
-    });
-} catch (err) {
-    console.error("Error updating device status:", err);
-    return res.status(500).json({
-        message: "Failed to update device status",
-        error: err.message
-    });
-}
+        if (!deviceSnapshot.exists()) {
+            return res.status(404).json({
+                message: "Device not found"
+            });
+        }
+
+        // Only update the status field to "InDonation"
+        await updateDoc(deviceDocRef, {
+            status: "InDonation"
+        });
+
+        return res.status(200).json({
+            message: "Device status updated to InDonation successfully"
+        });
+    } catch (err) {
+        console.error("Error updating device status:", err);
+        return res.status(500).json({
+            message: "Failed to update device status",
+            error: err.message
+        });
+    }
 }
 
 export const getDevices = async (req, res) => {
@@ -481,7 +481,7 @@ export const orders = async (req, res) => {
 }
 
 export const getOrders = async (req, res) => {
-    const  userId  = req.query.userId;
+    const userId = req.query.userId;
 
     if (!userId) {
         return res.status(400).json({
@@ -616,11 +616,11 @@ export const createBlog = async (req, res) => {
 
 // export const getBlogs = async (req, res) => {
 //     const userId = req.query.userId;
-    
+
 //     try {
 //         const blogsCollection = collection(db, "blogs");
 //         let blogsQuery;
-        
+
 //         if (userId) {
 //             // If userId is provided, fetch only blogs with matching userId
 //             blogsQuery = query(blogsCollection, where("userId", "==", userId));
@@ -628,9 +628,9 @@ export const createBlog = async (req, res) => {
 //             // If no userId, fetch all blogs
 //             blogsQuery = blogsCollection;
 //         }
-        
+
 //         const blogsSnapshot = await getDocs(blogsQuery);
-        
+
 //         const blogs = blogsSnapshot.docs.map(doc => {
 //             const data = doc.data();
 //             return {
@@ -642,7 +642,7 @@ export const createBlog = async (req, res) => {
 //                 createdAt: data.createdAt
 //             };
 //         });
-        
+
 //         return res.status(200).json({
 //             message: userId ? "User blogs retrieved successfully!" : "Blogs retrieved successfully!",
 //             blogs: blogs
@@ -656,48 +656,48 @@ export const createBlog = async (req, res) => {
 //     }
 // }
 
-export const deleteBlog = async (req, res) => {
-    const { blogId } = req.query;
+// export const deleteBlog = async (req, res) => {
+//     const { blogId } = req.query;
 
-    if (!blogId) {
-        return res.status(400).json({
-            message: "blogId is required"
-        });
-    }
+//     if (!blogId) {
+//         return res.status(400).json({
+//             message: "blogId is required"
+//         });
+//     }
 
-    try {
-        const blogDocRef = doc(db, "blogs", blogId);
-        const blogSnapshot = await getDoc(blogDocRef);
+//     try {
+//         const blogDocRef = doc(db, "blogs", blogId);
+//         const blogSnapshot = await getDoc(blogDocRef);
 
-        if (!blogSnapshot.exists()) {
-            return res.status(404).json({
-                message: "Blog not found"
-            });
-        }
+//         if (!blogSnapshot.exists()) {
+//             return res.status(404).json({
+//                 message: "Blog not found"
+//             });
+//         }
 
-        await deleteDoc(blogDocRef);
+//         await deleteDoc(blogDocRef);
 
-        return res.status(200).json({
-            message: "Blog deleted successfully"
-        });
-    } catch (err) {
-        console.error("Error deleting blog:", err);
-        return res.status(500).json({
-            message: "Failed to delete blog",
-            error: err.message
-        });
-    }
-}
+//         return res.status(200).json({
+//             message: "Blog deleted successfully"
+//         });
+//     } catch (err) {
+//         console.error("Error deleting blog:", err);
+//         return res.status(500).json({
+//             message: "Failed to delete blog",
+//             error: err.message
+//         });
+//     }
+// }
 
 export const getBlogs = async (req, res) => {
     const userId = req.query.userId;
-    
+
     try {
         const blogsCollection = collection(db, "blogs");
         const blogsSnapshot = await getDocs(blogsCollection);
-        
+
         let blogs;
-        
+
         if (userId) {
             // If userId is provided, filter blogs with matching userId
             blogs = blogsSnapshot.docs
@@ -727,7 +727,7 @@ export const getBlogs = async (req, res) => {
                 };
             });
         }
-        
+
         return res.status(200).json({
             message: userId ? "User blogs retrieved successfully!" : "Blogs retrieved successfully!",
             blogs: blogs
@@ -741,7 +741,7 @@ export const getBlogs = async (req, res) => {
     }
 }
 
-export const updateBlog=async (req,res)=>{
+export const updateBlog = async (req, res) => {
     const { blogId } = req.query;
     const { title, body } = req.body;
 
@@ -780,13 +780,13 @@ export const updateBlog=async (req,res)=>{
 }
 
 export const deleteBlog = async (req, res) => {
-    const blogId=req.query.blogId;
+    const blogId = req.query.blogId;
     if (!blogId) {
         return res.status(400).json({
             message: "blogId is required"
         });
     }
-    else{
+    else {
         try {
             const blogDocRef = doc(db, "blogs", blogId);
             await deleteDoc(blogDocRef);
@@ -801,5 +801,43 @@ export const deleteBlog = async (req, res) => {
                 error: err.message
             });
         }
+    }
+}
+
+export const getInDonationDevices = async (req, res) => {
+    // const userId = req.query.userId;
+
+    try {
+        const devicesCollection = collection(db, "Devices"); // Make sure this matches your collection name
+        const devicesSnapshot = await getDocs(devicesCollection);
+
+        // Filter devices with status "InDonation" and map to desired format
+        const devices = devicesSnapshot.docs
+            .filter(doc => doc.data().status === "InDonation")
+            .map(doc => {
+                const data = doc.data();
+                return {
+                    deviceId: doc.id,
+                    name: data.name,
+                    type: data.type,
+                    status: data.status,
+                    location: data.location,
+                    currentOwner: data.currentOwner,
+                    donationInfo: data.donationInfo,
+                    // Include any other device fields you need
+                    createdAt: data.createdAt
+                };
+            });
+
+        return res.status(200).json({
+            message: "Devices with 'InDonation' status retrieved successfully!",
+            devices: devices
+        });
+    } catch (err) {
+        console.error("Error retrieving devices:", err);
+        return res.status(500).json({
+            message: "Error retrieving devices",
+            error: err.message
+        });
     }
 }
