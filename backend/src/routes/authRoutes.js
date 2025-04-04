@@ -2,12 +2,12 @@ import express from 'express';
 import { signup, signin, getProfile, locations, orders, getBlogs, 
     getOrders, getDevices, addDevice, deviceSuggestions,
     createBlog, updateDevice,
-   updateBlog,deleteBlog, donateDevice,
+   updateBlog,deleteBlog,
     addAddress,
+    getHomeFeed,
     getAddresses,
     getOrgOrders, 
    donateDevice, getInDonationDevices } from '../controllers/authController.js';
-import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { signupOrg, signinOrg } from '../controllers/authController.js';
@@ -44,7 +44,6 @@ router.get('/user/inDonationDevices', getInDonationDevices);
 /* Blogs Endpoints */
 router.post('/user/blogs', createBlog);
 router.get('/user/getBlogs', getBlogs);
-
 router.put('/user/updateBlog', updateBlog);
 router.delete('/user/deleteBlog', deleteBlog);
 
@@ -55,6 +54,7 @@ router.get('/user/getOrders', getOrders);
 /* Donate endpoints */
 router.put('/user/donateDevice', donateDevice);
 
+router.get('/user/getHomeFeed', getHomeFeed);
 
 router.get('/users', async (req, res) => {
     try {

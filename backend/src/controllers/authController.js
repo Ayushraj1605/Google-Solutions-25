@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, setDoc, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
@@ -495,42 +495,37 @@ export const orders = async (req, res) => {
         });
     }
 
-    // Reference the organization document
-    const organizationDoc = doc(db, "Organization", organizationId);
-
-    // Create orders subcollection inside the organization document
-    const orgOrdersCollection = collection(organizationDoc, "orders");
-
-    // Add a new order to the organization's orders subcollection
-    await addDoc(orgOrdersCollection, {
-        userId: userId,
-        deviceId: deviceId,
-        organizationId: organizationId,
-        createdAt: Timestamp.fromDate(new Date()),
-        status: "pending"
-        
-    });
-
     try {
-        // Reference the user document
+        // First, create the order document for the user
         const userDoc = doc(db, "users", userId);
-
-        // Create orders subcollection inside the user document
-        const ordersCollection = collection(userDoc, "orders");
-
-        // Add a new order to the subcollection
-        const orderDoc = await addDoc(ordersCollection, {
+        const userOrdersCollection = collection(userDoc, "orders");
+        
+        // Create the order data
+        const orderData = {
             userId: userId,
             deviceId: deviceId,
             organizationId: organizationId,
             createdAt: Timestamp.fromDate(new Date()),
             status: "pending"
-            // Add other order details as needed
+        };
+
+        // Add to user's orders first
+        const userOrderDoc = await addDoc(userOrdersCollection, orderData);
+        const orderId = userOrderDoc.id; // Get the generated orderId
+
+        // Now add the same order (with same ID) to organization's orders
+        const organizationDoc = doc(db, "Organization", organizationId);
+        const orgOrdersCollection = collection(organizationDoc, "orders");
+        
+        // Use the same orderId for organization's order
+        await setDoc(doc(orgOrdersCollection, orderId), {
+            ...orderData,
+            orderId: orderId // Include the orderId in the data
         });
 
         return res.status(200).json({
             message: "Order created successfully!",
-            orderId: orderDoc.id
+            orderId: orderId
         });
 
     } catch (err) {
@@ -858,3 +853,66 @@ export const getInDonationDevices = async (req, res) => {
         });
     }
 }
+
+export const getHomeFeed = async (req, res) => {
+    try {
+        // Fetch blogs
+        const blogsCollection = collection(db, "blogs");
+        const blogsSnapshot = await getDocs(blogsCollection);
+        
+        const blogs = blogsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                type: 'blog',
+                userId: data.userId,
+                username: data.username,
+                body: data.body,
+                title: data.title,
+                createdAt: data.createdAt,
+                // Add any other blog fields you want to include
+            };
+        });
+
+        // Fetch devices
+        const devicesCollection = collection(db, "Devices");
+        const devicesSnapshot = await getDocs(devicesCollection);
+        
+        const devices = devicesSnapshot.docs
+            .filter(doc => doc.data().status === "InDonation")
+            .map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    type: 'device',
+                    name: data.name,
+                    deviceType: data.type,
+                    status: data.status,
+                    location: data.location,
+                    currentOwner: data.currentOwner,
+                    donationInfo: data.donationInfo,
+                    createdAt: data.createdAt,
+                    // Add any other device fields you want to include
+                };
+            });
+
+        // Combine and sort by createdAt (newest first)
+        const combinedFeed = [...blogs, ...devices].sort((a, b) => {
+            // Convert to timestamps for comparison
+            const dateA = new Date(a.createdAt?.seconds * 1000 || a.createdAt);
+            const dateB = new Date(b.createdAt?.seconds * 1000 || b.createdAt);
+            return dateB - dateA; // For newest first
+        });
+
+        return res.status(200).json({
+            message: "Combined feed retrieved successfully!",
+            feed: combinedFeed
+        });
+    } catch (err) {
+        console.error("Error retrieving combined feed:", err);
+        return res.status(500).json({
+            message: "Error retrieving combined feed",
+            error: err.message
+        });
+    }
+};
