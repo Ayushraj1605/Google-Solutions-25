@@ -16,17 +16,19 @@ const Devices = ({ visible = true, style }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   // In your parent component that renders DeviceCard
   const [devices, setDevices] = useState([]);
 
-  // const handleStatusUpdate = (deviceId, newStatus) => {
-  //   setDevices(prevDevices =>
-  //     prevDevices.map(device =>
-  //       device.deviceId === deviceId ? { ...device, status: newStatus } : device
-  //     )
-  //   );
-  // };
-
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // Increment refreshKey to trigger a data reload
+    setRefreshKey(prevKey => prevKey + 1);
+    // You can end the refreshing animation after a delay or when data loads
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
 
   const _retrieveData = async () => {
     try {
@@ -66,6 +68,9 @@ const Devices = ({ visible = true, style }) => {
           }
         } catch (error) {
           console.error('Error fetching devices:', error);
+        } finally {
+          // Ensure refreshing is set to false after data is fetched
+          setRefreshing(false);
         }
       };
       fetchData();
