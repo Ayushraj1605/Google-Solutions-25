@@ -1,13 +1,6 @@
 import express from 'express';
-import { signup, signin, getProfile, locations, orders, getBlogs, 
-    getOrders, getDevices, addDevice, deviceSuggestions,
-    createBlog, updateDevice,
-   updateBlog,deleteBlog,
-    addAddress,
-    getHomeFeed,
-    getAddresses,
-    getOrgOrders, 
-   donateDevice, getInDonationDevices } from '../controllers/authController.js';
+import { signup, signin, getProfile, locations, orders, getBlogs, getOrders, getDevices, addDevice, deviceSuggestions, createBlog, updateDevice,updateBlog,deleteBlog,donateDevice, getInDonationDevices, getHomeFeed } from '../controllers/authController.js';
+import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { signupOrg, signinOrg } from '../controllers/authController.js';
@@ -39,7 +32,7 @@ router.post('/user/addDevice', addDevice);
 router.put('/user/updateDevice', updateDevice);
 router.get('/user/getDevices', getDevices);
 router.put('/user/donateDevice', donateDevice);
-router.get('/user/inDonationDevices', getInDonationDevices);
+router.get('/user/getHomeFeed', getHomeFeed);
 
 /* Blogs Endpoints */
 router.post('/user/blogs', createBlog);

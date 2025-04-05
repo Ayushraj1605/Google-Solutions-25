@@ -16,66 +16,315 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
+// const BlogCard = ({
+//   title = "The Future of E-Waste Management",
+//   subtitle = "March 13, 2025 • By GreenTech Insights",
+//   imageUri = null,
+//   description = "As the global demand for electronics rises...",
+//   avatarSource = null,
+//   category = "Environment",
+//   readTime = "5 min read",
+//   onCardPress = null,
+//   onShare = () => console.log('Share pressed'),
+//   onReadMore = () => console.log('Read More pressed'),
+//   onBookmark = () => console.log('Bookmark pressed'),
+// }) => {
+//   // State management
+//   const [isBookmarked, setIsBookmarked] = useState(false);
+//   const [isExpanded, setIsExpanded] = useState(false);
+//   const [isImageLoading, setIsImageLoading] = useState(imageUri ? true : false);
+//   const [liked, setLiked] = useState(false);
+//   const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
+//   const [commentCount, setCommentCount] = useState(Math.floor(Math.random() * 20));
+//   const [commentVisible, setCommentVisible] = useState(false);
+//   const [comments, setComments] = useState([
+//     { id: 1, user: 'EcoExpert', text: 'Great insights on e-waste management!', time: '2 hours ago' },
+//     { id: 2, user: 'GreenTech', text: 'We need more articles like this to raise awareness.', time: '1 day ago' }
+//   ]);
+
+//   // Check if description is long enough to need "Read More"
+//   const needsReadMore = description.length > 150;
+
+//   // Animation values
+//   const scaleAnim = useRef(new Animated.Value(1)).current;
+//   const opacityAnim = useRef(new Animated.Value(0)).current;
+
+//   // Handle image loading
+//   useEffect(() => {
+//     if (!isImageLoading) {
+//       Animated.timing(opacityAnim, {
+//         toValue: 1,
+//         duration: 300,
+//         useNativeDriver: true,
+//       }).start();
+//     }
+//   }, [isImageLoading, opacityAnim]);
+
+//   // Update image loading state when imageUri changes
+//   useEffect(() => {
+//     if (imageUri) {
+//       setIsImageLoading(true);
+//     }
+//   }, [imageUri]);
+
+//   // Action handlers
+//   const handleBookmarkPress = () => {
+//     setIsBookmarked(!isBookmarked);
+//     onBookmark();
+//   };
+
+//   const handleReadMorePress = () => {
+//     setIsExpanded(!isExpanded);
+//     onReadMore();
+//   };
+
+//   const handleLike = () => {
+//     setLiked(!liked);
+//     setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+//   };
+
+//   const showCommentModal = () => setCommentVisible(true);
+//   const hideCommentModal = () => setCommentVisible(false);
+
+//   // Handle button press with feedback
+//   const handleButtonPress = (action) => {
+//     return () => {
+//       Animated.sequence([
+//         Animated.timing(scaleAnim, {
+//           toValue: 0.95,
+//           duration: 100,
+//           useNativeDriver: true,
+//         }),
+//         Animated.timing(scaleAnim, {
+//           toValue: 1,
+//           duration: 100,
+//           useNativeDriver: true,
+//         })
+//       ]).start();
+//       action();
+//     };
+//   };
+
+//   // Default avatar if not provided
+//   const defaultAvatar = require('../assets/svg/logo');
+
+//   // Card wrapper component decides if card is pressable
+//   const CardWrapper = onCardPress
+//     ? ({ children }) => (
+//       <TouchableOpacity
+//         activeOpacity={0.9}
+//         onPress={onCardPress}
+//         style={{ width: '100%' }}
+//       >
+//         {children}
+//       </TouchableOpacity>
+//     )
+//     : ({ children }) => <View style={{ width: '100%' }}>{children}</View>;
+
+//   return (
+//     <CardWrapper>
+//       <Animated.View
+//         style={[
+//           styles.cardContainer,
+//           { transform: [{ scale: scaleAnim }] }
+//         ]}
+//       >
+//         {/* Card Header */}
+//         <View style={styles.orderHeader}>
+//           <View style={styles.orderInfo}>
+//             <Text style={styles.orderId}>{title}</Text>
+//             <Text style={styles.orderDate}>{subtitle}</Text>
+//           </View>
+//           <TouchableOpacity 
+//             style={styles.bookmarkButton}
+//             onPress={handleButtonPress(handleBookmarkPress)}
+//           >
+//             <MaterialCommunityIcons 
+//               name={isBookmarked ? "bookmark" : "bookmark-outline"} 
+//               size={24} 
+//               color={isBookmarked ? "#f39c12" : "#7f8c8d"} 
+//             />
+//           </TouchableOpacity>
+//         </View>
+
+//         {/* Category and Read Time */}
+//         <View style={styles.metaContainer}>
+//           <View style={styles.categoryPill}>
+//             <Text style={styles.categoryText}>{category}</Text>
+//           </View>
+//           <View style={styles.readTimePill}>
+//             <MaterialCommunityIcons name="clock-outline" size={12} color="#7f8c8d" />
+//             <Text style={styles.readTimeText}>{readTime}</Text>
+//           </View>
+//         </View>
+
+//         {/* Card Content - Image and Text */}
+//         <View style={styles.contentContainer}>
+//           {/* Image */}
+//           {imageUri && (
+//             <View style={styles.imageWrapper}>
+//               <Animated.View style={[styles.imageContainer, { opacity: opacityAnim }]}>
+//                 <Image
+//                   source={{ uri: imageUri }}
+//                   style={styles.coverImage}
+//                   resizeMode="cover"
+//                   onLoadStart={() => setIsImageLoading(true)}
+//                   onLoadEnd={() => setIsImageLoading(false)}
+//                   onError={() => setIsImageLoading(false)}
+//                 />
+//               </Animated.View>
+
+//               {isImageLoading && (
+//                 <View style={styles.loaderContainer}>
+//                   <ActivityIndicator size="small" color="#2ecc71" />
+//                 </View>
+//               )}
+//             </View>
+//           )}
+
+//           {/* Description Text */}
+//           <View style={styles.textContent}>
+//             <Text 
+//               style={styles.description} 
+//               numberOfLines={isExpanded ? null : 4}
+//             >
+//               {description}
+//             </Text>
+
+//             {/* Inline Read More link that only appears if content is long enough */}
+//             {needsReadMore && !isExpanded && (
+//               <TouchableOpacity 
+//                 onPress={handleButtonPress(handleReadMorePress)}
+//                 style={styles.inlineReadMore}
+//               >
+//                 <Text style={styles.inlineReadMoreText}>Read more</Text>
+//               </TouchableOpacity>
+//             )}
+
+//             {/* Show Less link that only appears when expanded */}
+//             {isExpanded && (
+//               <TouchableOpacity 
+//                 onPress={handleButtonPress(handleReadMorePress)}
+//                 style={styles.inlineReadMore}
+//               >
+//                 <Text style={styles.inlineReadMoreText}>Show less</Text>
+//               </TouchableOpacity>
+//             )}
+//           </View>
+//         </View>
+
+//         {/* Social Actions */}
+
+
+//         {/* Card Footer */}
+//         <View style={styles.orderFooter}>
+//           <TouchableOpacity style={styles.socialButton} onPress={handleLike}>
+//             <MaterialCommunityIcons 
+//               name={liked ? "heart" : "heart-outline"} 
+//               size={20} 
+//               color={liked ? "#e74c3c" : "#7f8c8d"} 
+//             />
+//             <Text style={styles.socialButtonText}>{likeCount}</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity style={styles.socialButton} onPress={showCommentModal}>
+//             <MaterialCommunityIcons name="comment-outline" size={20} color="#7f8c8d" />
+//             <Text style={styles.socialButtonText}>{commentCount}</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity style={styles.socialButton} onPress={handleButtonPress(onShare)}>
+//             <MaterialCommunityIcons name="share-outline" size={20} color="#7f8c8d" />
+//             <Text style={styles.socialButtonText}>Share </Text>
+//           </TouchableOpacity>
+//         </View>
+//       </Animated.View>
+
+//       {/* Comments Modal */}
+//       <Modal
+//         visible={commentVisible}
+//         animationType="slide"
+//         transparent={true}
+//         onRequestClose={hideCommentModal}
+//       >
+//         <View style={styles.modalOverlay}>
+//           <View style={styles.modalContainer}>
+//             <View style={styles.modalHeader}>
+//               <Text style={styles.modalTitle}>Comments</Text>
+//               <TouchableOpacity 
+//                 style={styles.closeButton} 
+//                 onPress={hideCommentModal}
+//               >
+//                 <Text style={styles.closeButtonText}>✕</Text>
+//               </TouchableOpacity>
+//             </View>
+
+//             <ScrollView style={styles.commentsList}>
+//               {comments.map(comment => (
+//                 <View key={comment.id} style={styles.commentItem}>
+//                   <View style={styles.commentUserCircle}>
+//                     <Text style={styles.commentUserInitial}>{comment.user.charAt(0)}</Text>
+//                   </View>
+//                   <View style={styles.commentContent}>
+//                     <View style={styles.commentHeader}>
+//                       <Text style={styles.commentUser}>{comment.user}</Text>
+//                       <Text style={styles.commentTime}>{comment.time}</Text>
+//                     </View>
+//                     <Text style={styles.commentText}>{comment.text}</Text>
+//                   </View>
+//                 </View>
+//               ))}
+//             </ScrollView>
+
+//             <View style={styles.commentInputContainer}>
+//               <View style={styles.commentInput}>
+//                 <MaterialCommunityIcons name="pencil" size={20} color="#7f8c8d" style={styles.commentInputIcon} />
+//                 <Text style={styles.commentInputText}>Add a comment...</Text>
+//               </View>
+//               <TouchableOpacity style={styles.commentSendButton}>
+//                 <MaterialCommunityIcons name="send" size={20} color="#2ecc71" />
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+//         </View>
+//       </Modal>
+//     </CardWrapper>
+//   );
+// };
+
+// BlogCard component remains mostly the same, just simplified for this use case
+
+// BlogCard component remains mostly the same, just simplified for this use case
+
+
+// BlogCard component remains mostly the same, just simplified for this use case
 const BlogCard = ({
-  title = "The Future of E-Waste Management",
-  subtitle = "March 13, 2025 • By GreenTech Insights",
-  imageUri = null,
-  description = "As the global demand for electronics rises...",
-  avatarSource = null,
-  category = "Environment",
-  readTime = "5 min read",
-  onCardPress = null,
-  onShare = () => console.log('Share pressed'),
-  onReadMore = () => console.log('Read More pressed'),
-  onBookmark = () => console.log('Bookmark pressed'),
+  title,
+  subtitle,
+  description,
+  category,
+  readTime,
 }) => {
   // State management
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(imageUri ? true : false);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(Math.floor(Math.random() * 50) + 5);
   const [commentCount, setCommentCount] = useState(Math.floor(Math.random() * 20));
   const [commentVisible, setCommentVisible] = useState(false);
-  const [comments, setComments] = useState([
-    { id: 1, user: 'EcoExpert', text: 'Great insights on e-waste management!', time: '2 hours ago' },
-    { id: 2, user: 'GreenTech', text: 'We need more articles like this to raise awareness.', time: '1 day ago' }
-  ]);
   
   // Check if description is long enough to need "Read More"
-  const needsReadMore = description.length > 150;
+  const needsReadMore = description && description.length > 150;
 
   // Animation values
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  // Handle image loading
-  useEffect(() => {
-    if (!isImageLoading) {
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isImageLoading, opacityAnim]);
-
-  // Update image loading state when imageUri changes
-  useEffect(() => {
-    if (imageUri) {
-      setIsImageLoading(true);
-    }
-  }, [imageUri]);
 
   // Action handlers
   const handleBookmarkPress = () => {
     setIsBookmarked(!isBookmarked);
-    onBookmark();
   };
 
   const handleReadMorePress = () => {
     setIsExpanded(!isExpanded);
-    onReadMore();
   };
 
   const handleLike = () => {
@@ -105,139 +354,91 @@ const BlogCard = ({
     };
   };
 
-  // Default avatar if not provided
-  const defaultAvatar = require('../assets/svg/logo');
-
-  // Card wrapper component decides if card is pressable
-  const CardWrapper = onCardPress
-    ? ({ children }) => (
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={onCardPress}
-        style={{ width: '100%' }}
-      >
-        {children}
-      </TouchableOpacity>
-    )
-    : ({ children }) => <View style={{ width: '100%' }}>{children}</View>;
-
   return (
-    <CardWrapper>
-      <Animated.View
-        style={[
-          styles.cardContainer,
-          { transform: [{ scale: scaleAnim }] }
-        ]}
-      >
-        {/* Card Header */}
-        <View style={styles.orderHeader}>
-          <View style={styles.orderInfo}>
-            <Text style={styles.orderId}>{title}</Text>
-            <Text style={styles.orderDate}>{subtitle}</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.bookmarkButton}
-            onPress={handleButtonPress(handleBookmarkPress)}
+    <Animated.View style={[styles.cardContainer, { transform: [{ scale: scaleAnim }] }]}>
+      {/* Card Header */}
+      <View style={styles.orderHeader}>
+        <View style={styles.orderInfo}>
+          <Text style={styles.orderId}>{title}</Text>
+          <Text style={styles.orderDate}>{subtitle}</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.bookmarkButton}
+          onPress={handleButtonPress(handleBookmarkPress)}
+        >
+          <MaterialCommunityIcons 
+            name={isBookmarked ? "bookmark" : "bookmark-outline"} 
+            size={24} 
+            color={isBookmarked ? "#f39c12" : "#7f8c8d"} 
+          />
+        </TouchableOpacity>
+      </View>
+      
+      {/* Category and Read Time */}
+      <View style={styles.metaContainer}>
+        <View style={styles.categoryPill}>
+          <Text style={styles.categoryText}>{category}</Text>
+        </View>
+        <View style={styles.readTimePill}>
+          <MaterialCommunityIcons name="clock-outline" size={12} color="#7f8c8d" />
+          <Text style={styles.readTimeText}>{readTime}</Text>
+        </View>
+      </View>
+      
+      {/* Card Content - Text */}
+      <View style={styles.contentContainer}>
+        {/* Description Text */}
+        <View style={styles.textContent}>
+          <Text 
+            style={styles.description} 
+            numberOfLines={isExpanded ? null : 4}
           >
-            <MaterialCommunityIcons 
-              name={isBookmarked ? "bookmark" : "bookmark-outline"} 
-              size={24} 
-              color={isBookmarked ? "#f39c12" : "#7f8c8d"} 
-            />
-          </TouchableOpacity>
-        </View>
-        
-        {/* Category and Read Time */}
-        <View style={styles.metaContainer}>
-          <View style={styles.categoryPill}>
-            <Text style={styles.categoryText}>{category}</Text>
-          </View>
-          <View style={styles.readTimePill}>
-            <MaterialCommunityIcons name="clock-outline" size={12} color="#7f8c8d" />
-            <Text style={styles.readTimeText}>{readTime}</Text>
-          </View>
-        </View>
-        
-        {/* Card Content - Image and Text */}
-        <View style={styles.contentContainer}>
-          {/* Image */}
-          {imageUri && (
-            <View style={styles.imageWrapper}>
-              <Animated.View style={[styles.imageContainer, { opacity: opacityAnim }]}>
-                <Image
-                  source={{ uri: imageUri }}
-                  style={styles.coverImage}
-                  resizeMode="cover"
-                  onLoadStart={() => setIsImageLoading(true)}
-                  onLoadEnd={() => setIsImageLoading(false)}
-                  onError={() => setIsImageLoading(false)}
-                />
-              </Animated.View>
-
-              {isImageLoading && (
-                <View style={styles.loaderContainer}>
-                  <ActivityIndicator size="small" color="#2ecc71" />
-                </View>
-              )}
-            </View>
+            {description}
+          </Text>
+          
+          {/* Inline Read More link that only appears if content is long enough */}
+          {needsReadMore && !isExpanded && (
+            <TouchableOpacity 
+              onPress={handleButtonPress(handleReadMorePress)}
+              style={styles.inlineReadMore}
+            >
+              <Text style={styles.inlineReadMoreText}>Read more</Text>
+            </TouchableOpacity>
           )}
           
-          {/* Description Text */}
-          <View style={styles.textContent}>
-            <Text 
-              style={styles.description} 
-              numberOfLines={isExpanded ? null : 4}
+          {/* Show Less link that only appears when expanded */}
+          {isExpanded && (
+            <TouchableOpacity 
+              onPress={handleButtonPress(handleReadMorePress)}
+              style={styles.inlineReadMore}
             >
-              {description}
-            </Text>
-            
-            {/* Inline Read More link that only appears if content is long enough */}
-            {needsReadMore && !isExpanded && (
-              <TouchableOpacity 
-                onPress={handleButtonPress(handleReadMorePress)}
-                style={styles.inlineReadMore}
-              >
-                <Text style={styles.inlineReadMoreText}>Read more</Text>
-              </TouchableOpacity>
-            )}
-            
-            {/* Show Less link that only appears when expanded */}
-            {isExpanded && (
-              <TouchableOpacity 
-                onPress={handleButtonPress(handleReadMorePress)}
-                style={styles.inlineReadMore}
-              >
-                <Text style={styles.inlineReadMoreText}>Show less</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+              <Text style={styles.inlineReadMoreText}>Show less</Text>
+            </TouchableOpacity>
+          )}
         </View>
+      </View>
+      
+      {/* Card Footer */}
+      <View style={styles.orderFooter}>
+        <TouchableOpacity style={styles.socialButton} onPress={handleLike}>
+          <MaterialCommunityIcons 
+            name={liked ? "heart" : "heart-outline"} 
+            size={20} 
+            color={liked ? "#e74c3c" : "#7f8c8d"} 
+          />
+          <Text style={styles.socialButtonText}>{likeCount}</Text>
+        </TouchableOpacity>
         
-        {/* Social Actions */}
+        <TouchableOpacity style={styles.socialButton} onPress={showCommentModal}>
+          <MaterialCommunityIcons name="comment-outline" size={20} color="#7f8c8d" />
+          <Text style={styles.socialButtonText}>{commentCount}</Text>
+        </TouchableOpacity>
         
-        
-        {/* Card Footer */}
-        <View style={styles.orderFooter}>
-          <TouchableOpacity style={styles.socialButton} onPress={handleLike}>
-            <MaterialCommunityIcons 
-              name={liked ? "heart" : "heart-outline"} 
-              size={20} 
-              color={liked ? "#e74c3c" : "#7f8c8d"} 
-            />
-            <Text style={styles.socialButtonText}>{likeCount}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.socialButton} onPress={showCommentModal}>
-            <MaterialCommunityIcons name="comment-outline" size={20} color="#7f8c8d" />
-            <Text style={styles.socialButtonText}>{commentCount}</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.socialButton} onPress={handleButtonPress(onShare)}>
-            <MaterialCommunityIcons name="share-outline" size={20} color="#7f8c8d" />
-            <Text style={styles.socialButtonText}>Share </Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
+        <TouchableOpacity style={styles.socialButton} onPress={handleButtonPress(() => console.log('Share pressed'))}>
+          <MaterialCommunityIcons name="share-outline" size={20} color="#7f8c8d" />
+          <Text style={styles.socialButtonText}>Share</Text>
+        </TouchableOpacity>
+      </View>
       
       {/* Comments Modal */}
       <Modal
@@ -259,20 +460,19 @@ const BlogCard = ({
             </View>
             
             <ScrollView style={styles.commentsList}>
-              {comments.map(comment => (
-                <View key={comment.id} style={styles.commentItem}>
-                  <View style={styles.commentUserCircle}>
-                    <Text style={styles.commentUserInitial}>{comment.user.charAt(0)}</Text>
-                  </View>
-                  <View style={styles.commentContent}>
-                    <View style={styles.commentHeader}>
-                      <Text style={styles.commentUser}>{comment.user}</Text>
-                      <Text style={styles.commentTime}>{comment.time}</Text>
-                    </View>
-                    <Text style={styles.commentText}>{comment.text}</Text>
-                  </View>
+              {/* Sample comments - you would replace with actual comments */}
+              <View style={styles.commentItem}>
+                <View style={styles.commentUserCircle}>
+                  <Text style={styles.commentUserInitial}>U</Text>
                 </View>
-              ))}
+                <View style={styles.commentContent}>
+                  <View style={styles.commentHeader}>
+                    <Text style={styles.commentUser}>User</Text>
+                    <Text style={styles.commentTime}>Just now</Text>
+                  </View>
+                  <Text style={styles.commentText}>This is a sample comment.</Text>
+                </View>
+              </View>
             </ScrollView>
             
             <View style={styles.commentInputContainer}>
@@ -287,9 +487,11 @@ const BlogCard = ({
           </View>
         </View>
       </Modal>
-    </CardWrapper>
+    </Animated.View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   cardContainer: {

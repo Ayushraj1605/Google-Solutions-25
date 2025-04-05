@@ -784,75 +784,47 @@ export const deleteBlog = async (req, res) => {
     }
 }
 
-export const donateDevice = async (req, res) => {
-    const { deviceId } = req.query;
+// export const getInDonationDevices = async (req, res) => {
+// const userId = req.query.userId;
 
-if (!deviceId) {
-    return res.status(400).json({
-        message: "deviceId is required"
-    });
-}
+//     try {
+//         const devicesCollection = collection(db, "Devices"); // Make sure this matches your collection name
+//         const devicesSnapshot = await getDocs(devicesCollection);
 
-try {
-    const deviceDocRef = doc(db, "Devices", deviceId);
-    const deviceSnapshot = await getDoc(deviceDocRef);
+//         // Filter devices with status "InDonation" and map to desired format
+//         const devices = devicesSnapshot.docs
+//             .filter(doc => doc.data().status === "InDonation")
+//             .map(doc => {
+//                 const data = doc.data();
+//                 return {
+//                     deviceId: doc.id,
+//                     name: data.name,
+//                     type: data.type,
+//                     status: data.status,
+//                     location: data.location,
+//                     currentOwner: data.currentOwner,
+//                     donationInfo: data.donationInfo,
+//                     // Include any other device fields you need
+//                     createdAt: data.createdAt
+//                 };
+//             });
 
-    if (!deviceSnapshot.exists()) {
-        return res.status(404).json({
-            message: "Device not found"
-        });
-    }
+//         return res.status(200).json({
+//             message: "Devices with 'InDonation' status retrieved successfully!",
+//             devices: devices
+//         });
+//     } catch (err) {
+//         console.error("Error retrieving devices:", err);
+//         return res.status(500).json({
+//             message: "Error retrieving devices",
+//             error: err.message
+//         });
+//     }
+// }
 
-    // Only update the status field to "InDonation"
-    await updateDoc(deviceDocRef, {
-        status: "InDonation"
-    });
 
-    return res.status(200).json({
-        message: "Device status updated to InDonation successfully"
-    });
-} catch (err) {
-    console.error("Error updating device status:", err);
-    return res.status(500).json({
-        message: "Failed to update device status",
-        error: err.message
-    });
-}
-}
-
-export const getInDonationDevices = async (req, res) => {
-    try {
-        const devicesCollection = collection(db, "Devices");
-        const devicesSnapshot = await getDocs(devicesCollection);
-
-        // Filter devices with status "InDonation" and map to desired format
-        const devices = devicesSnapshot.docs
-            .filter(doc => doc.data().status === "InDonation")
-            .map(doc => {
-                const data = doc.data();
-                return {
-                    deviceId: doc.id,
-                    deviceName: data.deviceName,
-                    deviceType: data.deviceType,
-                    status: data.status,
-                    imageUrl: data.imageUrl,
-                    userId: data.userId,
-                    createdAt: data.createdAt
-                };
-            });
-
-        return res.status(200).json({
-            message: "Devices with 'InDonation' status retrieved successfully!",
-            devices: devices
-        });
-    } catch (err) {
-        console.error("Error retrieving devices:", err);
-        return res.status(500).json({
-            message: "Error retrieving devices",
-            error: err.message
-        });
-    }
-}
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebaseConfig'; // Adjust the import path as needed
 
 export const getHomeFeed = async (req, res) => {
     try {
@@ -883,16 +855,13 @@ export const getHomeFeed = async (req, res) => {
             .map(doc => {
                 const data = doc.data();
                 return {
-                    id: doc.id,
-                    type: 'device',
-                    name: data.name,
-                    deviceType: data.type,
+                    deviceId: doc.id,
+                    deviceName: data.deviceName,
+                    deviceType: data.deviceType,
                     status: data.status,
-                    location: data.location,
-                    currentOwner: data.currentOwner,
-                    donationInfo: data.donationInfo,
-                    createdAt: data.createdAt,
-                    // Add any other device fields you want to include
+                    imageUrl: data.imageUrl,
+                    userId: data.userId,
+                    createdAt: data.createdAt
                 };
             });
 
