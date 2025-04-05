@@ -1,9 +1,9 @@
-import { db } from "../../app.js"; // Import Firestore instance
+import { db } from "../../app.js";
 import dotenv from "dotenv";
 dotenv.config();
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { collection, query, where, setDoc, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
@@ -220,12 +220,89 @@ export const signup = async (req, res) => {
         });
     }
 };
+
+export const addAddress = async (req, res) => {
+    const { userId } = req.query;
+    const { Address, pinCode } = req.body;
+
+    if (!userId || !Address || !pinCode) {
+        return res.status(400).json({ message: "userId, Address and pinCode are required" });
+    }
+
+    try {
+        // Reference the user document
+        const userDoc = doc(db, "users", userId);
+        
+        // Create addresses subcollection inside the user document
+        const addressesCollection = collection(userDoc, "addresses");
+
+        // Add a new address to the subcollection
+        const addressDoc = await addDoc(addressesCollection, {
+            userId: userId,
+            Address: Address,
+            pinCode: pinCode,
+            createdAt: Timestamp.fromDate(new Date())
+        });
+
+        res.status(200).json({
+            message: "Address added successfully!",
+            addressId: addressDoc.id
+        });
+    } catch (error) {
+        console.error("Error adding address:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message,
+        });
+    }
+}
+
+// Add a new function to get user addresses
+export const getAddresses = async (req, res) => {
+    const { userId } = req.query;
+
+    if (!userId) {
+        return res.status(400).json({ message: "userId is required" });
+    }
+
+    try {
+        const userDoc = doc(db, "users", userId);
+        const addressesCollection = collection(userDoc, "addresses");
+        const addressesSnapshot = await getDocs(addressesCollection);
+
+        const userAddresses = addressesSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                addressId: doc.id,
+                Address: data.Address,
+                pinCode: data.pinCode,
+                createdAt: data.createdAt
+            };
+        });
+
+        res.status(200).json({
+            message: "User addresses retrieved successfully!",
+            addresses: userAddresses
+        });
+    } catch (error) {
+        console.error("Error getting addresses:", error);
+        res.status(500).json({
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+}
 // Get Profile Function (Optional, Implement Based on Requirements)
 export const getProfile = async (req, res) => {
+    const { userId } = req.query;  // Destructure userId from query params
+
+    if (!userId) {
+        return res.status(400).json({ message: "userId is required" });
+    }
+
     try {
-        const { userId } = req.params;
         const userDoc = doc(db, "users", userId);
-        const userSnapshot = await getDocs(userDoc);
+        const userSnapshot = await getDoc(userDoc);  // Use getDoc instead of getDocs
 
         if (!userSnapshot.exists()) {
             return res.status(404).json({ message: "User not found" });
@@ -236,6 +313,7 @@ export const getProfile = async (req, res) => {
             profile: userSnapshot.data(),
         });
     } catch (error) {
+        console.error("Error getting profile:", error);
         res.status(500).json({
             message: "Internal server error",
             error: error.message,
@@ -277,10 +355,11 @@ export const addDevice = async (req, res) => {
     const {
         organizationName,
         organizationId,
-        description,
         imei,
         modelNumber,
         purchaseYear,
+        address,
+        pinCode,
         status,
         submittedAt } = req.body || null;
 
@@ -298,7 +377,8 @@ export const addDevice = async (req, res) => {
             userId: userId,
             createdAt: Timestamp.fromDate(new Date()),
             organizationId: organizationId,
-            description: description,
+            address: address,
+            pinCode: pinCode,
             imei: imei,
             modelNumber: modelNumber,
             purchaseYear: purchaseYear,
@@ -359,41 +439,7 @@ export const updateDevice = async (req, res) => {
     }
 }
 
-export const donateDevice = async (req, res) => {
-    const { deviceId } = req.query;
-
-    if (!deviceId) {
-        return res.status(400).json({
-            message: "deviceId is required"
-        });
-    }
-
-    try {
-        const deviceDocRef = doc(db, "Devices", deviceId);
-        const deviceSnapshot = await getDoc(deviceDocRef);
-
-        if (!deviceSnapshot.exists()) {
-            return res.status(404).json({
-                message: "Device not found"
-            });
-        }
-
-        // Only update the status field to "InDonation"
-        await updateDoc(deviceDocRef, {
-            status: "InDonation"
-        });
-
-        return res.status(200).json({
-            message: "Device status updated to InDonation successfully"
-        });
-    } catch (err) {
-        console.error("Error updating device status:", err);
-        return res.status(500).json({
-            message: "Failed to update device status",
-            error: err.message
-        });
-    }
-}
+// Duplicate donateDevice function removed to fix the issue
 
 export const getDevices = async (req, res) => {
     const { userId } = req.query;
@@ -450,25 +496,36 @@ export const orders = async (req, res) => {
     }
 
     try {
-        // Reference the user document
+        // First, create the order document for the user
         const userDoc = doc(db, "users", userId);
-
-        // Create orders subcollection inside the user document
-        const ordersCollection = collection(userDoc, "orders");
-
-        // Add a new order to the subcollection
-        const orderDoc = await addDoc(ordersCollection, {
+        const userOrdersCollection = collection(userDoc, "orders");
+        
+        // Create the order data
+        const orderData = {
             userId: userId,
             deviceId: deviceId,
             organizationId: organizationId,
             createdAt: Timestamp.fromDate(new Date()),
             status: "pending"
-            // Add other order details as needed
+        };
+
+        // Add to user's orders first
+        const userOrderDoc = await addDoc(userOrdersCollection, orderData);
+        const orderId = userOrderDoc.id; // Get the generated orderId
+
+        // Now add the same order (with same ID) to organization's orders
+        const organizationDoc = doc(db, "Organization", organizationId);
+        const orgOrdersCollection = collection(organizationDoc, "orders");
+        
+        // Use the same orderId for organization's order
+        await setDoc(doc(orgOrdersCollection, orderId), {
+            ...orderData,
+            orderId: orderId // Include the orderId in the data
         });
 
         return res.status(200).json({
             message: "Order created successfully!",
-            orderId: orderDoc.id
+            orderId: orderId
         });
 
     } catch (err) {
@@ -480,12 +537,50 @@ export const orders = async (req, res) => {
     }
 }
 
+export const getOrgOrders = async (req, res) => {
+    const organizationId = req.query.organizationId;
+
+    if (!organizationId) {
+        return res.status(400).json({
+            message: "organizationId is missing"
+        });
+    }
+
+    try {
+        const organizationDoc = doc(db, "Organization", organizationId);
+        const ordersCollection = collection(organizationDoc, "orders");
+        const ordersSnapshot = await getDocs(ordersCollection);
+
+        const orgOrders = ordersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                orderId: doc.id,
+                userId: data.userId,
+                deviceId: data.deviceId,
+                organizationId: data.organizationId,
+                createdAt: data.createdAt,
+                status: data.status
+            };
+        });
+
+        return res.status(200).json({
+            message: "Organization orders retrieved successfully!",
+            orders: orgOrders
+        });
+    } catch (err) {
+        return res.status(500).json({
+            message: "Error retrieving organization orders",
+            error: err.message
+        });
+    }
+}
+
 export const getOrders = async (req, res) => {
     const userId = req.query.userId;
 
     if (!userId) {
         return res.status(400).json({
-            message: "userId is required"
+            message: "userId is missing"
         });
     }
 
@@ -573,121 +668,6 @@ export const createBlog = async (req, res) => {
         });
     }
 }
-
-// export const getBlogs = async (req, res) => {
-//     const userId = req.query.userId;
-//     if (userId) {
-//         // here fetch only those blogs that have blog.userId==userId
-//         return res.status(400).json({
-//             message: "User received",
-//             error: "None"
-//         });
-//     }
-//     else {
-//         try {
-//             const blogsCollection = collection(db, "blogs");
-//             const blogsSnapshot = await getDocs(blogsCollection);
-
-//             const blogs = blogsSnapshot.docs.map(doc => {
-//                 const data = doc.data();
-//                 return {
-//                     blogId: doc.id,
-//                     userId: data.userId,
-//                     username: data.username,
-//                     body: data.body,
-//                     title: data.title,
-//                     createdAt: data.createdAt
-//                 };
-//             });
-
-//             return res.status(200).json({
-//                 message: "Blogs retrieved successfully!",
-//                 blogs: blogs
-//             });
-//         } catch (err) {
-//             console.error("Error retrieving blogs:", err);
-//             return res.status(500).json({
-//                 message: "Error retrieving blogs",
-//                 error: err.message
-//             });
-//         }
-//     }
-// }
-
-// export const getBlogs = async (req, res) => {
-//     const userId = req.query.userId;
-
-//     try {
-//         const blogsCollection = collection(db, "blogs");
-//         let blogsQuery;
-
-//         if (userId) {
-//             // If userId is provided, fetch only blogs with matching userId
-//             blogsQuery = query(blogsCollection, where("userId", "==", userId));
-//         } else {
-//             // If no userId, fetch all blogs
-//             blogsQuery = blogsCollection;
-//         }
-
-//         const blogsSnapshot = await getDocs(blogsQuery);
-
-//         const blogs = blogsSnapshot.docs.map(doc => {
-//             const data = doc.data();
-//             return {
-//                 blogId: doc.id,
-//                 userId: data.userId,
-//                 username: data.username,
-//                 body: data.body,
-//                 title: data.title,
-//                 createdAt: data.createdAt
-//             };
-//         });
-
-//         return res.status(200).json({
-//             message: userId ? "User blogs retrieved successfully!" : "Blogs retrieved successfully!",
-//             blogs: blogs
-//         });
-//     } catch (err) {
-//         console.error("Error retrieving blogs:", err);
-//         return res.status(500).json({
-//             message: "Error retrieving blogs",
-//             error: err.message
-//         });
-//     }
-// }
-
-// export const deleteBlog = async (req, res) => {
-//     const { blogId } = req.query;
-
-//     if (!blogId) {
-//         return res.status(400).json({
-//             message: "blogId is required"
-//         });
-//     }
-
-//     try {
-//         const blogDocRef = doc(db, "blogs", blogId);
-//         const blogSnapshot = await getDoc(blogDocRef);
-
-//         if (!blogSnapshot.exists()) {
-//             return res.status(404).json({
-//                 message: "Blog not found"
-//             });
-//         }
-
-//         await deleteDoc(blogDocRef);
-
-//         return res.status(200).json({
-//             message: "Blog deleted successfully"
-//         });
-//     } catch (err) {
-//         console.error("Error deleting blog:", err);
-//         return res.status(500).json({
-//             message: "Failed to delete blog",
-//             error: err.message
-//         });
-//     }
-// }
 
 export const getBlogs = async (req, res) => {
     const userId = req.query.userId;
@@ -875,16 +855,13 @@ export const getHomeFeed = async (req, res) => {
             .map(doc => {
                 const data = doc.data();
                 return {
-                    id: doc.id,
-                    type: 'device',
+                    deviceId: doc.id,
                     deviceName: data.deviceName,
                     deviceType: data.deviceType,
                     status: data.status,
-                    imei: data.imei,
-                    currentOwner: data.currentOwner,
-                    donationInfo: data.donationInfo,
-                    createdAt: data.createdAt,
-                    // Add any other device fields you want to include
+                    imageUrl: data.imageUrl,
+                    userId: data.userId,
+                    createdAt: data.createdAt
                 };
             });
 
