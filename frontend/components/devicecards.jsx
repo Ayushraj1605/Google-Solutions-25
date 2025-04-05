@@ -1,24 +1,25 @@
 import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  Image, 
-  TouchableOpacity, 
-  ActivityIndicator, 
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  ActivityIndicator,
   Dimensions,
   Modal,
-  ScrollView 
+  ScrollView
 } from 'react-native';
 import { router } from 'expo-router';
 import axios from 'axios';
+import { use } from 'react';
 
 const { width } = Dimensions.get('window');
 
 // Format text function simplified to only what's needed
 const formatText = (text) => {
   if (!text) return [];
-  
+
   return text.split('\n\n').map(section => {
     // Check if section has a bold title format: "*Title:* Content"
     if (section.includes('') && section.includes(':')) {
@@ -29,7 +30,7 @@ const formatText = (text) => {
         const title = section.substring(0, titleEndIndex).replace(/\\/g, '').trim();
         // Extract content after the colon
         const content = section.substring(titleEndIndex + 2).replace(/\\/g, '').trim();
-        
+
         return {
           isHeader: true,
           title: title,
@@ -37,29 +38,31 @@ const formatText = (text) => {
         };
       }
     }
-    
+
     // Handle paragraphs that might contain bold formatting
     const formattedContent = section.replace(/\\(.?)\\*/g, '$1').trim();
-    
-    return { 
-      isHeader: false, 
-      content: formattedContent 
+
+    return {
+      isHeader: false,
+      content: formattedContent
     };
   });
 };
 
-const DeviceCard = ({ data }) => {
+const DeviceCard = ({ data, onStatusUpdate }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isInDonation, setIsInDonation] = useState(false);
   const [isLoadingTips, setIsLoadingTips] = useState(false);
   const [visible, setVisible] = useState(false);
   const [deviceTips, setDeviceTips] = useState('');
   const [pulseAnimation, setPulseAnimation] = useState(false);
-
+  const [isDonating, setIsDonating] = useState(false);
+  const isInDonation = data?.status === "InDonation";
   // Improved console logs for debugging
-  console.log('Device data:', data);
-  console.log('Device status (type):', typeof data?.status, data?.status);
-  console.log('Device ID:', data?.deviceId || data?.deviceID);
-  console.log('Device type:', data?.deviceType);
+  // console.log('Device data:', data);
+  // console.log('Device status (type):', typeof data?.status, data?.status);
+  // console.log('Device ID:', data?.deviceId || data?.deviceID);
+  // console.log('Device type:', data?.deviceType);
 
   const showModal = () => setVisible(true);
   const hideModal = () => setVisible(false);
@@ -71,22 +74,77 @@ const DeviceCard = ({ data }) => {
     setIsSubmitting(false);
   };
 
+  // const handleDonatePress = async () => {
+  //   setIsDonating(true);
+  //   // console.log('Donating device with ID:', data.deviceId || data.deviceID);
+  //   try {
+  //     let endpoint, requestMethod;
+  //     endpoint = `https://cloudrunservice-254131401451.us-central1.run.app/user/donateDevice?deviceId=${data.deviceId || data.deviceID}`;
+  //     requestMethod = 'put';
+  //     const { status } = await axios({
+  //       method: requestMethod,
+  //       url: endpoint,
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       }
+  //     });
+
+  //   }
+  //   catch {
+  //     console.error('Error donating device:', error);
+  //     Alert.alert("Error", `Failed to donating device. Please try again.`);
+  //   } finally {
+  //     setIsDonating(false);
+  //   }
+  // };
+  const handleDonatePress = async () => {
+    setIsDonating(true);
+    try {
+      // Optimistically update UI
+      if (onStatusUpdate) {
+        onStatusUpdate(data.deviceId || data.deviceID, "InDonation");
+      }
+
+      const endpoint = `https://cloudrunservice-254131401451.us-central1.run.app/user/donateDevice?deviceId=${data.deviceId || data.deviceID}`;
+
+      await axios({
+        method: 'put',
+        url: endpoint,
+        headers: { "Content-Type": "application/json" }
+      });
+
+      // Optional: Refresh data from server if needed
+      // You could trigger a refresh here if you prefer
+
+    } catch (error) {
+      console.error('Error donating device:', error);
+      // Revert UI if API call fails
+      if (onStatusUpdate) {
+        onStatusUpdate(data.deviceId || data.deviceID, "Ready");
+      }
+      Alert.alert("Error", "Failed to donate device. Please try again.");
+    } finally {
+      setIsDonating(false);
+    }
+  };
+
+
   const handleViewDetails = async () => {
     try {
       setIsLoadingTips(true);
       startPulseAnimation();
-      
+
       console.log('Fetching suggestions for device type:', data?.deviceType || "generic");
-      
+
       const response = await axios.post('https://cloudrunservice-254131401451.us-central1.run.app/user/deviceSuggestions', {
         deviceType: data?.deviceType || "generic"
       });
-      
+
       console.log('Received suggestions:', response.data.suggestions ? 'Success' : 'Empty');
       setDeviceTips(response.data.suggestions);
       setIsLoadingTips(false);
       showModal();
-    } catch(err) {
+    } catch (err) {
       console.error('Error fetching device details:', err);
       setIsLoadingTips(false);
       router.push({
@@ -95,7 +153,7 @@ const DeviceCard = ({ data }) => {
       });
     }
   };
-  
+
   // Function to start pulse animation
   const startPulseAnimation = () => {
     let pulseCount = 0;
@@ -114,17 +172,19 @@ const DeviceCard = ({ data }) => {
   const deviceType = data?.deviceType || "Make the world greener";
   const deviceId = data?.deviceId || data?.deviceID || "Unknown";
   const imageUrl = data?.imageUrl || "https://www.clipartmax.com/png/middle/167-1673712_green-recycling-symbol-green-recycle-logo-png.png";
-  
+
   // Check if status indicates the device is in progress
   // If status is a string, we need to check for values that mean "in progress"
   const recycleStatus = data?.status ? data.status !== "" : false;
-  
+
   // Determine if the device is in a recycling state based on status string
   const isInRecyclingProcess = recycleStatus && data?.status !== "Ready";
-  
+  // const isInDonation = data?.status === "InDonation";
+  console.log(data?.status);
+  // const isInDonation=donationStatus && data?.status!=="InDonation";
   // Status indicator color - adjust based on your actual status values
   const statusColor = isInRecyclingProcess ? '#FFB74D' : '#4CAF50';
-  const statusText = isInRecyclingProcess ? "In Progress":"";
+  const statusText = isInRecyclingProcess ? "In Progress" : "";
 
   // Format tips for display
   const formattedTips = formatText(deviceTips);
@@ -140,14 +200,14 @@ const DeviceCard = ({ data }) => {
         <View style={styles.contentContainer}>
           {/* Left side: Image */}
           <View style={styles.imageContainer}>
-            <Image 
-              source={{ uri: imageUrl }} 
+            <Image
+              source={{ uri: imageUrl }}
               style={styles.image}
               resizeMode="cover"
             />
             <View style={styles.logoContainer}>
-              <Image 
-                source={require('../assets/svg/logo')} 
+              <Image
+                source={require('../assets/svg/logo')}
                 style={styles.logo}
               />
             </View>
@@ -162,15 +222,33 @@ const DeviceCard = ({ data }) => {
               <View style={styles.idContainer}>
                 <Text style={styles.idLabel}>ID:</Text>
                 <Text style={styles.idValue}>{deviceId}</Text>
-              </View>
-              {/* <Text style={styles.statusInfoText}>Status: {data?.status || "Ready to Recycle"}</Text> */}
+
+              </View><TouchableOpacity
+                style={[
+                  styles.donateButton,
+                  isInDonation && styles.donateButtonDisabled
+                ]}
+                onPress={isInDonation ? null : handleDonatePress}
+                disabled={isInDonation || isDonating}
+                activeOpacity={isInDonation ? 0.7 : 1}
+              >
+                {isDonating ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.donateButtonText}>
+                    {isInDonation ? "In Donation Queue" : "Donate"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.statusInfoText}>Status: {data?.status || "Ready to Recycle"}</Text>
             </View>
           </View>
         </View>
-        
+
         {/* Action buttons */}
         <View style={styles.actionContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.detailsButton,
               pulseAnimation && styles.detailsButtonPulse,
@@ -187,21 +265,22 @@ const DeviceCard = ({ data }) => {
               </View>
             ) : (
               <View style={styles.buttonContent}>
-                <Image 
-                  source={require('../assets/gemini-icon.png')} 
+                <Image
+                  source={require('../assets/gemini-icon.png')}
                   style={styles.geminiIcon}
                 />
                 <Text style={styles.detailsButtonText}>Gemini assisted Reuse Tips</Text>
               </View>
             )}
           </TouchableOpacity>
+
         </View>
       </View>
-      
+
       {/* Recycle button - Now outside the main card */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
-          styles.recycleButton, 
+          styles.recycleButton,
           isInRecyclingProcess && styles.recycleButtonDisabled
         ]}
         onPress={!isInRecyclingProcess ? handleRecyclePress : null}
@@ -230,14 +309,14 @@ const DeviceCard = ({ data }) => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{deviceName}</Text>
               <Text style={styles.modalSubtitle}>Recycling Information</Text>
-              <TouchableOpacity 
-                style={styles.closeButton} 
+              <TouchableOpacity
+                style={styles.closeButton}
                 onPress={hideModal}
               >
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
-            
+
             {/* Modal Content */}
             <ScrollView style={styles.modalContent}>
               {deviceTips ? (
@@ -264,10 +343,10 @@ const DeviceCard = ({ data }) => {
                 </View>
               )}
             </ScrollView>
-            
+
             {/* Modal Footer */}
             <View style={styles.modalFooter}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalRecycleButton}
                 onPress={() => {
                   hideModal();
@@ -437,8 +516,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
   },
+
   recycleButtonDisabled: {
     backgroundColor: '#888',
+  },
+  donateButton: {
+    marginTop: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    backgroundColor: '#34C759',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '50%',
+  },
+  donateButtonDisabled: {
+    backgroundColor: '#888',
+  },
+  donateButtonText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   recycleButtonText: {
     fontSize: 14,

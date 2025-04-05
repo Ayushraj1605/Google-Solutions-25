@@ -16,7 +16,17 @@ const Devices = ({ visible = true, style }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
-  const [refreshing, setRefreshing] = useState(false); // New state for refreshing
+  // In your parent component that renders DeviceCard
+  const [devices, setDevices] = useState([]);
+
+  // const handleStatusUpdate = (deviceId, newStatus) => {
+  //   setDevices(prevDevices =>
+  //     prevDevices.map(device =>
+  //       device.deviceId === deviceId ? { ...device, status: newStatus } : device
+  //     )
+  //   );
+  // };
+
 
   const _retrieveData = async () => {
     try {
@@ -49,6 +59,8 @@ const Devices = ({ visible = true, style }) => {
               deviceId: device.deviceId || device.deviceID,
               deviceID: device.deviceId || device.deviceID
             }));
+
+            console.log('Fetched devices data:', devicesWithStatus);
             setData(devicesWithStatus);
             setFilteredData(devicesWithStatus);
           }
@@ -97,13 +109,24 @@ const Devices = ({ visible = true, style }) => {
     },
     []
   );
+  const handleStatusUpdate = (deviceId, newStatus) => {
+    setData(prevDevices =>
+      prevDevices.map(device =>
+        (device.deviceId === deviceId || device.deviceID === deviceId)
+          ? { ...device, status: newStatus }
+          : device
+      )
+    );
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    setRefreshKey(prevKey => prevKey + 1); // Trigger a re-fetch
-    setRefreshing(false);
+    // Also update filteredData to keep them in sync
+    setFilteredData(prevDevices =>
+      prevDevices.map(device =>
+        (device.deviceId === deviceId || device.deviceID === deviceId)
+          ? { ...device, status: newStatus }
+          : device
+      )
+    );
   };
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#609966" />
@@ -129,7 +152,11 @@ const Devices = ({ visible = true, style }) => {
         >
           {filteredData.length > 0 ? (
             filteredData.map((item, index) => (
-              <Cards key={item.id || index} data={item} />
+              <Cards
+                key={item.id || index}
+                data={item}
+                onStatusUpdate={handleStatusUpdate}
+              />
             ))
           ) : (
             <View style={styles.emptyContainer}>

@@ -1,6 +1,5 @@
 import express from 'express';
-import { signup, signin, getProfile, locations, orders, getBlogs, getOrders, getDevices, addDevice, deviceSuggestions, createBlog, updateDevice,updateBlog,deleteBlog } from '../controllers/authController.js';
-
+import { signup, signin, getProfile, locations, orders, getBlogs, getOrders, getDevices, addDevice, deviceSuggestions, createBlog, updateDevice,updateBlog,deleteBlog,donateDevice, getInDonationDevices, getHomeFeed } from '../controllers/authController.js';
 import { authMiddleware } from '../middlewares/authMiddleware.js';
 import { db } from '../../app.js'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -18,28 +17,38 @@ router.get('/user', (req, res) => {
 /* Org Endpoints */
 router.post('/org/signup', signupOrg);
 router.post('/org/login', signinOrg);
+router.get('/org/getOrgOrders', getOrgOrders);
 
 /* user Endpoints */
 router.post('/user/signup', signup);
 router.post('/user/login', signin);     
-router.get('/user/profile', authMiddleware, getProfile);
+router.get('/user/profile', getProfile);
+router.post('/user/addAddress', addAddress);
+router.get('/user/getAddress', getAddresses);
 router.get('/user/orgLocations', locations);
 
 /* Adding Devices endpoints */
 router.post('/user/addDevice', addDevice);
 router.put('/user/updateDevice', updateDevice);
 router.get('/user/getDevices', getDevices);
+router.put('/user/donateDevice', donateDevice);
+router.get('/user/getHomeFeed', getHomeFeed);
 
 /* Blogs Endpoints */
 router.post('/user/blogs', createBlog);
 router.get('/user/getBlogs', getBlogs);
-
 router.put('/user/updateBlog', updateBlog);
 router.delete('/user/deleteBlog', deleteBlog);
 
 /* order Endpoints */
 router.post('/user/order', orders);
 router.get('/user/getOrders', getOrders);
+
+/* Donate endpoints */
+router.put('/user/donateDevice', donateDevice);
+
+router.get('/user/getHomeFeed', getHomeFeed);
+
 router.get('/users', async (req, res) => {
     try {
         const userCollection = collection(db, "users");  

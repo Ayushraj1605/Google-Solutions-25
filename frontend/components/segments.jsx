@@ -1,6 +1,15 @@
 import * as React from 'react';
 import { ScrollView, View } from 'react-native';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { SafeAreaView, StyleSheet,
+    Image,
+    TouchableOpacity,
+    Text,
+    Animated,
+    Platform,
+    Dimensions,
+    ActivityIndicator,
+    Modal,
+  } from 'react-native';
 import { SegmentedButtons } from 'react-native-paper';
 import NewsCards from './Newscards';
 import BlogCard from './blogcards'; // Changed from BlogCards to BlogCard
@@ -8,6 +17,26 @@ import FactsCards from './factscard';
 import ChatBotButton from './chatbotbutton';
 import BlogEditButton from './blogeditbutton';
 import axios from 'axios';
+import DeviceCard from './deviceHomeCard';
+// import { useState } from 'react';
+import{ useState, useEffect, useRef } from 'react';
+// import {
+//   StyleSheet,
+//   View,
+//   Image,
+//   TouchableOpacity,
+//   Text,
+//   Animated,
+//   Platform,
+//   Dimensions,
+//   ActivityIndicator,
+//   Modal,
+//   ScrollView,
+//   SafeAreaView
+// } from 'react-native';
+// import { MaterialCommunityIcons } from '@expo/vector-icons';
+// import axios from 'axios';
+
 
 // Real, verified blog content
 // const blogData = [
@@ -133,95 +162,543 @@ const factsData = [
 
 
 
-const Segments = ({ name }) => {
-  const [value, setValue] = React.useState('Blogs');
-  const [blogs, setBlogs] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
+// const Segments = ({ name }) => {
+//   const [value, setValue] = React.useState('Blogs');
+//   const [blogs, setBlogs] = React.useState([]);
+//   const [devices, setDevices] = React.useState([]);
+//   const [loading, setLoading] = React.useState(false);
+//   const [error, setError] = React.useState(null);
 
-  const fetchBlogs = async () => {
+//   const fetchBlogs = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs/');
+//       console.log('API Response:', response.data);
+
+//       if (response.data && response.data.blogs) {
+//         setBlogs(response.data.blogs);
+//         console.log(blogs);
+//       } else {
+//         setError('No blogs found in the response');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching blogs:', err);
+//       setError('Failed to fetch blogs: ' + (err.message || 'Unknown error'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+
+//   // Fetch blogs when the component mounts or when the selected segment is 'Blogs'
+//   React.useEffect(() => {
+//     if (value === 'Blogs') {
+//       fetchBlogs();
+//     }
+//   }, [value]);
+
+//   const fetchInDonationDevices = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/inDonationDevices/');
+//       console.log('API Response:', response.data);
+
+//       if (response.data && response.data.devices) {
+//         setBlogs(response.data.devices);
+//         console.log(blogs);
+//       } else {
+//         setError('No blogs found in the response');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching blogs:', err);
+//       setError('Failed to fetch blogs: ' + (err.message || 'Unknown error'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+//   React.useEffect(() => {
+//     if (value === 'Devices') {
+//       fetchBlogs();
+//     }
+//   }, [value]);
+//   const renderContent = () => {
+//     switch (value) {
+//       case 'Blogs':
+//         const combinedItems = [
+//           ...blogs.map(blog => ({ type: 'blog', data: blog })),
+//           ...devices.map(device => ({ type: 'device', data: device }))
+//         ];
+
+//         // Shuffle the combined array
+//         const shuffledItems = combinedItems.sort(() => Math.random() - 0.5);
+//         return (
+//           // <>
+//           //   {blogs.map((blog) => (
+//           //     <View key={`blog-${blog.blogId}`} style={styles.cardContainer}>
+//           //       <BlogCard
+//           //         title={blog.title}
+//           //         subtitle={blog.subtitle}
+//           //         imageUri={blog.imageUri}
+//           //         description={blog.body}
+//           //         category={blog.category || "Environment"}
+//           //         readTime="4 min read"
+//           //         likes={Math.floor(Math.random() * 50) + 10}
+//           //         comments={Math.floor(Math.random() * 10) + 1}
+//           //         onShare={() => console.log(`Share blog: ${blog.blogId}`)}
+//           //         onReadMore={() => console.log(`Read more blog: ${blog.blogId}`)}
+//           //         onBookmark={() => console.log(`Bookmark blog: ${blog.blogId}`)}
+//           //       />
+//           //       <DeviceHomeCard></DeviceHomeCard>
+//           //     </View>
+//           //   ))}
+//           // </>
+//           // Assuming you have two arrays: blogs and devices
+
+//           // Render the shuffled items
+//           <>
+//             {shuffledItems.map((item, index) => {
+//               if (item.type === 'blog') {
+//                 const blog = item.data;
+//                 return (
+//                   <View key={`blog-${blog.blogId}`} style={styles.cardContainer}>
+//                     <BlogCard
+//                       title={blog.title}
+//                       subtitle={blog.subtitle}
+//                       imageUri={blog.imageUri}
+//                       description={blog.body}
+//                       category={blog.category || "Environment"}
+//                       readTime="4 min read"
+//                       likes={Math.floor(Math.random() * 50) + 10}
+//                       comments={Math.floor(Math.random() * 10) + 1}
+//                       onShare={() => console.log(`Share blog: ${blog.blogId}`)}
+//                       onReadMore={() => console.log(`Read more blog: ${blog.blogId}`)}
+//                       onBookmark={() => console.log(`Bookmark blog: ${blog.blogId}`)}
+//                     />
+//                   </View>
+//                 );
+//               } else {
+//                 const device = item.data;
+//                 return (
+//                   <View key={`device-${device.id}`} style={styles.cardContainer}>
+//                     <DeviceHomeCard device={device} />
+//                   </View>
+//                 );
+//               }
+//             })}
+//           </>
+//         );
+//     }
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       {/* Single ScrollView wrapping the content to avoid multiple scroll areas */}
+//       <ScrollView
+//         contentContainerStyle={styles.scrollContent}
+//         showsVerticalScrollIndicator={false}
+//       >
+//         <View style={styles.contentWrapper}>{renderContent()}
+//         </View>
+//         {/* <View><BlogEditButton></BlogEditButton></View> */}
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// };
+// const Segments = ({ name }) => {
+//   const [blogs, setBlogs] = React.useState([]);
+//   const [devices, setDevices] = React.useState([]);
+//   const [loading, setLoading] = React.useState(false);
+//   const [error, setError] = React.useState(null);
+
+//   const fetchBlogs = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs/');
+//       console.log('API Response:', response.data);
+
+//       if (response.data && response.data.blogs) {
+//         // Sort blogs by createdAt in descending order (newest first)
+//         const sortedBlogs = response.data.blogs.sort((a, b) => 
+//           new Date(b.createdAt) - new Date(a.createdAt)
+//         );
+//         setBlogs(sortedBlogs);
+//       } else {
+//         setError('No blogs found in the response');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching blogs:', err);
+//       setError('Failed to fetch blogs: ' + (err.message || 'Unknown error'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const fetchInDonationDevices = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/inDonationDevices/');
+//       console.log('API Response:', response.data);
+
+//       if (response.data && response.data.devices) {
+//         // Sort devices by createdAt in descending order (newest first)
+//         const sortedDevices = response.data.devices.sort((a, b) => 
+//           new Date(b.createdAt) - new Date(a.createdAt)
+//         );
+//         setDevices(sortedDevices);
+//       } else {
+//         setError('No devices found in the response');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching devices:', err);
+//       setError('Failed to fetch devices: ' + (err.message || 'Unknown error'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Fetch both blogs and devices when the component mounts
+//   React.useEffect(() => {
+//     fetchBlogs();
+//     fetchInDonationDevices();
+//   }, []);
+
+//   const renderContent = () => {
+//     // Combine and sort all items by createdAt
+//     const combinedItems = [
+//       ...blogs.map(blog => ({ type: 'blog', data: blog, createdAt: blog.createdAt })),
+//       ...devices.map(device => ({ type: 'device', data: device, createdAt: device.createdAt }))
+//     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+//     return (
+//       <>
+//         {combinedItems.map((item, index) => {
+//           if (item.type === 'blog') {
+//             const blog = item.data;
+//             return (
+//               <View key={`blog-${blog.blogId}`} style={styles.cardContainer}>
+//                 <BlogCard
+//                   title={blog.title}
+//                   subtitle={blog.subtitle}
+//                   imageUri={blog.imageUri}
+//                   description={blog.body}
+//                   category={blog.category || "Environment"}
+//                   readTime="4 min read"
+//                   likes={Math.floor(Math.random() * 50) + 10}
+//                   comments={Math.floor(Math.random() * 10) + 1}
+//                   onShare={() => console.log(`Share blog: ${blog.blogId}`)}
+//                   onReadMore={() => console.log(`Read more blog: ${blog.blogId}`)}
+//                   onBookmark={() => console.log(`Bookmark blog: ${blog.blogId}`)}
+//                 />
+//               </View>
+//             );
+//           } else {
+//             const device = item.data;
+//             return (
+//               <View key={`device-${device.id}`} style={styles.cardContainer}>
+//                 <DeviceHomeCard device={device} />
+//               </View>
+//             );
+//           }
+//         })}
+//       </>
+//     );
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <ScrollView
+//         contentContainerStyle={styles.scrollContent}
+//         showsVerticalScrollIndicator={false}
+//       >
+//         <View style={styles.contentWrapper}>
+//           {/* {loading && <ActivityIndicator size="large" />} */}
+//           {error && <Text style={styles.errorText}>{error}</Text>}
+//           {renderContent()}
+//         </View>
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// };
+// const Segments = ({ name }) => {
+//   const [blogs, setBlogs] = React.useState([]);
+//   const [devices, setDevices] = React.useState([]);
+//   const [loading, setLoading] = React.useState(false);
+//   const [error, setError] = React.useState(null);
+
+//   const fetchBlogs = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs/');
+//       console.log('API Response:', response.data);
+
+//       if (response.data?.blogs) {
+//         const sortedBlogs = response.data.blogs.sort((a, b) => 
+//           new Date(b.createdAt) - new Date(a.createdAt)
+//         );
+//         setBlogs(sortedBlogs);
+//       } else {
+//         setError('No blogs found');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching blogs:', err);
+//       setError('Failed to fetch blogs: ' + (err.message || 'Unknown error'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const fetchInDonationDevices = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/inDonationDevices/');
+//       console.log('API Response:', response.data);
+
+//       if (response.data?.devices) {
+//         const sortedDevices = response.data.devices.sort((a, b) => 
+//           new Date(b.createdAt) - new Date(a.createdAt)
+//         );
+//         setDevices(sortedDevices);
+//       } else {
+//         setError('No devices found');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching devices:', err);
+//       setError('Failed to fetch devices: ' + (err.message || 'Unknown error'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   React.useEffect(() => {
+//     fetchBlogs();
+//     fetchInDonationDevices();
+//   }, []);
+
+//   // Merge blogs & devices into a single array, sorted by createdAt (newest first)
+//   const mergedFeed = React.useMemo(() => {
+//     return [
+//       ...blogs.map(blog => ({ type: 'blog', ...blog })),
+//       ...devices.map(device => ({ type: 'device', ...device }))
+//     ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+//   }, [blogs, devices]);
+
+//   const renderItem = (item) => {
+//     if (item.type === 'blog') {
+//       return (
+//         <View key={`blog-${item.blogId}`} style={styles.cardContainer}>
+//           <BlogCard
+//             title={item.title}
+//             subtitle={item.subtitle}
+//             imageUri={item.imageUri}
+//             description={item.body}
+//             category={item.category || "Environment"}
+//             readTime="4 min read"
+//             likes={Math.floor(Math.random() * 50) + 10}
+//             comments={Math.floor(Math.random() * 10) + 1}
+//             onShare={() => console.log(`Share blog: ${item.blogId}`)}
+//             onReadMore={() => console.log(`Read more blog: ${item.blogId}`)}
+//             onBookmark={() => console.log(`Bookmark blog: ${item.blogId}`)}
+//           />
+//         </View>
+//       );
+//     } else {
+//       return (
+//         <View key={`device-${item.deviceId}`} style={styles.cardContainer}>
+//           <DeviceHomeCard device={item} />
+//         </View>
+//       );
+//     }
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <ScrollView
+//         contentContainerStyle={styles.scrollContent}
+//         showsVerticalScrollIndicator={false}
+//       >
+//         <View style={styles.contentWrapper}>
+//           {/* {loading && <ActivityIndicator size="large" />} */}
+//           {error && <Text style={styles.errorText}>{error}</Text>}
+//           {mergedFeed.map(renderItem)}
+//         </View>
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// };
+
+
+// const { width } = Dimensions.get('window');
+
+// const Segments = ({ name }) => {
+//   const [feed, setFeed] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+
+//   const fetchHomeFeed = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/getHomeFeed');
+//       console.log('API Response:', response.data);
+
+//       if (response.data?.feed) {
+//         // Sort feed items by createdAt timestamp (newest first)
+//         const sortedFeed = response.data.feed.sort((a, b) => {
+//           const dateA = a.createdAt ? new Date(a.createdAt.seconds * 1000) : new Date(0);
+//           const dateB = b.createdAt ? new Date(b.createdAt.seconds * 1000) : new Date(0);
+//           return dateB - dateA;
+//         });
+//         setFeed(sortedFeed);
+//       } else {
+//         setError('No feed items found');
+//       }
+//     } catch (err) {
+//       console.error('Error fetching feed:', err);
+//       setError('Failed to fetch feed: ' + (err.message || 'Unknown error'));
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     fetchHomeFeed();
+//   }, []);
+
+//   const renderItem = (item) => {
+//     if (item.type === 'blog') {
+//       return (
+//         <View key={`blog-${item.id}`} style={styles.cardContainer}>
+//           <BlogCard
+//             title={item.title}
+//             subtitle={`${new Date(item.createdAt?.seconds * 1000).toLocaleDateString()} • By ${item.username || 'Anonymous'}`}
+//             description={item.body}
+//             category="Environment" // Default category since it's not in the API
+//             readTime="4 min read" // Estimated read time
+//           />
+//         </View>
+//       );
+//     }
+//     // You can add other item types here as needed
+//     return null;
+//   };
+
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <ScrollView
+//         contentContainerStyle={styles.scrollContent}
+//         showsVerticalScrollIndicator={false}
+//       >
+//         <View style={styles.contentWrapper}>
+//           {loading && <ActivityIndicator size="large" />}
+//           {error && <Text style={styles.errorText}>{error}</Text>}
+//           {feed.map(renderItem)}
+//         </View>
+//       </ScrollView>
+//     </SafeAreaView>
+//   );
+// };
+
+// Copy
+// import React, { useState, useEffect, useMemo } from 'react';
+// import {
+//   StyleSheet,
+//   View,
+//   Text,
+//   ScrollView,
+//   SafeAreaView,
+//   ActivityIndicator
+// } from 'react-native';
+// import axios from 'axios';
+// import BlogCard from './BlogCard'; // Assuming BlogCard is in a separate file
+
+const Segments = ({ name }) => {
+  const [feed, setFeed] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchHomeFeed = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/getBlogs/');
+      const response = await axios.get('https://cloudrunservice-254131401451.us-central1.run.app/user/getHomeFeed/');
       console.log('API Response:', response.data);
-      
-      if (response.data && response.data.blogs) {
-        setBlogs(response.data.blogs);
-        console.log(blogs);
+
+      if (response.data?.feed) {
+        // Sort feed items by createdAt (newest first)
+        const sortedFeed = response.data.feed.sort((a, b) => {
+          const dateA = a.updatedAt ? new Date(a.updatedAt.seconds * 1000) : new Date(0);
+          const dateB = b.updatedAt ? new Date(b.updatedAt.seconds * 1000) : new Date(0);
+          return dateB - dateA;
+        });
+        setFeed(sortedFeed);
       } else {
-        setError('No blogs found in the response');
+        setError('No feed items found');
       }
     } catch (err) {
-      console.error('Error fetching blogs:', err);
-      setError('Failed to fetch blogs: ' + (err.message || 'Unknown error'));
+      console.error('Error fetching feed:', err);
+      setError('Failed to fetch feed: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchHomeFeed();
+  }, []);
 
-  // Fetch blogs when the component mounts or when the selected segment is 'Blogs'
-  React.useEffect(() => {
-    if (value === 'Blogs') {
-      fetchBlogs();
+  const renderItem = (item) => {
+    if (item.type === 'blog') {
+      return (
+        <View key={`blog-${item.id}`} style={styles.cardContainer}>
+          <BlogCard
+            title={item.title}
+            subtitle={`${new Date(item.updatedAt?.seconds * 1000).toLocaleDateString()} • By ${item.username || 'Anonymous'}`}
+            description={item.body}
+            category="Environment" // Default category
+            readTime="4 min read" // Default read time
+          />
+        </View>
+      );
+    } else if (item.type === 'device') {
+      return (
+        <View key={`device-${item.id}`} style={styles.cardContainer}>
+          <DeviceCard
+            deviceName={item.deviceName || 'Unnamed Device'}
+            deviceId={item.id}
+            deviceType={item.deviceType || 'Unknown'}
+            description={`Status: ${item.status || 'Unknown'}`}
+            status={item.status || 'inDonation'}
+            createdAt={item.createdAt ? new Date(item.createdAt.seconds * 1000) : new Date()}
+            userName={item.username || 'Anonymous Donor'}
+            // Add these if available in your API response
+            // imageUri={item.imageUri}
+            // onCardPress={() => handleDevicePress(item)}
+            // onShare={() => handleShareDevice(item)}
+            // onContact={() => handleContactDonor(item)}
+          />
+        </View>
+      );
     }
-  }, [value]);
-
-  // Format the date from timestamp
-  const formatDate = (timestamp) => {
-    if (!timestamp) return '';
-    
-    try {
-      const date = new Date(timestamp.seconds * 1000);
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      });
-    } catch (e) {
-      console.error('Error formatting date:', e);
-      return '';
-    }
-  };
-
-  const renderContent = () => {
-    switch (value) {
-      case 'Blogs':
-        return (
-          <>
-            {blogs.map((blog) => (
-              <View key={`blog-${blog.blogId}`} style={styles.cardContainer}>
-                <BlogCard
-                  title={blog.title}
-                  subtitle={blog.subtitle}
-                  imageUri={blog.imageUri}
-                  description={blog.body}
-                  category={blog.category || "Environment"}
-                  readTime="4 min read"
-                  likes={Math.floor(Math.random() * 50) + 10}
-                  comments={Math.floor(Math.random() * 10) + 1}
-                  onShare={() => console.log(`Share blog: ${blog.blogId}`)}
-                  onReadMore={() => console.log(`Read more blog: ${blog.blogId}`)}
-                  onBookmark={() => console.log(`Bookmark blog: ${blog.blogId}`)}
-                />
-              </View>
-            ))}
-          </>
-        );
-    }
+    return null;
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Single ScrollView wrapping the content to avoid multiple scroll areas */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.contentWrapper}>{renderContent()}
+        <View style={styles.contentWrapper}>
+          {loading && <ActivityIndicator size="large" />}
+          {error && <Text style={styles.errorText}>{error}</Text>}
+          {feed.map(renderItem)}
         </View>
-      {/* <View><BlogEditButton></BlogEditButton></View> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -261,7 +738,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 10,
-},
+  },
 });
 
 export default Segments;
