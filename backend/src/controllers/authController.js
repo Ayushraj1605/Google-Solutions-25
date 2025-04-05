@@ -804,40 +804,107 @@ export const deleteBlog = async (req, res) => {
     }
 }
 
-export const getInDonationDevices = async (req, res) => {
-    // const userId = req.query.userId;
+// export const getInDonationDevices = async (req, res) => {
+// const userId = req.query.userId;
 
+//     try {
+//         const devicesCollection = collection(db, "Devices"); // Make sure this matches your collection name
+//         const devicesSnapshot = await getDocs(devicesCollection);
+
+//         // Filter devices with status "InDonation" and map to desired format
+//         const devices = devicesSnapshot.docs
+//             .filter(doc => doc.data().status === "InDonation")
+//             .map(doc => {
+//                 const data = doc.data();
+//                 return {
+//                     deviceId: doc.id,
+//                     name: data.name,
+//                     type: data.type,
+//                     status: data.status,
+//                     location: data.location,
+//                     currentOwner: data.currentOwner,
+//                     donationInfo: data.donationInfo,
+//                     // Include any other device fields you need
+//                     createdAt: data.createdAt
+//                 };
+//             });
+
+//         return res.status(200).json({
+//             message: "Devices with 'InDonation' status retrieved successfully!",
+//             devices: devices
+//         });
+//     } catch (err) {
+//         console.error("Error retrieving devices:", err);
+//         return res.status(500).json({
+//             message: "Error retrieving devices",
+//             error: err.message
+//         });
+//     }
+// }
+
+
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebaseConfig'; // Adjust the import path as needed
+
+export const getHomeFeed = async (req, res) => {
     try {
-        const devicesCollection = collection(db, "Devices"); // Make sure this matches your collection name
-        const devicesSnapshot = await getDocs(devicesCollection);
+        // Fetch blogs
+        const blogsCollection = collection(db, "blogs");
+        const blogsSnapshot = await getDocs(blogsCollection);
+        
+        const blogs = blogsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                type: 'blog',
+                userId: data.userId,
+                username: data.username,
+                body: data.body,
+                title: data.title,
+                createdAt: data.createdAt,
+                // Add any other blog fields you want to include
+            };
+        });
 
-        // Filter devices with status "InDonation" and map to desired format
+        // Fetch devices
+        const devicesCollection = collection(db, "Devices");
+        const devicesSnapshot = await getDocs(devicesCollection);
+        
         const devices = devicesSnapshot.docs
             .filter(doc => doc.data().status === "InDonation")
             .map(doc => {
                 const data = doc.data();
                 return {
-                    deviceId: doc.id,
-                    name: data.name,
-                    type: data.type,
+                    id: doc.id,
+                    type: 'device',
+                    deviceName: data.deviceName,
+                    deviceType: data.deviceType,
                     status: data.status,
-                    location: data.location,
+                    imei: data.imei,
                     currentOwner: data.currentOwner,
                     donationInfo: data.donationInfo,
-                    // Include any other device fields you need
-                    createdAt: data.createdAt
+                    createdAt: data.createdAt,
+                    // Add any other device fields you want to include
                 };
             });
 
+        // Combine and sort by createdAt (newest first)
+        const combinedFeed = [...blogs, ...devices].sort((a, b) => {
+            // Convert to timestamps for comparison
+            const dateA = new Date(a.createdAt?.seconds * 1000 || a.createdAt);
+            const dateB = new Date(b.createdAt?.seconds * 1000 || b.createdAt);
+            return dateB - dateA; // For newest first
+        });
+
         return res.status(200).json({
-            message: "Devices with 'InDonation' status retrieved successfully!",
-            devices: devices
+            message: "Combined feed retrieved successfully!",
+            feed: combinedFeed
         });
     } catch (err) {
-        console.error("Error retrieving devices:", err);
+        console.error("Error retrieving combined feed:", err);
         return res.status(500).json({
-            message: "Error retrieving devices",
+            message: "Error retrieving combined feed",
             error: err.message
         });
     }
-}
+};
