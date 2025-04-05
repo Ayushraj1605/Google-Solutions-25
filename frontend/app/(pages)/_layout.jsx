@@ -19,6 +19,12 @@ const _layout = () => {
           headerShown: false,
           // headerTitle: 'Upload Device Info',
         }}
+      /><Stack.Screen
+        name='addresses'
+        options={{
+          headerShown: false,
+          // headerTitle: 'Upload Device Info',
+        }}
       />
       <Stack.Screen
         name='recycleform'
@@ -51,8 +57,10 @@ const _layout = () => {
       <Stack.Screen
         name='orderHistory'
         options={{
-          headerShown: false,
-          // headerTitle: 'Upload Device Info',
+          headerShown: true,
+          headerTitle: 'My Recycling Orders',
+          presentation: 'card',
+          animation: 'slide_from_right',
         }}
       />
       <Stack.Screen
@@ -62,8 +70,16 @@ const _layout = () => {
           // headerTitle: 'Upload Device Info',
         }}
       />
+      <Stack.Screen
+        name="myAddresses"
+        options={{
+          headerShown: false, // We're using our custom header
+          presentation: 'card',
+          animation: 'slide_from_right',
+        }}
+      />
     </Stack>
-    
+
   )
 }
 

@@ -1,4 +1,3 @@
-// components/orgOrders/FilterTabs.js
 import React from 'react';
 import { 
   StyleSheet, 
@@ -7,43 +6,29 @@ import {
   TouchableOpacity
 } from 'react-native';
 
-const FilterTabs = ({ activeTab, setActiveTab }) => {
+const FilterTabs = ({ activeTab, setActiveTab, counts = {} }) => {
+  const tabs = [
+    { id: 'pending', label: 'Pending' },
+    { id: 'accepted', label: 'Accepted' },
+    { id: 'completed', label: 'Completed' },
+    { id: 'cancelled', label: 'Cancelled' }
+  ];
+  // ...rest of the component
+
   return (
     <View style={styles.tabsContainer}>
-      <TouchableOpacity 
-        style={[styles.tab, activeTab === 'all' && styles.activeTab]}
-        onPress={() => setActiveTab('all')}
-      >
-        <Text style={[styles.tabText, activeTab === 'all' && styles.activeTabText]}>All</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.tab, activeTab === 'pending' && styles.activeTab]}
-        onPress={() => setActiveTab('pending')}
-      >
-        <Text style={[styles.tabText, activeTab === 'pending' && styles.activeTabText]}>Pending</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.tab, activeTab === 'accepted' && styles.activeTab]}
-        onPress={() => setActiveTab('accepted')}
-      >
-        <Text style={[styles.tabText, activeTab === 'accepted' && styles.activeTabText]}>Accepted</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.tab, activeTab === 'completed' && styles.activeTab]}
-        onPress={() => setActiveTab('completed')}
-      >
-        <Text style={[styles.tabText, activeTab === 'completed' && styles.activeTabText]}>Completed</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[styles.tab, activeTab === 'cancelled' && styles.activeTab]}
-        onPress={() => setActiveTab('cancelled')}
-      >
-        <Text style={[styles.tabText, activeTab === 'cancelled' && styles.activeTabText]}>Cancelled</Text>
-      </TouchableOpacity>
+      {tabs.map(tab => (
+        <TouchableOpacity 
+          key={tab.id}
+          style={[styles.tab, activeTab === tab.id && styles.activeTab]}
+          onPress={() => setActiveTab(tab.id)}
+        >
+          <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>
+            {tab.label}
+            {counts[tab.id] !== undefined && ` (${counts[tab.id]})`}
+          </Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 };
