@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   StyleSheet, 
   View, 
@@ -8,7 +8,8 @@ import {
   SafeAreaView,
   Dimensions,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -22,6 +23,7 @@ const OrderHistoryScreen = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [userId, setUserId] = useState(null);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -46,72 +48,88 @@ const OrderHistoryScreen = () => {
     _retrieveData();
   }, []);
 
+  // Function to fetch orders and devices
+  const fetchOrdersAndDevices = async (isRefreshing = false) => {
+    if (isRefreshing) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    
+    try {
+      // First fetch orders
+      const ordersResponse = await axios.get(
+        `https://cloudrunservice-254131401451.us-central1.run.app/user/getOrders?userId=${userId}`
+      );
+      
+      console.log('Orders response:', ordersResponse.data);
+      
+      if (!ordersResponse.data?.orders || !ordersResponse.data.orders.length) {
+        console.warn('No orders returned from API');
+        setOrders([]);
+        return;
+      }
+      
+      // Now fetch devices to get more details
+      const devicesResponse = await axios.get(
+        `https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}&cache=${refreshKey}`
+      );
+      
+      console.log('Devices response:', devicesResponse.data);
+      
+      // Create a map of deviceId to its device details
+      const deviceDetailsMap = {};
+      if (devicesResponse.data?.devices && Array.isArray(devicesResponse.data.devices)) {
+        devicesResponse.data.devices.forEach(device => {
+          deviceDetailsMap[device.deviceId || device.deviceID || device.id] = device;
+        });
+      }
+      
+      // Merge order data with device details
+      const completeOrders = ordersResponse.data.orders.map(order => {
+        const deviceId = order.deviceId;
+        const deviceDetails = deviceDetailsMap[deviceId] || {};
+        
+        return {
+          ...order,
+          ...deviceDetails,
+          id: order.orderId || order.id || deviceId, // Ensure we have an id for the key prop
+          deviceId: deviceId,
+          deviceName: deviceDetails.deviceName || deviceDetails.modelNumber || 'Unknown Device',
+          description: deviceDetails.description || deviceDetails.deviceType || 'Electronic device',
+          status: order.status || 'pending',
+          date: new Date(order.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString(),
+          organization: deviceDetails.organization || 'GreenTech Recycling'
+        };
+      });
+      
+      console.log('Complete merged orders:', completeOrders);
+      setOrders(completeOrders);
+    } catch (error) {
+      console.error('Error fetching orders and devices:', error);
+      setError('Failed to load orders. Please try again later.');
+      setOrders([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   // Fetch orders when userId changes
   useEffect(() => {
     if (userId) {
-      const fetchOrdersAndDevices = async () => {
-        setLoading(true);
-        try {
-          // First fetch orders
-          const ordersResponse = await axios.get(
-            `https://cloudrunservice-254131401451.us-central1.run.app/user/getOrders?userId=${userId}`
-          );
-          
-          console.log('Orders response:', ordersResponse.data);
-          
-          if (!ordersResponse.data?.orders || !ordersResponse.data.orders.length) {
-            console.warn('No orders returned from API');
-            setOrders([]);
-            setLoading(false);
-            return;
-          }
-          
-          // Now fetch devices to get more details
-          const devicesResponse = await axios.get(
-            `https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}&cache=${refreshKey}`
-          );
-          
-          console.log('Devices response:', devicesResponse.data);
-          
-          // Create a map of deviceId to its device details
-          const deviceDetailsMap = {};
-          if (devicesResponse.data?.devices && Array.isArray(devicesResponse.data.devices)) {
-            devicesResponse.data.devices.forEach(device => {
-              deviceDetailsMap[device.deviceId || device.deviceID || device.id] = device;
-            });
-          }
-          
-          // Merge order data with device details
-          const completeOrders = ordersResponse.data.orders.map(order => {
-            const deviceId = order.deviceId;
-            const deviceDetails = deviceDetailsMap[deviceId] || {};
-            
-            return {
-              ...order,
-              ...deviceDetails,
-              id: order.orderId || order.id || deviceId, // Ensure we have an id for the key prop
-              deviceId: deviceId,
-              deviceName: deviceDetails.deviceName || deviceDetails.modelNumber || 'Unknown Device',
-              description: deviceDetails.description || deviceDetails.deviceType || 'Electronic device',
-              status: order.status || 'pending',
-              date: new Date(order.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString(),
-              organization: deviceDetails.organization || 'GreenTech Recycling'
-            };
-          });
-          
-          console.log('Complete merged orders:', completeOrders);
-          setOrders(completeOrders);
-        } catch (error) {
-          console.error('Error fetching orders and devices:', error);
-          setError('Failed to load orders. Please try again later.');
-          setOrders([]);
-        } finally {
-          setLoading(false);
-        }
-      };
       fetchOrdersAndDevices();
     }
   }, [userId, refreshKey]);
+  
+  // Use useMemo to cache filtered orders based on activeTab
+  const filteredOrders = useMemo(() => {
+    if (activeTab === 'all') {
+      return orders;
+    } else {
+      return orders.filter(order => order.status.toLowerCase() === activeTab);
+    }
+  }, [orders, activeTab]);
   
   const getStatusColor = (status) => {
     switch(status.toLowerCase()) {
@@ -139,16 +157,15 @@ const OrderHistoryScreen = () => {
     }
   };
   
-  const getFilteredOrders = () => {
-    if (activeTab === 'all') {
-      return orders;
-    } else {
-      return orders.filter(order => order.status.toLowerCase() === activeTab);
-    }
-  };
-  
   const navigateToOrderDetails = (orderId) => {
     router.push(`/order-details?id=${orderId}`);
+  };
+
+  // Pull to refresh handler
+  const onRefresh = () => {
+    if (userId) {
+      fetchOrdersAndDevices(true);
+    }
   };
 
   const renderOrderCard = (order) => {
@@ -265,12 +282,12 @@ const OrderHistoryScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Recycling Orders</Text>
-      </View>
+      </View> */}
       
       <View style={styles.tabsContainer}>
         <TouchableOpacity 
@@ -320,10 +337,21 @@ const OrderHistoryScreen = () => {
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#2ecc71']}
+              tintColor="#2ecc71"
+            />
+          }
+        >
           <View style={styles.ordersContainer}>
-            {getFilteredOrders().length > 0 ? (
-              getFilteredOrders().map(renderOrderCard)
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map(renderOrderCard)
             ) : (
               <View style={styles.emptyState}>
                 <MaterialCommunityIcons name="archive-outline" size={64} color="#bdc3c7" />
@@ -351,7 +379,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f6fa',
-    paddingTop: 42,
+    // paddingTop: 42,
   },
   header: {
     flexDirection: 'row',

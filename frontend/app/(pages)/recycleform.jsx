@@ -140,7 +140,7 @@ const RecycleForm = () => {
       });
       
       // Navigate to the organisation list with form data as query params
-      router.push(`/organisationList?${queryParams.toString()}`);
+      router.push(`/addresses?${queryParams.toString()}`);
     } catch (err) {
       console.error('Error during form submission:', err);
       Alert.alert('Error', 'Something went wrong. Please try again.');

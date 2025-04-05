@@ -1,14 +1,14 @@
-// components/orgOrders/index.js
-import React, { useState, useEffect } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Dimensions
+  Dimensions,
+  RefreshControl
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -26,25 +26,32 @@ const { width } = Dimensions.get('window');
 
 const OrderHistoryScreen = () => {
   const [activeTab, setActiveTab] = useState('pending');
-  const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [allOrders, setAllOrders] = useState([]); // All orders from API
+  const [filteredOrders, setFilteredOrders] = useState([]); // Orders filtered by date and pincode
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false); // For pull-to-refresh
   const [orgId, setOrgId] = useState(null);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [markedDates, setMarkedDates] = useState({});
   const [pincodes, setPincodes] = useState([]);
   const [selectedPincode, setSelectedPincode] = useState('all');
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [processingAction, setProcessingAction] = useState(false);
-  
+  const [tabDataCache, setTabDataCache] = useState({
+    pending: [],
+    accepted: [],
+    completed: [],
+    cancelled: []
+  });
+
   // Retrieve organization ID from AsyncStorage
   const _retrieveData = async () => {
     try {
-      const value = await AsyncStorage.getItem('ORG_ID');
+      const value = await AsyncStorage.getItem('ID');
       if (value !== null) {
         setOrgId(value);
+        return value; // Return the value for immediate use
       }
     } catch (error) {
       console.error('Error retrieving data:', error);
@@ -52,143 +59,385 @@ const OrderHistoryScreen = () => {
     } finally {
       setLoading(false);
     }
+    return null;
   };
 
   // Initialize component
   useEffect(() => {
-    _retrieveData();
-  }, []);
+    const initializeData = async () => {
+      const id = await _retrieveData();
+      if (id) {
+        fetchOrders(id);
+      }
+    };
 
-  // Fetch orders when orgId changes
+    initializeData();
+  }, [refreshKey]);
+
+  // Apply date and pincode filters when dependencies change
   useEffect(() => {
-    if (orgId) {
-      fetchOrders();
-    }
-  }, [orgId, refreshKey, selectedDate]);
+    if (allOrders.length > 0) {
+      // First filter by date
+      const dateFiltered = filterOrdersByDate(allOrders, selectedDate);
 
-  const fetchOrders = async () => {
+      // Then apply pincode filter to the date-filtered results
+      filterOrdersByPincode(dateFiltered, selectedPincode);
+    } else {
+      // Ensure filteredOrders is set to empty array when no orders
+      setFilteredOrders([]);
+    }
+  }, [allOrders, selectedDate, selectedPincode]);
+
+  // Cache filtered orders by status for each tab
+  useEffect(() => {
+    if (filteredOrders.length > 0) {
+      const statusCounts = getStatusCounts(filteredOrders);
+      
+      // Only update cache for tabs that have data
+      const newCache = { ...tabDataCache };
+      
+      const pendingOrders = filteredOrders.filter(order => {
+        const status = (order.status || '').toLowerCase();
+        return ['pending', 'indonation'].includes(status);
+      });
+      if (pendingOrders.length > 0) {
+        newCache.pending = pendingOrders;
+      }
+      
+      const acceptedOrders = filteredOrders.filter(order => {
+        const status = (order.status || '').toLowerCase();
+        return ['accepted', 'processing', 'accept'].includes(status);
+      });
+      if (acceptedOrders.length > 0) {
+        newCache.accepted = acceptedOrders;
+      }
+      
+      const completedOrders = filteredOrders.filter(order => {
+        const status = (order.status || '').toLowerCase();
+        return ['completed', 'done'].includes(status);
+      });
+      if (completedOrders.length > 0) {
+        newCache.completed = completedOrders;
+      }
+      
+      const cancelledOrders = filteredOrders.filter(order => {
+        const status = (order.status || '').toLowerCase();
+        return ['cancelled', 'rejected', 'reject'].includes(status);
+      });
+      if (cancelledOrders.length > 0) {
+        newCache.cancelled = cancelledOrders;
+      }
+      
+      setTabDataCache(newCache);
+    }
+  }, [filteredOrders]);
+
+  // Use memoized orders based on active tab
+  // Replace the problematic useMemo hook with this fixed version
+const ordersToDisplay = useMemo(() => {
+  // Use cached data if available, otherwise filter again
+  if (tabDataCache[activeTab] && tabDataCache[activeTab].length > 0) {
+    return tabDataCache[activeTab];
+  }
+  
+  // Fallback to filtering if cache is empty
+  // Directly filter orders here instead of calling the function
+  if (!filteredOrders || !Array.isArray(filteredOrders)) {
+    return [];
+  }
+  
+  return filteredOrders.filter(order => {
+    const status = (order.status || '').toLowerCase();
+    
+    switch (activeTab) {
+      case 'pending':
+        return ['pending', 'indonation'].includes(status);
+      case 'accepted':
+        return ['accepted', 'processing', 'accept'].includes(status);
+      case 'completed':
+        return ['completed', 'done'].includes(status);
+      case 'cancelled':
+        return ['cancelled', 'rejected', 'reject'].includes(status);
+      default:
+        return false;
+    }
+  });
+}, [activeTab, tabDataCache, filteredOrders]);
+
+  const fetchOrderDetails = async (order) => {
+    if (!order || !order.orderId) {
+      console.warn('Invalid order object received:', order);
+      return null;
+    }
+  
+    try {
+      let addressResponse, deviceResponse;
+  
+      // Only fetch address if userId exists
+      if (order.userId) {
+        addressResponse = await axios.get(
+          `https://cloudrunservice-254131401451.us-central1.run.app/user/getAddress?userId=${order.userId}`
+        );
+      }
+  
+      // Only fetch device if deviceId exists
+      if (order.deviceId) {
+        deviceResponse = await axios.get(
+          `https://cloudrunservice-254131401451.us-central1.run.app/org/getDevice?deviceId=${order.deviceId}`
+        );
+      }
+  
+      // Extract the relevant information with proper null checks
+      const address = addressResponse?.data?.address || { address: 'Unknown', city: 'Unknown', pincode: '000000' };
+      const device = deviceResponse?.data?.device || { modelNumber: 'Unknown Device', deviceType: 'Electronic device' };
+  
+      // Handle case when createdAt might be missing or in different format
+      let orderDate;
+      if (order.createdAt?.seconds) {
+        orderDate = new Date(order.createdAt.seconds * 1000);
+      } else if (order.createdAt) {
+        // Handle if it's already a timestamp or ISO string
+        orderDate = new Date(order.createdAt);
+      } else {
+        orderDate = new Date();
+      }
+  
+      // Get status from device when available, fall back to order status when not
+      const currentStatus = device.status || order.status || 'pending';
+  
+      return {
+        ...order,
+        id: order.orderId,
+        deviceName: device.modelNumber || 'Unknown Device',
+        description: device.deviceType || 'Electronic device',
+        status: currentStatus, // Use the status from device info
+        orderDate: orderDate,
+        date: orderDate.toLocaleDateString(),
+        pincode: address.pincode || '000000',
+        userAddress: address
+      };
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      // Return order with default values in case of error
+      const fallbackDate = new Date();
+      return {
+        ...order,
+        id: order.orderId,
+        deviceName: 'Unknown Device',
+        description: 'Electronic device',
+        status: order.status || 'pending',
+        orderDate: fallbackDate,
+        date: fallbackDate.toLocaleDateString(),
+        pincode: '000000',
+        userAddress: { address: 'Unknown', city: 'Unknown', pincode: '000000' }
+      };
+    }
+  };
+
+  const fetchOrders = async (id) => {
+    const organizationId = id || orgId;
+    if (!organizationId) {
+      console.error('No organization ID available');
+      setError('Organization ID not found');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      // Format date for API call
-      const formattedDate = selectedDate.toISOString().split('T')[0];
-      
-      // Fetch orders for the organization
+      // Get orders for the organization
       const ordersResponse = await axios.get(
-        `https://cloudrunservice-254131401451.us-central1.run.app/org/getOrders?orgId=${orgId}&date=${formattedDate}&cache=${refreshKey}`
+        `https://cloudrunservice-254131401451.us-central1.run.app/org/getOrgOrders?organizationId=${organizationId}`
       );
-      
+
       if (!ordersResponse.data?.orders || !Array.isArray(ordersResponse.data.orders)) {
         console.warn('No orders returned from API or invalid format');
-        setOrders([]);
+        setAllOrders([]);
         setFilteredOrders([]);
         setLoading(false);
         return;
       }
-      
-      // Process orders
-      const processedOrders = ordersResponse.data.orders.map(order => ({
-        ...order,
-        id: order.orderId || order.id,
-        deviceName: order.deviceName || order.modelNumber || 'Unknown Device',
-        description: order.description || order.deviceType || 'Electronic device',
-        status: order.status || 'pending',
-        date: new Date(order.createdAt?.seconds * 1000 || Date.now()).toLocaleDateString(),
-        pincode: order.pincode || order.address?.pincode || '000000',
-        userAddress: order.address || { address: 'Unknown', city: 'Unknown', pincode: '000000' }
-      }));
-      
-      setOrders(processedOrders);
-      
-      // Extract unique pincodes
-      const uniquePincodes = [...new Set(processedOrders.map(order => order.pincode))];
+
+      // Fetch detailed information for each order
+      const orderPromises = ordersResponse.data.orders
+        .filter(order => order && order.orderId) // Filter out invalid orders
+        .map(order => fetchOrderDetails(order));
+
+      const processedOrdersWithNulls = await Promise.all(orderPromises);
+      const processedOrders = processedOrdersWithNulls.filter(order => order !== null);
+
+      setAllOrders(processedOrders);
+
+      // Extract unique pincodes with null check
+      const uniquePincodes = [...new Set(processedOrders.map(order => order.pincode).filter(Boolean))];
       setPincodes(uniquePincodes);
-      
-      // Apply default filters
-      filterOrdersByPincode(processedOrders, 'all');
-      
-      // Fetch calendar marked dates
-      fetchCalendarData();
+
+      // Initial filtering will be handled by the useEffect
+
     } catch (error) {
       console.error('Error fetching orders:', error);
       setError('Failed to load orders. Please try again later.');
-      setOrders([]);
+      setAllOrders([]);
       setFilteredOrders([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
-  
-  const fetchCalendarData = async () => {
-    try {
-      // Fetch calendar data to mark dates
-      const calendarResponse = await axios.get(
-        `https://cloudrunservice-254131401451.us-central1.run.app/org/getCalendarData?orgId=${orgId}`
-      );
-      
-      if (calendarResponse.data?.dates) {
-        setMarkedDates(calendarResponse.data.dates);
+
+  // Filter orders by date with safety checks
+  const filterOrdersByDate = (orders, date) => {
+    if (!orders || !Array.isArray(orders) || !date) {
+      return [];
+    }
+
+    // Format the selected date to YYYY-MM-DD for comparison
+    const formattedDate = date.toISOString().split('T')[0];
+
+    return orders.filter(order => {
+      // Make sure orderDate exists and is a valid date
+      if (!order.orderDate || !(order.orderDate instanceof Date)) {
+        return false;
       }
-    } catch (error) {
-      console.error('Error fetching calendar data:', error);
-    }
+
+      // Format the order date to YYYY-MM-DD for comparison
+      const orderDateFormatted = order.orderDate.toISOString().split('T')[0];
+      return orderDateFormatted === formattedDate;
+    });
   };
-  
-  const filterOrdersByPincode = (ordersList, pincode) => {
-    if (pincode === 'all') {
-      setFilteredOrders(ordersList);
-      setSelectedPincode('all');
+
+  // Filter orders by pincode with safety checks
+  const filterOrdersByPincode = (orders, pincode) => {
+    if (!orders || !Array.isArray(orders)) {
+      setFilteredOrders([]);
+      return;
+    }
+
+    let result;
+
+    if (!pincode || pincode === 'all') {
+      result = orders;
     } else {
-      const filtered = ordersList.filter(order => order.pincode === pincode);
-      setFilteredOrders(filtered);
-      setSelectedPincode(pincode);
+      result = orders.filter(order => order.pincode === pincode);
     }
+
+    setFilteredOrders(result);
   };
-  
+
+  // Get orders filtered by status with safety checks
   const getFilteredOrdersByStatus = () => {
-    if (activeTab === 'all') {
-      return filteredOrders;
-    } else {
-      return filteredOrders.filter(order => order.status.toLowerCase() === activeTab);
+    if (!filteredOrders || !Array.isArray(filteredOrders)) {
+      return [];
     }
+    
+    return filteredOrders.filter(order => {
+      const status = (order.status || '').toLowerCase();
+      
+      switch (activeTab) {
+        case 'pending':
+          return ['pending', 'indonation'].includes(status);
+        case 'accepted':
+          return ['accepted', 'processing', 'accept'].includes(status);
+        case 'completed':
+          return ['completed', 'done'].includes(status);
+        case 'cancelled':
+          return ['cancelled', 'rejected', 'reject'].includes(status);
+        default:
+          return false;
+      }
+    });
   };
-  
+
+  // Add this function to calculate counts
+  const getStatusCounts = (orders) => {
+    if (!orders || !Array.isArray(orders)) {
+      return {
+        pending: 0,
+        accepted: 0,
+        completed: 0,
+        cancelled: 0
+      };
+    }
+
+    const counts = {
+      pending: 0,
+      accepted: 0,
+      completed: 0,
+      cancelled: 0
+    };
+
+    orders.forEach(order => {
+      const status = (order.status || '').toLowerCase();
+      if (['pending', 'indonation'].includes(status)) counts.pending++;
+      else if (['accepted', 'processing', 'accept'].includes(status)) counts.accepted++;
+      else if (['completed', 'done'].includes(status)) counts.completed++;
+      else if (['cancelled', 'rejected', 'reject'].includes(status)) counts.cancelled++;
+    });
+
+    return counts;
+  };
+
   const handleSelectOrder = (orderId) => {
+    if (!orderId) return;
+
     if (selectedOrders.includes(orderId)) {
       setSelectedOrders(selectedOrders.filter(id => id !== orderId));
     } else {
       setSelectedOrders([...selectedOrders, orderId]);
     }
   };
-  
+
   const handleSelectAll = () => {
-    const displayedOrders = getFilteredOrdersByStatus();
-    if (selectedOrders.length === displayedOrders.length) {
+    if (!ordersToDisplay.length) return;
+
+    if (selectedOrders.length === ordersToDisplay.length) {
       // Deselect all
       setSelectedOrders([]);
     } else {
       // Select all
-      setSelectedOrders(displayedOrders.map(order => order.id));
+      setSelectedOrders(ordersToDisplay.map(order => order.id).filter(Boolean));
     }
   };
-  
+
   const handleBulkAction = async (action) => {
-    if (selectedOrders.length === 0) return;
-    
+    if (!selectedOrders.length || !orgId) return;
+  
     setProcessingAction(true);
     try {
-      // Call API to perform action (accept/reject)
-      await axios.post(
-        `https://cloudrunservice-254131401451.us-central1.run.app/org/updateOrders`,
-        {
-          orgId: orgId,
-          orderIds: selectedOrders,
-          action: action
-        }
+      const selectedOrdersData = filteredOrders.filter(order =>
+        selectedOrders.includes(order.id) && order.deviceId
       );
+  
+      const updatePromises = selectedOrdersData.map(order =>
+        axios.put(
+          `https://cloudrunservice-254131401451.us-central1.run.app/user/updateDevice?deviceId=${order.deviceId}`,
+          {
+            status: action === 'accept' ? 'accepted' : action === 'reject' ? 'cancelled' : action
+          }
+        )
+      );
+  
+      await Promise.all(updatePromises);
       
-      // Reset selected orders and refresh
+      // Update local state
+      setAllOrders(prevOrders => 
+        prevOrders.map(order => {
+          if (selectedOrders.includes(order.id)) {
+            return { 
+              ...order, 
+              status: action === 'accept' ? 'accepted' : action === 'reject' ? 'cancelled' : action 
+            };
+          }
+          return order;
+        })
+      );
+  
       setSelectedOrders([]);
-      setRefreshKey(prevKey => prevKey + 1);
+      // Reset cache for affected tabs
+      setTabDataCache(prevCache => ({
+        ...prevCache,
+        [activeTab]: [] // Clear the cache for current tab to trigger re-filtering
+      }));
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
       setError(`Failed to ${action} orders. Please try again.`);
@@ -196,35 +445,76 @@ const OrderHistoryScreen = () => {
       setProcessingAction(false);
     }
   };
-  
+
+  // Handle date selection
   const handleDateSelect = (date) => {
+    if (!date) return;
     setSelectedDate(date);
+    // Clear tab cache when date changes
+    setTabDataCache({
+      pending: [],
+      accepted: [],
+      completed: [],
+      cancelled: []
+    });
+    // Filtering is now handled by the useEffect
   };
-  
+
+  // Handle pincode selection
+  const handlePincodeSelect = (pincode) => {
+    if (!pincode) return;
+    setSelectedPincode(pincode);
+    // Clear tab cache when pincode changes
+    setTabDataCache({
+      pending: [],
+      accepted: [],
+      completed: [],
+      cancelled: []
+    });
+    // Filtering is now handled by the useEffect
+  };
+
   const handleRetry = () => {
     setError(null);
     setRefreshKey(prevKey => prevKey + 1);
   };
-  
+
+  // Handle pull-to-refresh
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Clear the cache for the current tab
+    setTabDataCache(prevCache => ({
+      ...prevCache,
+      [activeTab]: []
+    }));
+    setRefreshKey(prevKey => prevKey + 1);
+  };
+
+  // Change tab without refreshing data
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSelectedOrders([]); // Clear selections when changing tabs
+    // We don't refresh data here, just change the active tab
+  };
+
+  const hasOrders = ordersToDisplay && ordersToDisplay.length > 0;
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-      
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Organization Orders</Text>
-      </View>
-      
-      <DateFilter 
+
+      <DateFilter
         selectedDate={selectedDate}
-        markedDates={markedDates}
         onDateSelect={handleDateSelect}
+        markedDates={{}} // Add this line to provide an empty object as default
       />
-      
-      <FilterTabs 
+
+      <FilterTabs
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange} // Use our new handler that doesn't auto-refresh
+        counts={getStatusCounts(filteredOrders)}
       />
-      
+
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2ecc71" />
@@ -234,43 +524,54 @@ const OrderHistoryScreen = () => {
         <ErrorState error={error} onRetry={handleRetry} />
       ) : (
         <>
-          <PincodeFilter 
+          <PincodeFilter
             pincodes={pincodes}
             selectedPincode={selectedPincode}
-            onSelectPincode={(pincode) => filterOrdersByPincode(orders, pincode)}
+            onSelectPincode={handlePincodeSelect}
           />
-          
+
           {selectedOrders.length > 0 && (
-            <ActionButtons 
+            <ActionButtons
               selectedCount={selectedOrders.length}
               onAccept={() => handleBulkAction('accept')}
               onReject={() => handleBulkAction('reject')}
               processing={processingAction}
             />
           )}
-          
-          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+
+          <ScrollView 
+            style={styles.scrollView} 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#2ecc71']}
+                tintColor="#2ecc71"
+              />
+            }
+          >
             <View style={styles.ordersContainer}>
-              {getFilteredOrdersByStatus().length > 0 ? (
+              {hasOrders ? (
                 <>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.selectAllContainer}
                     onPress={handleSelectAll}
                   >
-                    <MaterialCommunityIcons 
-                      name={selectedOrders.length === getFilteredOrdersByStatus().length ? "checkbox-marked" : "checkbox-blank-outline"} 
-                      size={20} 
-                      color="#2ecc71" 
+                    <MaterialCommunityIcons
+                      name={selectedOrders.length === ordersToDisplay.length ? "checkbox-marked" : "checkbox-blank-outline"}
+                      size={20}
+                      color="#2ecc71"
                     />
                     <Text style={styles.selectAllText}>
-                      {selectedOrders.length === getFilteredOrdersByStatus().length 
-                        ? "Deselect All" 
+                      {selectedOrders.length === ordersToDisplay.length
+                        ? "Deselect All"
                         : "Select All Orders"}
                     </Text>
                   </TouchableOpacity>
-                  
-                  {getFilteredOrdersByStatus().map(order => (
-                    <OrderCard 
+
+                  {ordersToDisplay.map(order => (
+                    <OrderCard
                       key={order.id}
                       order={order}
                       isSelected={selectedOrders.includes(order.id)}
@@ -279,9 +580,9 @@ const OrderHistoryScreen = () => {
                   ))}
                 </>
               ) : (
-                <EmptyState 
+                <EmptyState
                   activeTab={activeTab}
-                  onRefresh={() => setRefreshKey(prevKey => prevKey + 1)}
+                  onRefresh={onRefresh}
                 />
               )}
             </View>
@@ -297,7 +598,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f6fa',
-    paddingTop: 42,
+    // paddingTop: 42,
   },
   header: {
     padding: 16,

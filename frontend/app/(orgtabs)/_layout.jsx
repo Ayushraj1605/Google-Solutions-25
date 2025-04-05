@@ -59,7 +59,7 @@ const _layout = () => {
                     name='ordersOrg'
                     options={{
                         title: 'Orders',
-                        headerShown: false,
+                        headerShown: true,
                         tabBarIcon: ({ color, focused, name }) => (
                             <Profile></Profile>
                         ),

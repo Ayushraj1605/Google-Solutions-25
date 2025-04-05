@@ -19,13 +19,14 @@ export default function OrganisationList() {
     // Get URL parameters using useLocalSearchParams hook
     const params = useLocalSearchParams();
     
-    // Create a state to store all form data (from previous screen + organization selection)
+    // Create a state to store all form data (from previous screens + organization selection)
     const [formData, setFormData] = useState({});
     
     // State management
     const [selectedOrg, setSelectedOrg] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [deviceId, setDeviceId] =useState("");
+    const [deviceId, setDeviceId] = useState("");
+    const [addressDetails, setAddressDetails] = useState("");
 
     const [userData, setUserData] = useState({
         id: '',
@@ -38,6 +39,8 @@ export default function OrganisationList() {
         // Log received params for debugging
         console.log("Received params:", params);
         setDeviceId(params.deviceId);
+        setAddressDetails(params.addressDetails || "");
+        
         // Initialize form data with the received parameters
         setFormData({
             deviceId: params.deviceId,
@@ -45,8 +48,11 @@ export default function OrganisationList() {
             imei: params.imei,
             purchaseYear: params.purchaseYear,
             description: params.description,
-            status:"Pending",
-            // Note: invoice file cannot be passed via URL params
+            addressId: params.addressId,
+            address: params.addressDetails,
+            pinCode:params.pincode,
+            status: "Pending",
+        // Note: invoice file cannot be passed via URL params
         });
     }, []);
 
@@ -73,28 +79,28 @@ export default function OrganisationList() {
         fetchUserData();
       }, []);
 
-    // Dummy organizations list
+    // Dummy organizations list - in a real app, this would be fetched from an API
     const organizations = [
         {
-            id: 1,
-            name: 'Organization 1',
-            description: 'Organization 1 description',
+            id: "3wPDNwrPP8mvB3rnHSPv",
+            name: 'EcoRecycle',
+            description: 'Specializing in eco-friendly electronics recycling and refurbishment',
             memberCount: 57,
-            category: 'Technology'
+            category: 'Recycling'
         },
         {
             id: 2,
-            name: 'Organization 2',
-            description: 'Organization 2 description',
+            name: 'TechDonations',
+            description: 'We refurbish and donate electronics to schools and nonprofits',
             memberCount: 124,
-            category: 'Healthcare'
+            category: 'Education'
         },
         {
             id: 3,
-            name: 'Organization 3',
-            description: 'Organization 3 description',
+            name: 'GreenTech Solutions',
+            description: 'Focused on sustainable disposal and parts recovery',
             memberCount: 36,
-            category: 'Education'
+            category: 'Sustainability'
         },
     ];
 
@@ -109,90 +115,91 @@ export default function OrganisationList() {
     };
 
     // Handle submission to backend API
-// Handle submission to backend API
-const handleSubmit = async () => {
-    if (!selectedOrg) {
-        Alert.alert('Selection Required', 'Please select an organization');
-        return;
-    }
+    const handleSubmit = async () => {
+        if (!selectedOrg) {
+            Alert.alert('Selection Required', 'Please select an organization');
+            return;
+        }
 
-    setIsLoading(true);
-    
-    try {
-        // Prepare data for first API (device update)
-        const dataToSubmit = {
-            ...formData,
-            submittedAt: new Date().toISOString()
-        };
+        setIsLoading(true);
         
-        // API endpoint for device update
-        const API_URL = `https://cloudrunservice-254131401451.us-central1.run.app/user/updateDevice?deviceId=${deviceId}`;
-        
-        // Prepare data for orders API (only deviceId and organizationId)
-        const orderData = {
-            deviceId: deviceId,
-            organizationId: selectedOrg.id.toString()
-        };
-        
-        const API_URL_ORDERS = `https://cloudrunservice-254131401451.us-central1.run.app/user/order?userId=${userData.id}`;
-        
-        // Set proper headers
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+        try {
+            // Prepare data for first API (device update)
+            const dataToSubmit = {
+                ...formData,
+                submittedAt: new Date().toISOString()
+            };
+            console.log("Data to submit:", dataToSubmit);
+            // API endpoint for device update
+            const API_URL = `https://cloudrunservice-254131401451.us-central1.run.app/user/updateDevice?deviceId=${deviceId}`;
+            
+            // Prepare data for orders API (includes deviceId, organizationId, and addressId)
+            const orderData = {
+                deviceId: deviceId,
+                organizationId: selectedOrg.id.toString(),
+                addressId: formData.addressId
+            };
+            
+            const API_URL_ORDERS = `https://cloudrunservice-254131401451.us-central1.run.app/user/order?userId=${userData.id}`;
+            
+            // Set proper headers
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+            
+            // Make the API requests
+            const response = await axios.put(API_URL, dataToSubmit, config);
+            const orderResponse = await axios.post(API_URL_ORDERS, orderData, config);
+            
+            // console.log("Device update response:", response.data);
+            // console.log("Order response:", orderResponse.data);
+            
+            if (response.status === 200 || response.status === 201) {
+                // Show success message
+                Alert.alert(
+                    'Success',
+                    'Your device has been successfully submitted for recycling',
+                    [
+                        { 
+                            text: 'OK', 
+                            onPress: () => router.push('/devices') 
+                        }
+                    ]
+                );
+            } else {
+                throw new Error(`Server responded with status: ${response.status}`);
             }
-        };
-        
-        // Make the API requests
-        const response = await axios.put(API_URL, dataToSubmit, config);
-        const orderResponse = await axios.post(API_URL_ORDERS, orderData, config);
-        
-        // console.log("Device update response:", response.data);
-        // console.log("Order response:", orderResponse.data);
-        
-        if (response.status === 200 || response.status === 201) {
-            // Show success message
+        } catch (error) {
+            console.error('API submission error:', error);
+            let errorMessage = 'There was a problem submitting your device. Please try again.';
+            
+            // More specific error handling
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.log("Error response data:", error.response.data);
+                console.log("Error response status:", error.response.status);
+                errorMessage = error.response.data?.message || errorMessage;
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log("Error request:", error.request);
+                errorMessage = 'No response received from server. Please check your connection.';
+            }
+            
+            // Show error message
             Alert.alert(
-                'Success',
-                'Your device has been successfully submitted for recycling',
-                [
-                    { 
-                        text: 'OK', 
-                        onPress: () => router.push('/devices') 
-                    }
-                ]
+                'Submission Failed',
+                errorMessage,
+                [{ text: 'OK' }]
             );
-        } else {
-            throw new Error(`Server responded with status: ${response.status}`);
+        } finally {
+            setIsLoading(false);
         }
-    } catch (error) {
-        console.error('API submission error:', error);
-        let errorMessage = 'There was a problem submitting your device. Please try again.';
-        
-        // More specific error handling
-        if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
-            console.log("Error response data:", error.response.data);
-            console.log("Error response status:", error.response.status);
-            errorMessage = error.response.data?.message || errorMessage;
-        } else if (error.request) {
-            // The request was made but no response was received
-            console.log("Error request:", error.request);
-            errorMessage = 'No response received from server. Please check your connection.';
-        }
-        
-        // Show error message
-        Alert.alert(
-            'Submission Failed',
-            errorMessage,
-            [{ text: 'OK' }]
-        );
-    } finally {
-        setIsLoading(false);
-    }
-};
+    };
+
     // Custom card component
     const OrganizationCard = ({ item, onSelect, isSelected }) => (
         <TouchableOpacity
@@ -239,6 +246,15 @@ const handleSubmit = async () => {
                         <Text style={styles.summaryTitle}>Device Details</Text>
                         <Text style={styles.summaryItem}>Model: {formData.modelNumber}</Text>
                         {formData.imei && <Text style={styles.summaryItem}>IMEI: {formData.imei}</Text>}
+                        {formData.purchaseYear && <Text style={styles.summaryItem}>Purchase Year: {formData.purchaseYear}</Text>}
+                    </View>
+                )}
+
+                {/* Display address details if available */}
+                {addressDetails && (
+                    <View style={styles.addressContainer}>
+                        <Text style={styles.summaryTitle}>Pickup Address</Text>
+                        <Text style={styles.addressText}>{addressDetails}</Text>
                     </View>
                 )}
 
@@ -304,6 +320,14 @@ const styles = StyleSheet.create({
         borderLeftWidth: 3,
         borderLeftColor: '#609966',
     },
+    addressContainer: {
+        backgroundColor: '#F0F8FF',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+        borderLeftWidth: 3,
+        borderLeftColor: '#4682B4',
+    },
     summaryTitle: {
         fontSize: 16,
         fontWeight: '600',
@@ -314,6 +338,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#555',
         marginBottom: 4,
+    },
+    addressText: {
+        fontSize: 14,
+        color: '#555',
+        lineHeight: 20,
     },
     listContainer: {
         paddingBottom: 100, // Space for the fixed button

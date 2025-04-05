@@ -1,51 +1,59 @@
 // components/orgOrders/DateFilter.js
 import React, { useState } from 'react';
-import { 
-  StyleSheet, 
-  View, 
-  Text, 
+import {
+  StyleSheet,
+  View,
+  Text,
   TouchableOpacity,
   Modal
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Calendar } from 'react-native-calendars';
 
-const DateFilter = ({ selectedDate, markedDates, onDateSelect }) => {
+const DateFilter = ({
+  selectedDate,
+  markedDates = {}, // Add default empty object
+  onDateSelect
+}) => {
   const [isCalendarVisible, setCalendarVisible] = useState(false);
-  
+
   const formatDate = (date) => {
     const options = { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
     return date.toLocaleDateString('en-US', options);
   };
-  
+
   const getMarkedDates = () => {
-    // Convert markedDates (from API) into format for the Calendar component
+    if (!selectedDate) return {};
+
     const formattedMarkedDates = {};
-    
-    // Add the currently selected date
-    const dateString = selectedDate.toISOString().split('T')[0];
-    formattedMarkedDates[dateString] = {
-      selected: true,
-      selectedColor: '#2ecc71'
-    };
-    
-    // Add other dates with their statuses (green/red) from the markedDates object
-    Object.keys(markedDates).forEach(date => {
-      const status = markedDates[date];
-      formattedMarkedDates[date] = {
-        ...formattedMarkedDates[date],
-        // If all orders are completed/cancelled, mark as green, otherwise red
-        dotColor: status === 'completed' ? '#2ecc71' : '#e74c3c',
-        marked: true
+
+    // Add the currently selected date if valid
+    if (selectedDate instanceof Date && !isNaN(selectedDate)) {
+      const dateString = selectedDate.toISOString().split('T')[0];
+      formattedMarkedDates[dateString] = {
+        selected: true,
+        selectedColor: '#2ecc71'
       };
-    });
-    
+    }
+
+    // Add other dates with their statuses if markedDates exists
+    if (markedDates && typeof markedDates === 'object') {
+      Object.keys(markedDates).forEach(date => {
+        const status = markedDates[date];
+        formattedMarkedDates[date] = {
+          ...formattedMarkedDates[date],
+          dotColor: status === 'completed' ? '#2ecc71' : '#e74c3c',
+          marked: true
+        };
+      });
+    }
+
     return formattedMarkedDates;
   };
-  
+
   return (
     <>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.dateSelector}
         onPress={() => setCalendarVisible(true)}
       >
@@ -55,7 +63,7 @@ const DateFilter = ({ selectedDate, markedDates, onDateSelect }) => {
         </View>
         <MaterialCommunityIcons name="chevron-down" size={24} color="#7f8c8d" />
       </TouchableOpacity>
-      
+
       <Modal
         visible={isCalendarVisible}
         transparent={true}
@@ -66,14 +74,14 @@ const DateFilter = ({ selectedDate, markedDates, onDateSelect }) => {
           <View style={styles.calendarContainer}>
             <View style={styles.calendarHeader}>
               <Text style={styles.calendarTitle}>Select Date</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setCalendarVisible(false)}
                 style={styles.closeButton}
               >
                 <MaterialCommunityIcons name="close" size={24} color="#2c3e50" />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.legendContainer}>
               <View style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: '#2ecc71' }]} />
@@ -84,7 +92,7 @@ const DateFilter = ({ selectedDate, markedDates, onDateSelect }) => {
                 <Text style={styles.legendText}>Pending Orders</Text>
               </View>
             </View>
-            
+
             <Calendar
               current={selectedDate.toISOString().split('T')[0]}
               markedDates={getMarkedDates()}
@@ -98,9 +106,9 @@ const DateFilter = ({ selectedDate, markedDates, onDateSelect }) => {
                 arrowColor: '#2ecc71',
               }}
             />
-            
+
             <View style={styles.calendarFooter}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.todayButton}
                 onPress={() => {
                   onDateSelect(new Date());

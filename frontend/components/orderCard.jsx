@@ -1,266 +1,213 @@
-// components/orgOrders/OrderCard.js
 import React from 'react';
 import { 
   StyleSheet, 
   View, 
   Text, 
-  TouchableOpacity,
-  Image
+  TouchableOpacity, 
+  Dimensions
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+const { width } = Dimensions.get('window');
+
 const OrderCard = ({ order, isSelected, onSelect }) => {
-  // Handle both capitalized and lowercase status
-  const status = order.status.toLowerCase();
-  
-  const getStatusColor = (status) => {
-    switch(status.toLowerCase()) {
-      case 'pending':
-        return '#3498db'; // Blue
-      case 'completed':
-        return '#2ecc71'; // Green
-      case 'cancelled':
-        return '#e74c3c'; // Red
-      case 'accepted':
-        return '#9b59b6'; // Purple
-      default:
-        return '#95a5a6'; // Gray
-    }
+  // Ensure we have valid data with fallbacks
+  const {
+    id = 'Unknown ID',
+    deviceName = 'Unknown Device',
+    description = 'No description',
+    status = 'pending',
+    date = 'Unknown date',
+    pincode = 'Unknown',
+    userAddress = { address: 'Unknown', city: 'Unknown' }
+  } = order || {};
+
+  // Map status to colors and display text
+  const statusConfig = {
+    pending: { color: '#f39c12', text: 'Pending' },
+    indonation: { color: '#f39c12', text: 'Pending Donation' },
+    accepted: { color: '#3498db', text: 'Accepted' },
+    processing: { color: '#3498db', text: 'Processing' },
+    accept: { color: '#3498db', text: 'Accepted' },
+    completed: { color: '#2ecc71', text: 'Completed' },
+    done: { color: '#2ecc71', text: 'Completed' },
+    cancelled: { color: '#e74c3c', text: 'Cancelled' },
+    rejected: { color: '#e74c3c', text: 'Rejected' },
+    reject: { color: '#e74c3c', text: 'Rejected' }
   };
-  
-  const getStatusIcon = (status) => {
-    switch(status.toLowerCase()) {
-      case 'pending':
-        return 'clock-outline';
-      case 'completed':
-        return 'check-circle-outline';
-      case 'cancelled':
-        return 'close-circle-outline';
-      case 'accepted':
-        return 'progress-check';
-      default:
-        return 'help-circle-outline';
-    }
-  };
-  
+
+  const { color: statusColor, text: statusText } = statusConfig[status.toLowerCase()] || 
+    { color: '#95a5a6', text: 'Unknown' };
+
   return (
-    <View style={[styles.orderCard, isSelected && styles.selectedCard]}>
-      <View style={styles.checkboxContainer}>
-        <TouchableOpacity onPress={onSelect}>
-          <MaterialCommunityIcons 
-            name={isSelected ? "checkbox-marked" : "checkbox-blank-outline"} 
-            size={24} 
-            color="#2ecc71" 
+    <View style={[styles.card, isSelected && styles.selectedCard]}>
+      {/* Top section with checkbox and order ID */}
+      <View style={styles.topSection}>
+        <TouchableOpacity onPress={onSelect} style={styles.checkbox}>
+          <MaterialCommunityIcons
+            name={isSelected ? "checkbox-marked" : "checkbox-blank-outline"}
+            size={22}
+            color="#2ecc71"
           />
         </TouchableOpacity>
-      </View>
-      
-      <View style={styles.cardContent}>
-        <View style={styles.orderHeader}>
-          <View style={styles.orderInfo}>
-            <Text style={styles.orderId}>Order: {order.orderId || order.id}</Text>
-            <Text style={styles.orderDate}>{order.date}</Text>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(status) }]}>
-            <MaterialCommunityIcons name={getStatusIcon(status)} size={14} color="#fff" />
-            <Text style={styles.statusText}>
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </Text>
-          </View>
-        </View>
         
-        <View style={styles.orderContent}>
-          <View style={styles.deviceImageContainer}>
-            {order.imageUrl ? (
-              <Image 
-                source={{ uri: order.imageUrl }} 
-                style={styles.deviceImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.deviceImagePlaceholder}>
-                <MaterialCommunityIcons 
-                  name={
-                    (order.deviceName || '').toLowerCase().includes('iphone') || 
-                    (order.deviceName || '').toLowerCase().includes('smartphone') ? 'cellphone' :
-                    (order.deviceName || '').toLowerCase().includes('laptop') ? 'laptop' :
-                    (order.deviceName || '').toLowerCase().includes('tv') ? 'television' :
-                    (order.deviceName || '').toLowerCase().includes('ipad') || 
-                    (order.deviceName || '').toLowerCase().includes('tablet') ? 'tablet' :
-                    (order.deviceName || '').toLowerCase().includes('headphone') ? 'headphones' :
-                    (order.deviceName || '').toLowerCase().includes('printer') ? 'printer' :
-                    (order.deviceName || '').toLowerCase().includes('mouse') ? 'mouse' :
-                    'devices'
-                  } 
-                  size={36} 
-                  color="#7f8c8d" 
-                />
-              </View>
-            )}
-          </View>
-          
-          <View style={styles.deviceInfo}>
-            <Text style={styles.deviceName}>{order.deviceName}</Text>
-            <Text style={styles.deviceId}>Device ID: {order.deviceId}</Text>
-            <Text style={styles.deviceDescription} numberOfLines={2}>
-              {order.description}
-            </Text>
-          </View>
-        </View>
-        
-        <View style={styles.addressContainer}>
-          <MaterialCommunityIcons name="map-marker-outline" size={16} color="#7f8c8d" />
-          <Text style={styles.addressText}>
-            {order.userAddress?.address}, {order.userAddress?.city} - {order.pincode}
+        <View style={styles.idSection}>
+          <Text style={styles.idLabel}>Order ID:</Text>
+          <Text style={styles.idValue} numberOfLines={1}>
+            {id || 'Unknown'}
           </Text>
         </View>
         
-        <View style={styles.orderFooter}>
-          <View style={styles.footerInfo}>
-            <MaterialCommunityIcons name="account-outline" size={16} color="#7f8c8d" />
-            <Text style={styles.footerText}>
-              {order.userName || order.userId}
-            </Text>
-          </View>
-          
-          <View style={styles.footerInfo}>
-            <MaterialCommunityIcons name="phone-outline" size={16} color="#7f8c8d" />
-            <Text style={styles.footerText}>
-              {order.userPhone || order.contactNumber || 'N/A'}
-            </Text>
-          </View>
+        <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+          <Text style={styles.statusText}>{statusText}</Text>
         </View>
+      </View>
+      
+      {/* Divider */}
+      <View style={styles.divider} />
+      
+      {/* Device information */}
+      <View style={styles.detailsSection}>
+        <View style={styles.detailRow}>
+          <MaterialCommunityIcons name="devices" size={16} color="#555" />
+          <Text style={styles.detailLabel}>Device:</Text>
+          <Text style={styles.detailValue} numberOfLines={1}>
+            {deviceName}
+          </Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <MaterialCommunityIcons name="text-box-outline" size={16} color="#555" />
+          <Text style={styles.detailLabel}>Type:</Text>
+          <Text style={styles.detailValue} numberOfLines={1}>
+            {description}
+          </Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <MaterialCommunityIcons name="calendar" size={16} color="#555" />
+          <Text style={styles.detailLabel}>Date:</Text>
+          <Text style={styles.detailValue}>{date}</Text>
+        </View>
+      </View>
+      
+      {/* Address information */}
+      <View style={styles.addressSection}>
+        <View style={styles.addressHeader}>
+          <MaterialCommunityIcons name="map-marker" size={16} color="#555" />
+          <Text style={styles.addressLabel}>Delivery Address:</Text>
+        </View>
+        
+        <Text style={styles.addressValue} numberOfLines={2}>
+          {userAddress.address}, {userAddress.city}, {pincode}
+        </Text>
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  orderCard: {
-    backgroundColor: '#fff',
+  card: {
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     marginBottom: 16,
-    elevation: 2,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    overflow: 'hidden',
-    flexDirection: 'row',
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
   },
   selectedCard: {
-    borderWidth: 2,
     borderColor: '#2ecc71',
+    borderWidth: 2,
+    backgroundColor: '#f7fcfa',
   },
-  checkboxContainer: {
-    padding: 12,
-    justifyContent: 'center',
-    borderRightWidth: 1,
-    borderRightColor: '#f0f0f0',
+  topSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
-  cardContent: {
+  checkbox: {
+    marginRight: 10,
+  },
+  idSection: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  idLabel: {
+    fontSize: 13,
+    color: '#7f8c8d',
+    fontWeight: '500',
+    marginRight: 4,
+  },
+  idValue: {
+    fontSize: 13,
+    color: '#2c3e50',
+    fontWeight: '600',
     flex: 1,
   },
-  orderHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  orderInfo: {
-    flexDirection: 'column',
-  },
-  orderId: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
-  orderDate: {
-    fontSize: 12,
-    color: '#7f8c8d',
-    marginTop: 2,
-  },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 16,
+    marginLeft: 8,
   },
   statusText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '500',
-    marginLeft: 4,
-  },
-  orderContent: {
-    flexDirection: 'row',
-    padding: 12,
-  },
-  deviceImageContainer: {
-    marginRight: 12,
-  },
-  deviceImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-  },
-  deviceImagePlaceholder: {
-    width: 70,
-    height: 70,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deviceInfo: {
-    flex: 1,
-  },
-  deviceName: {
-    fontSize: 16,
     fontWeight: '600',
-    color: '#2c3e50',
   },
-  deviceId: {
-    fontSize: 13,
-    color: '#7f8c8d',
-    marginTop: 2,
+  divider: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
+    marginBottom: 12,
   },
-  deviceDescription: {
-    fontSize: 13,
-    color: '#7f8c8d',
-    marginTop: 4,
+  detailsSection: {
+    marginBottom: 12,
   },
-  addressContainer: {
+  detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingBottom: 12,
+    marginBottom: 6,
   },
-  addressText: {
-    fontSize: 13,
-    color: '#34495e',
+  detailLabel: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    fontWeight: '500',
     marginLeft: 6,
+    marginRight: 4,
+    width: 45,
+  },
+  detailValue: {
+    fontSize: 14,
+    color: '#2c3e50',
+    fontWeight: '500',
     flex: 1,
   },
-  orderFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+  addressSection: {
+    backgroundColor: '#f9f9f9',
+    padding: 10,
+    borderRadius: 8,
   },
-  footerInfo: {
+  addressHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 4,
   },
-  footerText: {
-    fontSize: 12,
+  addressLabel: {
+    fontSize: 13,
     color: '#7f8c8d',
-    marginLeft: 4,
+    fontWeight: '500',
+    marginLeft: 6,
+  },
+  addressValue: {
+    fontSize: 13,
+    color: '#2c3e50',
+    paddingLeft: 22,
   },
 });
 

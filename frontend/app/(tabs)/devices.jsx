@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, StatusBar, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, StatusBar, ActivityIndicator, Text, RefreshControl } from 'react-native';
 import { AnimatedFAB } from 'react-native-paper';
 import { router } from 'expo-router';
 import Cards from '../../components/devicecards';
@@ -11,22 +11,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const Devices = ({ visible = true, style }) => {
   const [isExtended, setIsExtended] = useState(true);
   const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]); // New state for filtered data
+  const [filteredData, setFilteredData] = useState([]);
   const [userId, setUserId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(''); // New state for search query
+  const [searchQuery, setSearchQuery] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   // In your parent component that renders DeviceCard
   const [devices, setDevices] = useState([]);
 
-  // const handleStatusUpdate = (deviceId, newStatus) => {
-  //   setDevices(prevDevices =>
-  //     prevDevices.map(device =>
-  //       device.deviceId === deviceId ? { ...device, status: newStatus } : device
-  //     )
-  //   );
-  // };
-
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // Increment refreshKey to trigger a data reload
+    setRefreshKey(prevKey => prevKey + 1);
+    // You can end the refreshing animation after a delay or when data loads
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
 
   const _retrieveData = async () => {
     try {
@@ -53,11 +55,9 @@ const Devices = ({ visible = true, style }) => {
             `https://cloudrunservice-254131401451.us-central1.run.app/user/getDevices?userId=${userId}&cache=${refreshKey}`
           );
           if (response.data?.devices) {
-            // Map the devices and ensure consistent property naming
             const devicesWithStatus = response.data.devices.map(device => ({
               ...device,
-              // Ensure status exists and is passed as is (not coerced to boolean)
-              status: device.status || "", // default to empty string instead of false
+              status: device.status || "",
               deviceId: device.deviceId || device.deviceID,
               deviceID: device.deviceId || device.deviceID
             }));
@@ -68,6 +68,9 @@ const Devices = ({ visible = true, style }) => {
           }
         } catch (error) {
           console.error('Error fetching devices:', error);
+        } finally {
+          // Ensure refreshing is set to false after data is fetched
+          setRefreshing(false);
         }
       };
       fetchData();
@@ -105,7 +108,7 @@ const Devices = ({ visible = true, style }) => {
     (query) => {
       const timeoutId = setTimeout(() => {
         handleSearch(query);
-      }, 500); // Wait for 500ms before updating the search query
+      }, 500);
 
       return () => clearTimeout(timeoutId);
     },
@@ -143,6 +146,14 @@ const Devices = ({ visible = true, style }) => {
           contentContainerStyle={styles.contentContainer}
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#609966']}
+              tintColor="#609966"
+            />
+          }
         >
           {filteredData.length > 0 ? (
             filteredData.map((item, index) => (

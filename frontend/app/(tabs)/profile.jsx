@@ -66,6 +66,11 @@ const ProfileScreen = () => {
     router.push('/orderHistory');
   }
 
+  const handleAddresses = () => {
+    console.log('My Addresses');
+    router.push('/myAddresses');
+  }
+
   const handleBlogsBookmarks = () => {
     console.log('My Blogs and Bookmarks');
     router.push('/blogsBookmarks');
@@ -137,6 +142,8 @@ const ProfileScreen = () => {
 
           {/* Menu Options */}
           <View style={{ marginTop: 40, paddingHorizontal: 20 }}>
+            <ButtonProfile title="My Addresses" handlePress={handleAddresses} />
+            <View style={{ height: 1 }} />
             <ButtonProfile title="Order History" handlePress={handleOrders} />
             <View style={{ height: 1 }} />
             <ButtonProfile title="Analytics" handlePress={handleAnalytics} />
